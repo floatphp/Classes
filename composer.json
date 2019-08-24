@@ -1,7 +1,7 @@
 {
   "name": "floatphp/classes",
   "type": "library",
-  "description": "Classes lib for floatPHP",
+  "description": "Classes libs for floatPHP",
   "keywords": ["floatphp","micro-framework","framework","PSR","ORM","jakiboy"],
   "homepage": "https://www.floatphp.com/",
   "license": "MIT",
