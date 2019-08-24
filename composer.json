@@ -1,0 +1,23 @@
+{
+  "name": "floatphp/classes",
+  "type": "library",
+  "description": "Classes lib for floatPHP",
+  "keywords": ["php","micro-framework","framework","PSR","ORM","jakiboy"],
+  "homepage": "https://www.floatphp.com/",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Jihad Sinnaour",
+      "email": "mail@jihadsinnaour.com",
+      "role": "Founder"
+    }
+  ],
+  "require": {
+    "php": ">=7.3"
+  },
+  "autoload": {
+    "psr-4" : {
+      "floatPHP\\Classes\\" : "src/"
+    }
+  }
+}
