@@ -10,11 +10,11 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Connection;
+namespace floatPHP\Classes\Connection;
 
-use floatphp\Classes\Filesystem\Logger;
-use PDOException;
-use PDO;
+use floatPHP\Classes\Filesystem\Logger;
+use \PDOException;
+use \PDO;
 
 class Db
 {

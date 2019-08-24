@@ -10,7 +10,7 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Auth;
+namespace floatPHP\Classes\Auth;
 
 class Session
 {
@@ -21,6 +21,7 @@ class Session
     {
         if (!isset($_SESSION)) session_start();
     }
+    
     /**
      * Register the session.
      *

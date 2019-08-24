@@ -10,11 +10,11 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Html;
+namespace floatPHP\Classes\Html;
 
-use \App\System\Exceptions\Classes\XTPLException;
-use \App\System\Interfaces\Classes\XTPLInterface;
-use \floatphp\Classes\Storage\File;
+use floatPHP\Exceptions\Classes\XTPLException;
+use floatPHP\Interfaces\Classes\XTPLInterface;
+use floatPHP\Classes\Storage\File;
 
 class Xtpl implements XTPLInterface
 {

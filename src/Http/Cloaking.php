@@ -10,7 +10,7 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Http;
+namespace floatPHP\Classes\Http;
 
 class Cloaking
 {
@@ -21,6 +21,7 @@ class Cloaking
 	public $reverseIp;
 	public $reverseName;
 	public $userAgent;
+
 	/**
 	 * @param string $ip
 	 * @param string $useragent
@@ -33,6 +34,7 @@ class Cloaking
 		$this->checkCloacking();
 		return $this;
 	}
+
 	/**
 	 * @param string $ip
 	 * @return void
@@ -42,6 +44,7 @@ class Cloaking
 		if ( !is_null($ip) && !empty($ip) )
 		$this->reverseIp = gethostbyaddr($ip);
 	}
+
 	/**
 	 * @param string $name
 	 * @return void
@@ -51,6 +54,7 @@ class Cloaking
 		if ( !is_null($name) && !empty($name) )
 		$this->reverseName = gethostbyname($name);
 	}
+
 	/**
 	 * @param string $useragent
 	 * @return void
@@ -60,6 +64,7 @@ class Cloaking
 		if ( !is_null($useragent) && !empty($useragent) )
 		$this->userAgent = $useragent;
 	}
+
     /**
 	 * @param void
 	 * @return object
@@ -71,6 +76,7 @@ class Cloaking
     		$this->isGoogleBot = TRUE;
     	}
     }
+
     /**
 	 * @param void
 	 * @return boolean
@@ -84,6 +90,7 @@ class Cloaking
            return TRUE;
         }
     }
+    
     /**
 	 * @param void
 	 * @return boolean

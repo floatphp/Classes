@@ -10,7 +10,7 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Html;
+namespace floatPHP\Classes\Html;
 
 class Hooks
 {

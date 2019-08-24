@@ -10,7 +10,7 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Http;
+namespace floatPHP\Classes\Http;
 
 class ResponseXML
 {
@@ -20,6 +20,7 @@ class ResponseXML
 		$xml = str_replace('</xml>', '', $xml);
 		return $xml;
 	}
+	
 	public static function parse($xml)
 	{
 		return simplexml_load_string($xml);

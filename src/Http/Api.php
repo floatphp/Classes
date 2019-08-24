@@ -10,7 +10,7 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Http;
+namespace floatPHP\Classes\Http;
 
 class Api
 {
@@ -19,6 +19,7 @@ class Api
 		$request = new Curl($url);
 		return $request->execute();
 	}
+	
 	public static function convertCSV($csv)
 	{
 		$array = array_map("str_getcsv", explode("\n", $csv));

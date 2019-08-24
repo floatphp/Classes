@@ -10,7 +10,7 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Http;
+namespace floatPHP\Classes\Http;
 
 class Url {
 
@@ -36,6 +36,7 @@ class Url {
 
 		}
 	}
+
 	public static function current()
 	{
 		if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off')
@@ -47,6 +48,7 @@ class Url {
 			return "http://".$_SERVER["HTTP_HOST"].$_SERVER["REQUEST_URI"];
 		}
 	}
+
 	/**
 	 * @param
 	 * @return
@@ -78,6 +80,7 @@ class Url {
 	  }
 	  return $text;
 	}
+
 	private function getProtocol()
 	{
 		if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') {
@@ -87,5 +90,4 @@ class Url {
 		}
 		return $this->protocol;
 	}
-
 }

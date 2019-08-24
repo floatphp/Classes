@@ -10,9 +10,9 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Filesystem;
+namespace floatPHP\Classes\Filesystem;
 
-use DateTime;
+use \DateTime;
 
 class Logger {
 			

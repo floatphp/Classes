@@ -10,7 +10,7 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Http;
+namespace floatPHP\Classes\Http;
 
 class Router {
 

@@ -10,7 +10,7 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Http;
+namespace floatPHP\Classes\Http;
 
 class Curl
 {
@@ -24,21 +24,21 @@ class Curl
     
     public function __construct($url = null)
     {
-
         $this->init($url);
         $this->setOptions();
-
     }
-    public function __destruct(){
 
+    public function __destruct()
+    {
         curl_close($this->request);
-
     }
+
     public function post($data = [])
     {
         $this->options[] = [CURLOPT_POST => TRUE];
         $this->options += [CURLOPT_POSTFIELDS => $data];
     }
+
     private function init($url)
     {
         // init curl
@@ -48,15 +48,18 @@ class Curl
         
         return $this;
     }
+
     public function addOption($option = [])
     {
         $this->options[] = $option;
         return $this;
     }
+
     private function setOptions()
     {
         curl_setopt_array($this->request, $this->options);
     }
+
     public function info()
     {
         if (!curl_errno($this->request)) 
@@ -65,6 +68,7 @@ class Curl
           return $this;
         }
     }
+    
     public function execute()
     {
         $this->setOptions();
