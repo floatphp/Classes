@@ -10,7 +10,7 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Storage; 
+namespace floatPHP\Classes\Storage; 
 
 class CSV
 {

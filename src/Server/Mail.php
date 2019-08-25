@@ -10,7 +10,7 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Server;
+namespace floatPHP\Classes\Server;
 
 class Mail
 {

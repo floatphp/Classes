@@ -10,10 +10,10 @@
  * @license   : MIT License
  */
 
-namespace floatphp\Classes\Storage;
+namespace floatPHP\Classes\Storage;
 
-use \App\System\Exceptions\Classes\FileException;
-use \App\System\Interfaces\Classes\FileInterface;
+use floatPHP\Exceptions\Classes\FileException;
+use floatPHP\Interfaces\Classes\FileInterface;
 use \Exception;
 
 class File implements FileInterface
