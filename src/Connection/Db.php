@@ -40,7 +40,7 @@ class Db
     
     private function connect()
     {
-        $this->settings = parse_ini_file(dirname(dirname(__FILE__)) . "/secret.ini");
+        $this->settings = parse_ini_file('App/System/secret.ini');
 
         $dsn = 'mysql:dbname=' . $this->settings["db"] . ';host=' . $this->settings["host"] . ';port=' . $this->settings["port"] . '';
         try {
