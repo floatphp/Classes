@@ -1,5 +1,6 @@
 {
   "name": "floatphp/classes",
+  "version" : "1.0.0",
   "type": "library",
   "description": "Classes libs for floatPHP",
   "keywords": ["floatphp","micro-framework","framework","PSR","ORM","jakiboy"],
@@ -10,10 +11,15 @@
       "name": "Jihad Sinnaour",
       "email": "mail@jihadsinnaour.com",
       "role": "Founder"
+    },
+    {
+      "name": "Softgine",
+      "email": "e-mailing@soft-gine.com",
+      "role": "Developer"
     }
   ],
   "require": {
-    "php": ">=7.3"
+    "php": ">=5.6"
   },
   "autoload": {
     "psr-4" : {
