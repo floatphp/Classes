@@ -3,11 +3,13 @@
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
  * @subpackage: Classes Auth Component
- * @version   : 1.0.0
+ * @version   : 1.1.0
  * @category  : PHP framework
  * @copyright : (c) JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link      : https://www.floatphp.com
  * @license   : MIT License
+ *
+ * This file if a part of FloatPHP Framework
  */
 
 namespace floatPHP\Classes\Auth;
@@ -15,17 +17,21 @@ namespace floatPHP\Classes\Auth;
 class Session
 {
     /**
-     * Constructor
+     * @param void
+     * @return void
      */
     public function __construct()
     {
-        if (!isset($_SESSION)) session_start();
+        if ( !isset($_SESSION) ) {
+            session_start();
+        }
     }
     
     /**
-     * Register the session.
+     * Register the session
      *
-     * @param integer $time.
+     * @param int $time
+     * @return void
      */
     public function register($time = 60)
     {
@@ -35,9 +41,10 @@ class Session
     }
 
     /**
-     * Checks to see if the session is registered.
+     * Checks to see if the session is registered
      *
-     * @return  True if it is, False if not.
+     * @param void
+     * @return boolean
      */
     public function isRegistered()
     {
@@ -49,10 +56,11 @@ class Session
     }
 
     /**
-     * Set key/value in session.
+     * Set key/value in session
      *
      * @param mixed $key
      * @param mixed $value
+     * @return void
      */
     public function set($key, $value)
     {
@@ -60,17 +68,18 @@ class Session
     }
 
     /**
-     * Retrieve value stored in session by key.
+     * Retrieve value stored in session by key
      *
-     * @var mixed
+     * @param string $key
+     * @return mixed
      */
     public function get($key)
     {
-        return isset($_SESSION[$key]) ? $_SESSION[$key]:false;
+        return isset($_SESSION[$key]) ? $_SESSION[$key] : false;
     }
 
     /**
-     * Retrieve the global session variable.
+     * Retrieve the global session variable
      *
      * @return array
      */
@@ -80,7 +89,7 @@ class Session
     }
 
     /**
-     * Gets the id for the current session.
+     * Gets the id for the current session
      *
      * @return integer - session id
      */
@@ -90,7 +99,7 @@ class Session
     }
 
     /**
-     * Checks to see if the session is over based on the amount of time given.
+     * Checks to see if the session is over based on the amount of time given
      *
      * @return boolean
     */
@@ -112,7 +121,7 @@ class Session
     }
 
     /**
-     * Returns the current time.
+     * Returns the current time
      *
      * @return unix timestamp
      */
@@ -128,7 +137,7 @@ class Session
     }
 
     /**
-     * Generates new time.
+     * Generates new time
      *
      * @return unix timestamp
      */
@@ -144,11 +153,11 @@ class Session
     }
 
     /**
-     * Destroys the session.
+     * Destroys the session
      */
     public function end()
     {
         session_destroy();
-        $_SESSION = array();
+        $_SESSION = [];
     }
 }

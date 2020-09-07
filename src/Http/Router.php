@@ -2,81 +2,77 @@
 /**
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
- * @subpackage: Classes HTTP Component
- * @version   : 1.0.0
+ * @subpackage: Classes Http Component
+ * @version   : 1.1.0
  * @category  : PHP framework
  * @copyright : (c) JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link      : https://www.floatphp.com
  * @license   : MIT License
+ *
+ * This file if a part of FloatPHP Framework
  */
 
 namespace floatPHP\Classes\Http;
 
-class Router {
-
+class Router
+{
 	/**
-	 * @var array Array of all routes (incl. named routes).
+	 * @access protected
+	 * @var array $routes All routes
+	 * @var array $namedRoutes All named routes
+	 * @var string $basePath
+	 * @var array $matchTypes Default match types
 	 */
-	protected $routes = array();
-
-	/**
-	 * @var array Array of all named routes.
-	 */
-	protected $namedRoutes = array();
-
-	/**
-	 * @var string Can be used to ignore leading part of the Request URL (if main file lives in subdirectory of host)
-	 */
+	protected $routes = [];
+	protected $namedRoutes = [];
 	protected $basePath = '';
-
-	/**
-	 * @var array Array of default match types (regex helpers)
-	 */
-	protected $matchTypes = array(
+	protected $matchTypes = [
 		'i'  => '[0-9]++',
 		'a'  => '[0-9A-Za-z]++',
 		'h'  => '[0-9A-Fa-f]++',
 		'*'  => '.+?',
 		'**' => '.++',
 		''   => '[^/\.]++'
-	);
+	];
 
 	/**
-	  * Create router in one call from config.
-	  *
-	  * @param array $routes
-	  * @param string $basePath
-	  * @param array $matchTypes
-	  */
-	public function __construct( $routes = array(), $basePath = '', $matchTypes = array() ) {
+	 * Create router in one call from config
+	 *
+	 * @param array $routes
+	 * @param string $basePath
+	 * @param array $matchTypes
+	 * @return void
+	 */
+	public function __construct($routes = [], $basePath = '', $matchTypes = [])
+	{
 		$this->addRoutes($routes);
 		$this->setBasePath($basePath);
 		$this->addMatchTypes($matchTypes);
 	}
 	
 	/**
-	 * Retrieves all routes.
-	 * Useful if you want to process or display routes.
-	 * @return array All routes.
+	 * Retrieves all routes
+	 *
+	 * @access public
+	 * @param void
+	 * @return array
 	 */
-	public function getRoutes() {
+	public function getRoutes()
+	{
 		return $this->routes;
 	}
 
 	/**
-	 * Add multiple routes at once from array in the following format:
+	 * Add multiple routes at once from array
 	 *
-	 *   $routes = array(
-	 *      array($method, $route, $target, $name)
-	 *   );
-	 *
+	 * @access public
 	 * @param array $routes
-	 * @return void
-	 * @author Koen Punt
 	 * @throws Exception
+	 * @return void
 	 */
-	public function addRoutes($routes){
-		if(!is_array($routes) && !$routes instanceof Traversable) {
+	public function addRoutes($routes)
+	{
+		if (!is_array($routes) && !$routes instanceof Traversable) {
 			throw new \Exception('Routes should be an array or an instance of Traversable');
 		}
 		foreach($routes as $route) {
@@ -85,61 +81,65 @@ class Router {
 	}
 
 	/**
-	 * Set the base path.
-	 * Useful if you are running your application from a subdirectory.
+	 * Set the base path
+	 *
+	 * @access public
+	 * @param array $routes
+	 * @return void
 	 */
-	public function setBasePath($basePath) {
+	public function setBasePath($basePath)
+	{
 		$this->basePath = $basePath;
 	}
 
 	/**
-	 * Add named match types. It uses array_merge so keys can be overwritten.
+	 * Add named match types
 	 *
-	 * @param array $matchTypes The key is the name and the value is the regex.
+	 * @access public
+	 * @param array $matchTypes
+	 * @return void
 	 */
-	public function addMatchTypes($matchTypes) {
+	public function addMatchTypes($matchTypes)
+	{
 		$this->matchTypes = array_merge($this->matchTypes, $matchTypes);
 	}
 
 	/**
-	 * Map a route to a target
+	 * Map routes to targets
 	 *
-	 * @param string $method One of 5 HTTP Methods, or a pipe-separated list of multiple HTTP Methods (GET|POST|PATCH|PUT|DELETE)
-	 * @param string $route The route regex, custom regex must start with an @. You can use multiple pre-set regex filters, like [i:id]
-	 * @param mixed $target The target where this route should point to. Can be anything.
-	 * @param string $name Optional name of this route. Supply if you want to reverse route this url in your application.
-	 * @throws Exception
+	 * @access public
+	 * @param string $method (GET|POST|PATCH|PUT|DELETE)
+	 * @param string $route Route regex
+	 * @param mixed $target
+	 * @param string $name Optional
+	 * @return void
 	 */
-	public function map($method, $route, $target, $name = null) {
-
+	public function map($method, $route, $target, $name = null)
+	{
 		$this->routes[] = array($method, $route, $target, $name);
-
-		if($name) {
-			if(isset($this->namedRoutes[$name])) {
+		if ($name) {
+			if (isset($this->namedRoutes[$name])) {
 				throw new \Exception("Can not redeclare route '{$name}'");
 			} else {
 				$this->namedRoutes[$name] = $route;
 			}
-
 		}
-
 		return;
 	}
 
 	/**
 	 * Reversed routing
 	 *
-	 * Generate the URL for a named route. Replace regexes with supplied parameters
-	 *
-	 * @param string $routeName The name of the route.
-	 * @param array @params Associative array of parameters to replace placeholders with.
-	 * @return string The URL of the route with named parameters in place.
+	 * @access public
+	 * @param string $routeName
+	 * @param array @params
 	 * @throws Exception
+	 * @return string
 	 */
-	public function generate($routeName, array $params = array()) {
-
+	public function generate($routeName, array $params = [])
+	{
 		// Check if named route exists
-		if(!isset($this->namedRoutes[$routeName])) {
+		if ( !isset($this->namedRoutes[$routeName]) ) {
 			throw new \Exception("Route '{$routeName}' does not exist.");
 		}
 
@@ -150,40 +150,36 @@ class Router {
 		$url = $this->basePath . $route;
 
 		if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER)) {
-
 			foreach($matches as $match) {
 				list($block, $pre, $type, $param, $optional) = $match;
-
 				if ($pre) {
 					$block = substr($block, 1);
 				}
-
-				if(isset($params[$param])) {
+				if (isset($params[$param]) ) {
 					$url = str_replace($block, $params[$param], $url);
 				} elseif ($optional) {
 					$url = str_replace($pre . $block, '', $url);
 				}
 			}
-
-
 		}
-
 		return $url;
 	}
 
 	/**
 	 * Match a given Request Url against stored routes
+	 *
+	 * @access public
 	 * @param string $requestUrl
 	 * @param string $requestMethod
-	 * @return array|boolean Array with route information on success, false on failure (no match).
+	 * @return array|boolean
 	 */
-	public function match($requestUrl = null, $requestMethod = null) {
-
-		$params = array();
+	public function match($requestUrl = null, $requestMethod = null)
+	{
+		$params = [];
 		$match = false;
 
 		// set Request Url if it isn't passed as parameter
-		if($requestUrl === null) {
+		if ( $requestUrl === null ) {
 			$requestUrl = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
 		}
 
@@ -191,49 +187,50 @@ class Router {
 		$requestUrl = substr($requestUrl, strlen($this->basePath));
 
 		// Strip query string (?a=b) from Request Url
-		if (($strpos = strpos($requestUrl, '?')) !== false) {
+		if ( ($strpos = strpos($requestUrl, '?')) !== false ) {
 			$requestUrl = substr($requestUrl, 0, $strpos);
 		}
 
 		// set Request Method if it isn't passed as a parameter
-		if($requestMethod === null) {
+		if ( $requestMethod === null ) {
 			$requestMethod = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
 		}
 
 		foreach($this->routes as $handler) {
 			list($method, $_route, $target, $name) = $handler;
-
 			$methods = explode('|', $method);
-			$method_match = false;
+			$methodMatch = false;
 
 			// Check if request method matches. If not, abandon early. (CHEAP)
 			foreach($methods as $method) {
 				if (strcasecmp($requestMethod, $method) === 0) {
-					$method_match = true;
+					$methodMatch = true;
 					break;
 				}
 			}
 
 			// Method did not match, continue to next route.
-			if(!$method_match) continue;
+			if (!$methodMatch) continue;
 
 			// Check for a wildcard (matches all)
 			if ($_route === '*') {
 				$match = true;
+
 			} elseif (isset($_route[0]) && $_route[0] === '@') {
 				$pattern = '`' . substr($_route, 1) . '`u';
 				$match = preg_match($pattern, $requestUrl, $params);
+
 			} else {
 				$route = null;
 				$regex = false;
 				$j = 0;
 				$n = isset($_route[0]) ? $_route[0] : null;
 				$i = 0;
-
 				// Find the longest non-regex substring and match it against the URI
 				while (true) {
-					if (!isset($_route[$i])) {
+					if ( !isset($_route[$i]) ) {
 						break;
+						
 					} elseif (false === $regex) {
 						$c = $n;
 						$regex = $c === '[' || $c === '(' || $c === '.';
@@ -248,23 +245,21 @@ class Router {
 					}
 					$route .= $_route[$i++];
 				}
-
 				$regex = $this->compileRoute($route);
 				$match = preg_match($regex, $requestUrl, $params);
 			}
 
-			if(($match == true || $match > 0)) {
+			if ( ($match == true || $match > 0) ) {
 
-				if($params) {
+				if ( $params ) {
 					foreach($params as $key => $value) {
-						if(is_numeric($key)) unset($params[$key]);
+						if ( is_numeric($key)) unset($params[$key] );
 					}
 				}
-
 				return array(
 					'target' => $target,
 					'params' => $params,
-					'name' => $name
+					'name'   => $name
 				);
 			}
 		}
@@ -273,22 +268,24 @@ class Router {
 
 	/**
 	 * Compile the regex for a given route (EXPENSIVE)
+	 *
+	 * @access private
+	 * @param string $route
+	 * @return string
 	 */
-	private function compileRoute($route) {
-		if (preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER)) {
-
+	private function compileRoute($route)
+	{
+		if ( preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER) ) {
 			$matchTypes = $this->matchTypes;
 			foreach($matches as $match) {
 				list($block, $pre, $type, $param, $optional) = $match;
-
-				if (isset($matchTypes[$type])) {
+				if ( isset($matchTypes[$type]) ) {
 					$type = $matchTypes[$type];
 				}
-				if ($pre === '.') {
+				if ( $pre === '.' ) {
 					$pre = '\.';
 				}
-
-				//Older versions of PCRE require the 'P' in (?P<named>)
+				// Older versions of PCRE require the 'P' in (?P<named>)
 				$pattern = '(?:'
 						. ($pre !== '' ? $pre : null)
 						. '('
@@ -299,7 +296,6 @@ class Router {
 
 				$route = str_replace($block, $pattern, $route);
 			}
-
 		}
 		return "`^$route$`u";
 	}

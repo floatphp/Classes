@@ -14,7 +14,7 @@
 
 namespace floatPHP\Classes\Http;
 
-class Post
+class Get
 {
 	/**
 	 * @access public
@@ -24,8 +24,8 @@ class Post
 	public static function get($item = null)
 	{
 		if ( isset($item) ) {
-			return $_POST[$item];
-		} else return $_POST;
+			return $_GET[$item];
+		} else return $_GET;
 	}
 
 	/**
@@ -36,9 +36,9 @@ class Post
 	 */
 	public static function set($item,$value)
 	{
-		$_POST[$item] = $value;
+		$_GET[$item] = $value;
 	}
-
+	
 	/**
 	 * @access public
 	 * @param string $item
@@ -46,9 +46,9 @@ class Post
 	 */
 	public static function isSetted($item = null)
 	{
-		if ( $item && isset($_POST[$item]) ) {
+		if ( $item && isset($_GET[$item]) ) {
 			return true;
-		} elseif ( !$item && isset($_POST) ) {
+		} elseif ( !$item && isset($_GET) ) {
 			return true;
 		} else return false;
 	}

@@ -3,11 +3,13 @@
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
  * @subpackage: Classes Filesystem Component
- * @version   : 1.0.0
+ * @version   : 1.1.0
  * @category  : PHP framework
  * @copyright : (c) JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link      : https://www.floatphp.com
  * @license   : MIT License
+ *
+ * This file if a part of FloatPHP Framework
  */
 
 namespace floatPHP\Classes\Filesystem;
@@ -39,9 +41,9 @@ class Logger {
 			}
 		}
 		else {
-			  if(mkdir($this->path,0777) === true) 
+			  if(mkdir($this->path,0755) === true) 
 			  {
- 				 $this->write($message);  
+ 				 $this->write($message);
 			  }	
 		}
 	}
