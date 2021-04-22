@@ -14,7 +14,7 @@
 
 namespace FloatPHP\Classes\Http;
 
-final class Get
+final class Cookie
 {
 	/**
 	 * @access public
@@ -24,9 +24,9 @@ final class Get
 	public static function get($item = null)
 	{
 		if ( $item ) {
-			return self::isSetted($item) ? $_GET[$item] : false;
+			return self::isSetted($item) ? $_COOKIE[$item] : false;
 		} else {
-			return $_GET;
+			return $_COOKIE;
 		}
 	}
 
@@ -34,11 +34,12 @@ final class Get
 	 * @access public
 	 * @param string $item
 	 * @param mixed $value
-	 * @return void
+	 * @param array $options
+	 * @return bool
 	 */
-	public static function set($item, $value)
+	public static function set($item , $value = '', $options = [])
 	{
-		$_GET[$item] = $value;
+		return setcookie($item,$value,$options);
 	}
 	
 	/**
@@ -49,9 +50,9 @@ final class Get
 	public static function isSetted($item = null)
 	{
 		if ( $item ) {
-			return isset($_GET[$item]);
+			return isset($_COOKIE[$item]);
 		} else {
-			return isset($_GET);
+			return isset($_COOKIE);
 		}
 	}
 }

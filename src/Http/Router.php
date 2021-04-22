@@ -12,9 +12,9 @@
  * This file if a part of FloatPHP Framework
  */
 
-namespace floatPHP\Classes\Http;
+namespace FloatPHP\Classes\Http;
 
-class Router
+final class Router
 {
     /**
      * @access protected

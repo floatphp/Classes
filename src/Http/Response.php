@@ -3,28 +3,32 @@
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
  * @subpackage: Classes Http Component
- * @version   : 1.1.0
+ * @version   : 1.0.0
  * @category  : PHP framework
- * @copyright : (c) JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link      : https://www.floatphp.com
  * @license   : MIT License
  *
  * This file if a part of FloatPHP Framework
  */
 
-namespace App\System\Classes\Http;
+namespace FloatPHP\Classes\Http;
 
-class Response
+use FloatPHP\Classes\Filesystem\Json;
+
+final class Response extends Status
 {
 	/**
-	 * @access public 
-	 * @param string $status, 
-	 * @return json
+	 * @param string $message
+	 * @param array $content
+	 * @param string $status
+	 * @param int $code 200
+	 * @return string
 	 */
-	public static function set($message = '', $content = [], $status = 'success', $statusCode = 200)
+	public static function set($message = '', $content = [], $status = 'success', $code = 200)
 	{
-		self::setHttpHeaders($statusCode);
-		echo json_encode([
+		self::setHttpHeaders($code);
+		echo Json::encode([
 			'status'  => $status,
 			'message' => $message,
 			'content' => $content
@@ -34,24 +38,25 @@ class Response
 
 	/**
 	 * @access public 
-	 * @param string $contentType
-	 * @param int $statusCode
+	 * @param int $code
+	 * @param string $type
 	 * @return void
 	 */
-	public static function setHttpHeaders($statusCode, $contentType = 'application/json')
+	public static function setHttpHeaders($code, $type = 'application/json')
 	{
-		$statusMessage = Status::getMessage($statusCode);
-		header("Content-Type: {$contentType}");
-		header("HTTP/1.1 {$statusCode} {$statusMessage}");
+		$status = self::getMessage($code);
+		$protocol = Server::get('SERVER_PROTOCOL');
+		header("Content-Type: {$type}");
+		header("{$protocol} {$code} {$status}");
 	}
 
 	/**
-	 * @param string $reponse, boolean|null $array
-	 * @return array|object
+	 * @param string $reponse
+	 * @param bool $isArray false
+	 * @return mixed
 	 */
-	public static function get($reponse, $array = null)
+	public static function get($reponse, $isArray = false)
 	{
-		if ($array) return json_decode( $reponse,true );
-		else return json_decode( $reponse );
+		return Json::decode($reponse,$isArray);
 	}
 }

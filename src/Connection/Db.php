@@ -3,18 +3,18 @@
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
  * @subpackage: Classes Connection Component
- * @version   : 1.1.0
+ * @version   : 1.0.0
  * @category  : PHP framework
- * @copyright : (c) JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link      : https://www.floatphp.com
  * @license   : MIT License
  *
  * This file if a part of FloatPHP Framework
  */
 
-namespace floatPHP\Classes\Connection;
+namespace FloatPHP\Classes\Connection;
 
-use floatPHP\Classes\Filesystem\Logger;
+use FloatPHP\Classes\Filesystem\Logger;
 use \PDOException;
 use \PDO;
 
@@ -23,14 +23,14 @@ class Db
     /**
      * @access private
      * @var object $pdo
+     * @var bool $isConnected
      * @var array $parameters
-     * @var boolean $isConnected false
      * @var object $log
      */
     private $pdo;
     private $isConnected = false;
-    private $log;
     private $parameters;
+    private $log;
 
     /**
      * @access protected
@@ -59,9 +59,7 @@ class Db
      */
     private function connect($config = [])
     {
-        $config = parse_ini_file(dirname(dirname(dirname(__FILE__))) . "/secret.ini");
         try {
-
             // Read settings & set PDO params
             $dsn = "mysql:dbname={$config['db']};host={$config['host']};port={$config['port']}";
             $this->pdo = new PDO($dsn,$config['user'], $config['pswd'], [
@@ -71,10 +69,10 @@ class Db
             // log any exceptions on Fatal error
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             
-            // Disable emulation of prepared statements, use REAL prepared statements instead
+            // Disable emulation of prepared statements
             $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
             
-            // Connection succeeded, set the boolean to true
+            // Connection succeeded
             $this->isConnected = true;
 
         } catch (PDOException $e) {
@@ -135,7 +133,7 @@ class Db
                     }
 
                     // Add type when binding the values to the column
-                    $this->query->bindValue($value[0], $value[1], $type);
+                    $this->query->bindValue($value[0],$value[1],$type);
                 }
             }
             
@@ -162,7 +160,7 @@ class Db
      */
     public function bind($params, $value)
     {
-        $this->parameters[sizeof($this->parameters)] = [':' . $params , $value];
+        $this->parameters[sizeof($this->parameters)] = [":{$params}",$value];
     }
 
     /**
@@ -197,7 +195,7 @@ class Db
         $this->Init($query, $params);
         $rawStatement = explode(" ", preg_replace("/\s+|\t+|\n+/", " ", $query));
         
-        // Which SQL statement is used 
+        // Which SQL statement is used
         $statement = strtolower($rawStatement[0]);
         
         if ( $statement === 'select' || $statement === 'show' ) {
@@ -218,7 +216,7 @@ class Db
     
     /**
      * Starts the transaction
-     * @return boolean, true on success or false on failure
+     * @return bool
      */
     public function beginTransaction()
     {
@@ -227,7 +225,7 @@ class Db
     
     /**
      *  Execute Transaction
-     *  @return boolean, true on success or false on failure
+     *  @return bool
      */
     public function executeTransaction()
     {
@@ -236,7 +234,7 @@ class Db
     
     /**
      *  Rollback of Transaction
-     *  @return boolean, true on success or false on failure
+     *  @return bool
      */
     public function rollBack()
     {
@@ -246,40 +244,37 @@ class Db
     /**
      *  Returns an array which represents a column from the result set 
      *
-     *  @param  string $query
-     *  @param  array  $params
+     *  @param string $query
+     *  @param array $params
      *  @return array
      */
     public function column($query, $params = null)
     {
         $this->Init($query, $params);
-        $Columns = $this->query->fetchAll(PDO::FETCH_NUM);
-        
+        $columns = $this->query->fetchAll(PDO::FETCH_NUM);
         $column = null;
-        
-        foreach ($Columns as $cells) {
+        foreach ($columns as $cells) {
             $column[] = $cells[0];
         }
-        
         return $column;
-        
     }
+
     /**
      *  Returns an array which represents a row from the result set 
      *
-     *  @param  string $query
-     *  @param  array  $params
-     *      @param  int    $fetchmode
+     *  @param string $query
+     *  @param array $params
+     *  @param int $fetchmode
      *  @return array
      */
     public function row($query, $params = null, $fetchmode = PDO::FETCH_ASSOC)
     {
-        $this->Init($query, $params);
+        $this->Init($query,$params);
         $result = $this->query->fetch($fetchmode);
         $this->query->closeCursor(); 
-        // Frees up the connection to the server so that other SQL statements may be issued,
         return $result;
     }
+
     /**
      *  Returns the value of one single field/column
      *
@@ -289,12 +284,12 @@ class Db
      */
     public function single($query, $params = null)
     {
-        $this->Init($query, $params);
+        $this->Init($query,$params);
         $result = $this->query->fetchColumn();
         $this->query->closeCursor(); 
-        // Frees up the connection to the server so that other SQL statements may be issued
         return $result;
     }
+
     /** 
      * Writes the log and returns the exception
      *
@@ -302,18 +297,13 @@ class Db
      * @param  string $sql
      * @return string
      */
-    private function ExceptionLog($message, $sql = "")
+    private function ExceptionLog($message, $sql = '')
     {
         $exception = 'Unhandled Exception.';
-        
-        if (!empty($sql)) {
-            # Add the Raw SQL to the Log
-            $message .= "\r\nRaw SQL : " . $sql;
+        if ( !empty($sql) ) {
+            $message .= "\r\nRaw SQL : {$sql}";
         }
-        # Write into log
         $this->log->write($message);
-        
-        // return $exception;
         echo $message;
     }
 }

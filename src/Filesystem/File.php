@@ -3,29 +3,28 @@
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
  * @subpackage: Classes Filesystem Component
- * @version   : 1.1.0
+ * @version   : 1.0.0
  * @category  : PHP framework
- * @copyright : (c) JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link      : https://www.floatphp.com
  * @license   : MIT License
  *
  * This file if a part of FloatPHP Framework
  */
 
-declare(strict_types = 1);
+namespace FloatPHP\Classes\Filesystem;
 
-namespace floatPHP\Classes\Filesystem;
+use FloatPHP\Interfaces\Classes\FileInterface;
 
-use floatphp\Interfaces\Classes\FileInterface;
-
-class File // implements FileInterface
+class File
 {
 	/**
 	 * @access protected
 	 * @var string $path
 	 * @var string $name
-	 * @var string $size
+	 * @var int $size
 	 * @var string $extension
+	 * @var string $permissions
 	 * @var string $content
 	 * @var string $parentDir
 	 */
@@ -33,6 +32,7 @@ class File // implements FileInterface
 	protected $name = null;
 	protected $size = null;
 	protected $extension = null;
+	protected $permissions = null;
 	protected $content = null;
 	protected $parentDir = null;
 
@@ -43,20 +43,30 @@ class File // implements FileInterface
 	private $handler = null;
 
 	/**
-	 * Construct file object
-	 *
-	 * @param string $path null
+	 * @param string $path
 	 */
 	public function __construct($path = null)
 	{
-		if ( $path && !$this->exists($this->path = $path) ) {
-			$this->write();
+		if ( ($this->path = $path) ) {
+			$this->analyze();
 		}
+	}
+
+	/**
+	 * Set file
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return void
+	 */
+	public function set($path)
+	{
+		$this->path = $path;
 		$this->analyze();
 	}
 
 	/**
-	 * Analyze File
+	 * Analyze file
 	 *
 	 * @access protected
 	 * @param void
@@ -64,32 +74,32 @@ class File // implements FileInterface
 	 */
 	protected function analyze()
 	{
-		if ( $this->path && ($this->path = realpath($this->path)) ) {
-			$this->parentDir = dirname($this->path);
-			$this->extension = pathinfo($this->path, PATHINFO_EXTENSION);
-			$this->name = basename(str_replace(".{$this->extension}", '', $this->path));
-			$this->extension = strtolower($this->extension);
-			$this->size = filesize($this->path);
-		}
+		$this->path = Stringify::formatPath($this->path);
+		$this->parentDir = dirname($this->path);
+		$this->extension = pathinfo($this->path, PATHINFO_EXTENSION);
+		$file = Stringify::replace(".{$this->extension}", '', $this->path);
+		$this->name = basename($file);
+		$this->extension = strtolower($this->extension);
+		$this->size = @filesize($this->path);
 	}
 
 	/**
-	 * Open File
+	 * Open file stream
 	 *
 	 * @access protected
-	 * @param string $mode 'c+'
-	 * @return void
+	 * @param string $mode
+	 * @param bool $include
+	 * @return mixed
 	 */
-	protected function open($mode = 'c+')
+	protected function open($mode = 'c+', $include = false)
 	{
 		clearstatcache();
-		if ( $this->exists($this->path) ) {
-			$this->handler = fopen($this->path, $mode);
-		}
+		$this->handler = @fopen($this->path,$mode,$include);
+		return $this->handler;
 	}
 
 	/**
-	 * Close file handler
+	 * Close file stream
 	 *
 	 * @access protected
 	 * @param void
@@ -105,28 +115,6 @@ class File // implements FileInterface
 	}
 
 	/**
-	 * @access protected
-	 * @param string $dir
-	 * @return void
-	 */
-	protected function recursiveRemove($dir)
-	{
-		if ( is_dir($dir) ) {
-			$objects = scandir($dir);
-			foreach ($objects as $object) {
-				if ($object !== '.' && $object !== '..') {
-					if (filetype("{$dir}/{$object}") == 'dir') {
-						$this->recursiveRemove("{$dir}/{$object}");
-					}
-					else unlink("{$dir}/{$object}");
-				}
-			 }
-			reset($objects);
-			rmdir($dir);
-		}
-	}
-
-	/**
 	 * Get Parent Dir
 	 *
 	 * @access public
@@ -136,6 +124,54 @@ class File // implements FileInterface
 	public function getParentDir()
 	{
 		return $this->parentDir;
+	}
+
+	/**
+	 * Get File Extension
+	 *
+	 * @access public
+	 * @param void
+	 * @return string
+	 */
+	public function getExtension()
+	{
+        return $this->extension;
+	}
+
+	/**
+	 * Get file name
+	 *
+	 * @access public
+	 * @param void
+	 * @return string
+	 */
+	public function getName()
+	{
+        return $this->name;
+	}
+
+	/**
+	 * Get file full name
+	 *
+	 * @access public
+	 * @param void
+	 * @return string
+	 */
+	public function getFileName()
+	{
+        return "{$this->name}.{$this->extension}";
+	}
+	
+	/**
+	 * Get file path
+	 *
+	 * @access public
+	 * @param void
+	 * @return string
+	 */
+	public function getPath()
+	{
+        return $this->path;
 	}
 
 	/**
@@ -151,6 +187,18 @@ class File // implements FileInterface
 	}
 
 	/**
+	 * Get file stream
+	 *
+	 * @access public
+	 * @param void
+	 * @return stream
+	 */
+	public function getStream()
+	{
+		return $this->handler;
+	}
+
+	/**
 	 * Get file last access
 	 *
 	 * @access public
@@ -159,7 +207,7 @@ class File // implements FileInterface
 	 */
     public function getLastAccess()
     {
-        if ( $this->exists($this->path) ) {
+        if ( $this->isExists() ) {
             if ( ($access = fileatime($this->path)) ) {
                 return $access;
             } else {
@@ -177,7 +225,7 @@ class File // implements FileInterface
 	 */
     public function getLastChange()
     {
-        if ( $this->exists($this->path) ) {
+        if ( $this->isExists() ) {
             if ( ($change = filemtime($this->path)) ) {
                 return $change;
             } else {
@@ -187,7 +235,7 @@ class File // implements FileInterface
     }
 
 	/**
-	 * Get File Size int
+	 * Get file Size value
 	 *
 	 * @access public
 	 * @param void
@@ -199,10 +247,10 @@ class File // implements FileInterface
 	}
 
 	/**
-	 * Get File Size
+	 * Get file Size
 	 *
 	 * @access public
-	 * @param int $decimals 2
+	 * @param int $decimals
 	 * @return string
 	 */
 	public function getSize($decimals = 2)
@@ -213,10 +261,35 @@ class File // implements FileInterface
 	}
 
 	/**
-	 * Read File & Get Content
+	 * Get file permissions
 	 *
 	 * @access public
-	 * @param boolean $return false
+	 * @param bool $convert
+	 * @return mixed
+	 */
+	public function getPermissions($convert = false)
+	{
+		$permissions = substr(sprintf('%o',@fileperms($this->path)),-4);
+		return ($convert) ? intval($permissions) : $permissions;
+	}
+
+	/**
+	 * Get file lines
+	 *
+	 * @access public
+	 * @param int $length
+	 * @return mixed
+	 */
+	public function getLines($length = null)
+	{
+		return fgets($this->handler, $length);
+	}
+
+	/**
+	 * Read file & get content
+	 *
+	 * @access public
+	 * @param bool $return
 	 * @return mixed
 	 */
 	public function read($return = false)
@@ -226,7 +299,7 @@ class File // implements FileInterface
 			if ( $this->isEmpty() ) {
 				$this->content = '';
 			} else {
-				$this->content = fread($this->handler, filesize($this->path));
+				$this->content = @fread($this->handler, $this->size);
 			}
 			if ($return) {
 				$this->close();
@@ -237,7 +310,7 @@ class File // implements FileInterface
 	}
 
 	/**
-	 * Write File & create folder if not exists
+	 * Write file & create folder if not exists
 	 *
 	 * @access public
 	 * @param string $input
@@ -245,26 +318,25 @@ class File // implements FileInterface
 	 */
 	public function write($input = '')
 	{
-		$dir = dirname($this->path);
-		if ( !is_file($dir) && !is_dir($dir) ) {
-			if ( !$this->addDir($dir) ) {
+		if ( !self::exists($this->parentDir) ) {
+			if ( !self::addDir($this->parentDir) ) {
 				return false;
 			}
 		}
-		if ( ($this->handler = fopen($this->path, 'w', true)) ) {
+		if ( $this->open('w', true) ) {
 			fwrite($this->handler, $input);
 		}
 		$this->close();
 	}
 
 	/**
-	 * Add String to File
+	 * Add string to file
 	 *
 	 * @access public
 	 * @param string $input
 	 * @return void
 	 */
-	public function addString($input)
+	public function addString($input = '')
 	{
 		$this->open('a');
 		if ( $this->handler ) {
@@ -282,24 +354,26 @@ class File // implements FileInterface
 	 */
 	public function addBreak()
 	{
-		fwrite(fopen($this->path, 'a'), PHP_EOL);
+		$this->open('a');
+		if ( $this->handler ) {
+			fwrite($this->handler, PHP_EOL);
+		}
+		$this->close();
 	}
 
 	/**
-	 * Delete file object
+	 * Remove file
 	 *
 	 * @access public
 	 * @param void
-	 * @return boolean
+	 * @return bool
 	 */
-	public function delete()
+	public function remove()
 	{
 		$this->close();
-		if ( $this->exists() ) {
-			if ( unlink($this->path) ) {
+		if ( $this->isExists() ) {
+			if ( @unlink($this->path) ) {
 				return true;
-			} else {
-				return false;
 			}
 		}
 		return false;
@@ -309,15 +383,17 @@ class File // implements FileInterface
 	 * Copy file
 	 *
 	 * @access public
-	 * @param void
-	 * @return string $dest
+	 * @param string $path
+	 * @return bool
 	 */
-    public function copy($dest)
+    public function copy($path)
     {
     	$this->close();
-        if ( copy($this->path, $dest) ) {
-            return true;
-        }
+    	if ( $this->isExists() ) {
+	        if ( copy($this->path, $path) ) {
+	            return true;
+	        }
+    	}
         return false;
     }
 
@@ -325,48 +401,125 @@ class File // implements FileInterface
 	 * Move file
 	 *
 	 * @access public
-	 * @param void
-	 * @return boolean
+	 * @param string $path
+	 * @return bool
 	 */
-    public function move($dest)
+    public function move($path)
     {
     	$this->close();
-        if ( rename($this->path, $dest) ) {
-            return true;
-        }
+    	if ( $this->isExists() ) {
+	        if ( rename($this->path, $path) ) {
+	            return true;
+	        }
+    	}
         return false;
     }
+
+	/**
+	 * Check file only exists
+	 *
+	 * @access public
+	 * @param void
+	 * @return bool
+	 */
+	public function isExists()
+	{
+		if ( self::exists($this->path) && is_file($this->path) ) {
+			return true;
+		}
+		return false;
+	}
 
 	/**
 	 * Check whether path is regular file
 	 *
 	 * @access public
 	 * @param void
-	 * @return boolean
+	 * @return mixed
 	 */
     public function isFile()
     {
-        if ( $this->path && is_file($this->path) ) {
-            return true;
-        }
-        return false;
+    	if ( $this->isExists() ) {
+    		return is_file($this->path);
+    	}
+        return null;
     }
 
+	/**
+	 * Check file empty
+	 *
+	 * @access public
+	 * @param void
+	 * @return mixed
+	 */
+	public function isEmpty()
+	{
+		if ( $this->isExists() ) {
+			return ($this->size == 0);
+		}
+		return null;
+	}
+
+	/**
+	 * Check file readable
+	 *
+	 * @access public
+	 * @param void
+	 * @return mixed
+	 */
+	public function isReadable()
+	{
+		if ( $this->isExists() ) {
+			return ($this->open('r') !== false);
+		}
+		return null;
+	}
+
+	/**
+	 * Check file writable
+	 *
+	 * @access public
+	 * @param void
+	 * @return mixed
+	 */
+	public function isWritable()
+	{
+		if ( $this->isExists() ) {
+			return is_writable($this->path);
+		}
+		return null;
+	}
+	
     /**
      * Add directory
 	 *
 	 * @access public
-	 * @param string $dir
-	 * @param int $mode
-	 * @param boolean $recursive
-	 * @return boolean
+	 * @param string $path
+	 * @param int $permissions
+	 * @param bool $recursive
+	 * @return bool
 	 */
-    public function addDir($dir, $mode = 0755, $recursive = true)
+    public static function addDir($path = null, $permissions = 0755, $recursive = true)
     {
-    	if ( !is_file($dir) && !is_dir($dir) ) {
-    		if ( @mkdir($dir, $mode, $recursive) ) {
+    	if ( !is_file($path) && !self::isDir($path) ) {
+    		if ( @mkdir($path,$permissions,$recursive) ) {
             	return true;
         	}
+    	}
+        return false;
+    }
+
+    /**
+     * Check directory
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return bool
+	 */
+    public static function isDir($path = null)
+    {
+    	if ( self::exists($path) && is_dir($path) ) {
+    		return true;
     	}
         return false;
     }
@@ -376,12 +529,12 @@ class File // implements FileInterface
 	 *
 	 * @access public
 	 * @param string $dir
-	 * @return boolean
+	 * @return bool
 	 */
-    public function removeDir($dir)
+    public static function removeDir($path)
     {
-    	if ( !is_file($dir) && is_dir($dir) ) {
-    		if ( @rmdir($dir) ) {
+    	if ( self::isDir($path) ) {
+    		if ( @rmdir($path) ) {
             	return true;
         	}
     	}
@@ -389,35 +542,35 @@ class File // implements FileInterface
     }
 
     /**
-     * Remove directory content
+     * Clear directory from content
 	 *
 	 * @access public
-	 * @param string $dir
-	 * @return boolean
+	 * @param string $path
+	 * @return bool
 	 */
-    public function emptyDir($dir)
+    public static function clearDir($path)
     {
 		$handler = false;
-		if ( is_dir($dir) ) {
-			$handler = opendir($dir);
+		if ( self::isDir($path) ) {
+			$handler = opendir($path);
 		}
 		if ( !$handler ) {
 			return false;
 		}
 	   	while( $file = readdir($handler) ) {
-			if ($file !== '.' && $file !== '..') {
-			    if ( !is_dir($dir.'/'.$file) ) {
-			    	@unlink($dir.'/'.$file);
+			if ( $file !== '.' && $file !== '..' ) {
+			    if ( !self::isDir("{$path}/{$file}") ) {
+			    	@unlink("{$path}/{$file}");
 			    } else {
-			    	$dir = $dir.'/'.$file;
+			    	$dir = "{$path}/{$file}";
 				    foreach( scandir($dir) as $file ) {
 				        if ( '.' === $file || '..' === $file ) {
 				        	continue;
 				        }
-				        if ( is_dir("{$dir}/{$file}") ) {
-				        	$this->recursiveRemove("{$dir}/{$file}");
+				        if ( self::isDir("{$dir}/{$file}") ) {
+				        	self::recursiveRemove("{$dir}/{$file}");
 				        } else {
-				        	unlink("{$dir}/{$file}");
+				        	@unlink("{$dir}/{$file}");
 				        }
 				    }
 				    @rmdir($dir);
@@ -429,57 +582,38 @@ class File // implements FileInterface
     }
 
 	/**
-	 * Check File Exists
-	 *
-	 * @access public
-	 * @param void
-	 * @return boolean
+	 * @access private
+	 * @param string $path
+	 * @return void
 	 */
-	public function exists()
+	private static function recursiveRemove($path)
 	{
-		if ( $this->isFile() && file_exists($this->path) ) {
-			return true;
+		if ( self::isDir($path) ) {
+			$objects = scandir($path);
+			foreach ($objects as $object) {
+				if ( $object !== '.' && $object !== '..' ) {
+					if ( filetype("{$path}/{$object}") == 'dir' ) {
+						self::recursiveRemove("{$path}/{$object}");
+					} else {
+						@unlink("{$path}/{$object}");
+					}
+				}
+			}
+			reset($objects);
+			@rmdir($path);
 		}
-		return false;
 	}
 
 	/**
-	 * Check file readable
+	 * Check File Exists without stream
 	 *
 	 * @access public
-	 * @param void
-	 * @return boolean
+	 * @param string $path
+	 * @return bool
 	 */
-	public function isReadable()
+	public static function exists($path)
 	{
-		if ( $this->path && !fopen($this->path, 'r') === false ) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Check file writable
-	 *
-	 * @access public
-	 * @param void
-	 * @return boolean
-	 */
-	public function isWritable()
-	{
-		return is_writable($this->path) ? true : false;
-	}
-
-	/**
-	 * Check file empty
-	 *
-	 * @access public
-	 * @param void
-	 * @return boolean
-	 */
-	public function isEmpty()
-	{
-		if ( $this->exists($this->path) && filesize($this->path) == 0 ) {
+		if ( file_exists($path) ) {
 			return true;
 		}
 		return false;
@@ -494,7 +628,7 @@ class File // implements FileInterface
 	 */
 	public static function r($path)
 	{
-		return file_get_contents($path);
+		return @file_get_contents($path);
 	}
 
 	/**
@@ -502,16 +636,16 @@ class File // implements FileInterface
 	 *
 	 * @access public
 	 * @param string $path
-	 * @param string $input empty
-	 * @param string $append false
+	 * @param string $input
+	 * @param string $append
 	 * @return mixed
 	 */
 	public static function w($path, $input = '', $append = false)
 	{
 		$flag = 0;
-		if ($append) {
+		if ( $append ) {
 			$flag = FILE_APPEND;
 		}
-		return file_put_contents($path, $input, $flag);
+		return @file_put_contents($path,$input,$flag);
 	}
 }

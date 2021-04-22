@@ -23,7 +23,7 @@
   },
   "autoload": {
     "psr-4" : {
-      "floatPHP\\Classes\\" : "src/"
+      "FloatPHP\\Classes\\" : "src/"
     }
   }
 }

@@ -3,26 +3,25 @@
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
  * @subpackage: Classes Auth Component
- * @version   : 1.1.0
+ * @version   : 1.0.0
  * @category  : PHP framework
- * @copyright : (c) JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link      : https://www.floatphp.com
  * @license   : MIT License
  *
  * This file if a part of FloatPHP Framework
  */
 
-namespace floatPHP\Classes\Auth;
+namespace FloatPHP\Classes\Auth;
 
-class Session
+final class Session
 {
     /**
      * @param void
-     * @return void
      */
     public function __construct()
     {
-        if ( !isset($_SESSION) ) {
+        if ( !$this->isSetted() ) {
             session_start();
         }
     }
@@ -30,25 +29,27 @@ class Session
     /**
      * Register the session
      *
-     * @param int $time
+     * @access public
+     * @param int $time 60
      * @return void
      */
     public function register($time = 60)
     {
-        $_SESSION['session_id'] = session_id();
-        $_SESSION['session_time'] = intval($time);
-        $_SESSION['session_start'] = $this->newTime();
+        $this->set('session_id', session_id());
+        $this->set('session_time', intval($time));
+        $this->set('session_start', $this->newTime());
     }
 
     /**
-     * Checks to see if the session is registered
+     * Check if session is registered
      *
+     * @access public
      * @param void
-     * @return boolean
+     * @return bool
      */
     public function isRegistered()
     {
-        if (! empty($_SESSION['session_id'])) {
+        if ( !empty($this->get('session_id')) ) {
             return true;
         } else {
             return false;
@@ -56,8 +57,9 @@ class Session
     }
 
     /**
-     * Set key/value in session
+     * Set key in session
      *
+     * @access public
      * @param mixed $key
      * @param mixed $value
      * @return void
@@ -70,17 +72,36 @@ class Session
     /**
      * Retrieve value stored in session by key
      *
+     * @access public
      * @param string $key
      * @return mixed
      */
     public function get($key)
     {
-        return isset($_SESSION[$key]) ? $_SESSION[$key] : false;
+        return $this->isSetted($key) ? $_SESSION[$key] : false;
     }
 
     /**
-     * Retrieve the global session variable
+     * Check key exists
      *
+     * @access public
+     * @param string $key null
+     * @return bool
+     */
+    public function isSetted($key = null)
+    {
+        if ( $key ) {
+            return isset($_SESSION[$key]);
+        } else {
+            return isset($_SESSION);
+        }
+    }
+
+    /**
+     * Retrieve global session variable
+     *
+     * @access public
+     * @param void
      * @return array
      */
     public function getSession()
@@ -89,71 +110,101 @@ class Session
     }
 
     /**
-     * Gets the id for the current session
+     * Get id for current session
      *
-     * @return integer - session id
+     * @access public
+     * @param void
+     * @return int
      */
     public function getSessionId()
     {
-        return $_SESSION['session_id'];
+        return $this->get('session_id');
     }
 
     /**
-     * Checks to see if the session is over based on the amount of time given
+     * Check if session is over
      *
-     * @return boolean
-    */
+     * @access public
+     * @param void
+     * @return bool
+     */
     public function isExpired()
     {
-        if ($_SESSION['session_start'] < $this->timeNow() ) {
+        if ( $this->get('session_start') < $this->timeNow() ) {
             return false;
         } else {
-            return false;
+            return true;
         }
     }
 
     /**
-     * Renews the session when the given time is not up and there is activity on the site.
+     * Renew session when the given time is not up
+     *
+     * @access public
+     * @param void
+     * @return void
      */
     public function renew()
     {
-        $_SESSION['session_start'] = $this->newTime();
+        $this->set('session_start', $this->newTime());
     }
 
     /**
-     * Returns the current time
+     * Return current time
      *
+     * @access public
+     * @param void
      * @return unix timestamp
      */
     private function timeNow()
     {
         $currentHour = date('H');
-        $currentMin = date('i');
-        $currentSec = date('s');
-        $currentMon = date('m');
-        $currentDay = date('d');
+        $currentMin  = date('i');
+        $currentSec  = date('s');
+        $currentMon  = date('m');
+        $currentDay  = date('d');
         $currentYear = date('y');
-        return mktime($currentHour, $currentMin, $currentSec, $currentMon, $currentDay, $currentYear);
+        return mktime(
+            $currentHour,
+            $currentMin,
+            $currentSec,
+            $currentMon,
+            $currentDay,
+            $currentYear
+        );
     }
 
     /**
      * Generates new time
      *
+     * @access public
+     * @param void
      * @return unix timestamp
      */
     private function newTime()
     {
         $currentHour = date('H');
-        $currentMin = date('i');
-        $currentSec = date('s');
-        $currentMon = date('m');
-        $currentDay = date('d');
+        $currentMin  = date('i');
+        $currentSec  = date('s');
+        $currentMon  = date('m');
+        $currentDay  = date('d');
         $currentYear = date('y');
-        return mktime($currentHour, ($currentMin + $_SESSION['session_time']), $currentSec, $currentMon, $currentDay, $currentYear);
+        return mktime(
+            $currentHour,
+            ($currentMin + $this->get('session_time')),
+            $currentSec,
+            $currentMon,
+            $currentDay,
+            $currentYear
+        );
     }
 
     /**
-     * Destroys the session
+     * Destroy session
+     *
+     * @access public
+     * @param void
+     * @return void
      */
     public function end()
     {

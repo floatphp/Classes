@@ -3,22 +3,21 @@
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
  * @subpackage: Classes Filesystem Component
- * @version   : 1.1.0
+ * @version   : 1.0.0
  * @category  : PHP framework
- * @copyright : (c) JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link      : https://www.floatphp.com
  * @license   : MIT License
  *
  * This file if a part of FloatPHP Framework
  */
 
-namespace floatPHP\Classes\Filesystem;
+namespace FloatPHP\Classes\Filesystem;
 
-class Json extends File
+final class Json extends File
 {
 	/**
 	 * @param string $path
-	 * @return void
 	 */
 	public function __construct($path)
 	{
@@ -30,12 +29,12 @@ class Json extends File
 	 * Parse JSON object
 	 *
 	 * @access public
-	 * @param boolean $isArray
+	 * @param bool $isArray
 	 * @return mixed
 	 */
 	public function parse($isArray = false)
 	{
-		return self::decode($this->getContent(), $isArray);
+		return self::decode($this->getContent(),$isArray);
 	}
 
 	/**
@@ -43,12 +42,12 @@ class Json extends File
 	 *
 	 * @access public
 	 * @param string $content
-	 * @param boolean $isArray
+	 * @param bool $isArray
 	 * @return mixed
 	 */
 	public static function decode($content, $isArray = false)
 	{
-		return json_decode($content, $isArray);
+		return json_decode($content,$isArray);
 	}
 
 	/**
@@ -64,17 +63,19 @@ class Json extends File
 	}
 
 	/**
-	 * Format encoded JSON
+	 * Format JSON For WordPress
 	 *
 	 * @access public
 	 * @param mixen $data
+	 * @param int $args
 	 * @return string
 	 *
 	 * JSON_UNESCAPED_UNICODE : 256
+	 * JSON_PRETTY_PRINT : 128
 	 * JSON_UNESCAPED_SLASHES : 64
 	 */
-	public static function format($data)
+	public static function format($data, $args = 64|256)
 	{
-		return json_encode($data, 64|256);
+		return json_encode($data,$args);
 	}
 }

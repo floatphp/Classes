@@ -14,7 +14,7 @@
 
 namespace FloatPHP\Classes\Http;
 
-final class Get
+final class Request
 {
 	/**
 	 * @access public
@@ -24,9 +24,9 @@ final class Get
 	public static function get($item = null)
 	{
 		if ( $item ) {
-			return self::isSetted($item) ? $_GET[$item] : false;
+			return self::isSetted($item) ? $_REQUEST[$item] : false;
 		} else {
-			return $_GET;
+			return $_REQUEST;
 		}
 	}
 
@@ -38,7 +38,7 @@ final class Get
 	 */
 	public static function set($item, $value)
 	{
-		$_GET[$item] = $value;
+		$_REQUEST[$item] = $value;
 	}
 	
 	/**
@@ -49,9 +49,9 @@ final class Get
 	public static function isSetted($item = null)
 	{
 		if ( $item ) {
-			return isset($_GET[$item]);
+			return isset($_REQUEST[$item]);
 		} else {
-			return isset($_GET);
+			return isset($_REQUEST);
 		}
 	}
 }

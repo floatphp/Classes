@@ -3,16 +3,16 @@
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
  * @subpackage: Classes Html Component
- * @version   : 1.1.0
+ * @version   : 1.0.0
  * @category  : PHP framework
- * @copyright : (c) JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
  * @link      : https://www.floatphp.com
  * @license   : MIT License
  *
  * This file if a part of FloatPHP Framework
  */
 
-namespace floatPHP\Classes\Html;
+namespace FloatPHP\Classes\Html;
 
 class Hooks
 {
@@ -98,7 +98,7 @@ class Hooks
    * @param string $tag
    * @param string|array $callableToRemove
    * @param int $priority PRIORITY(50)
-   * @return boolean
+   * @return bool
    */
   public function removeFilter($tag, $callableToRemove, $priority = self::PRIORITY)
   {
@@ -120,7 +120,7 @@ class Hooks
    * @access public
    * @param string $tag
    * @param int $priority false
-   * @return boolean
+   * @return bool
    */
   public function removeFilters($tag, $priority = false)
   {
@@ -783,12 +783,7 @@ class Hooks
     }
     $pattern = $this->getShortcodeRegex();
     return preg_replace_callback(
-        "/$pattern/s",
-        array(
-            $this,
-            'stripShortcodeTag',
-        ),
-        $content
+      "/$pattern/s",[$this,'stripShortcodeTag'],$content
     );
   }
 
