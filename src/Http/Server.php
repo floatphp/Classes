@@ -192,12 +192,36 @@ final class Server
 	 * @param void
 	 * @return bool
 	 */
-	public static function isAuth()
+	public static function isBasicAuth()
 	{
-		if ( isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW']) ) {
+		if ( self::isSetted('PHP_AUTH_USER') && self::isSetted('PHP_AUTH_PW') ) {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Get authentication user
+	 *
+	 * @access public
+	 * @param void
+	 * @return string
+	 */
+	public static function getBasicAuthUser()
+	{
+		return self::isSetted('PHP_AUTH_USER') ? self::get('PHP_AUTH_USER') : '';
+	}
+
+	/**
+	 * Get authentication password
+	 *
+	 * @access public
+	 * @param void
+	 * @return string
+	 */
+	public static function getBasicAuthPwd()
+	{
+		return self::isSetted('PHP_AUTH_PW') ? self::get('PHP_AUTH_PW') : '';
 	}
 
 	/**

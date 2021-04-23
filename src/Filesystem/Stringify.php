@@ -182,14 +182,15 @@ final class Stringify
 	 *
 	 * @access public
 	 * @param string $path
+	 * @param bool $untrailing
 	 * @return string
 	 */
-	public static function formatPath($path)
+	public static function formatPath($path, $untrailing = false)
 	{
 	    $wrapper = '';
 	    // Stream format
 	    if ( TypeCheck::isStream($path) ) {
-	        list( $wrapper, $path ) = explode('://',$path,2);
+	        list($wrapper,$path) = explode('://',$path,2);
 	        $wrapper .= '://';
 	    }
 	    // Paths format
@@ -199,6 +200,10 @@ final class Stringify
 	    // Windows format
 	    if ( substr($path,1,1) === ':' ) {
 	        $path = ucfirst($path);
+	    }
+	    // Untrailing Slash
+	    if ( $untrailing ) {
+	    	return Stringify::untrailingSlash("{$wrapper}{$path}");
 	    }
 	    return "{$wrapper}{$path}";
 	}
@@ -246,6 +251,26 @@ final class Stringify
 			return utf8_decode($string);
 		}
 		return @iconv(self::uppercase($from), self::uppercase($to), $string);
+	}
+
+	/**
+	 * @access public
+	 * @param string $string
+	 * @return string
+	 */
+	public static function untrailingSlash($string)
+	{
+	    return rtrim($string,'/\\');
+	}
+
+	/**
+	 * @access public
+	 * @param string $string
+	 * @return string
+	 */
+	public static function trailingSlash($string)
+	{
+	    return self::untrailingSlash($string) . '/';
 	}
 
 	/**

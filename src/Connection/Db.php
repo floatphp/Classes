@@ -15,6 +15,7 @@
 namespace FloatPHP\Classes\Connection;
 
 use FloatPHP\Classes\Filesystem\Logger;
+use FloatPHP\Classes\Filesystem\TypeCheck;
 use \PDOException;
 use \PDO;
 
@@ -42,44 +43,12 @@ class Db
      * Connect to database
      *
      * @param array $config
-     * @return void
      */
     public function __construct($config = [])
     {
         $this->log = new Logger();
         $this->connect($config);
         $this->parameters = [];
-    }
-
-    /**
-     * Connect to database
-     *
-     * @param array $config
-     * @return void
-     */
-    private function connect($config = [])
-    {
-        try {
-            // Read settings & set PDO params
-            $dsn = "mysql:dbname={$config['db']};host={$config['host']};port={$config['port']}";
-            $this->pdo = new PDO($dsn,$config['user'], $config['pswd'], [
-                PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'
-            ]);
-
-            // log any exceptions on Fatal error
-            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
-            // Disable emulation of prepared statements
-            $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-            
-            // Connection succeeded
-            $this->isConnected = true;
-
-        } catch (PDOException $e) {
-            // Write into logs
-            echo $this->ExceptionLog($e->getMessage());
-            die();
-        }
     }
     
     /**
@@ -92,62 +61,6 @@ class Db
     public function close()
     {
         $this->pdo = null;
-    }
-    
-    /**
-     *  Every method which needs to execute a SQL query uses this method
-     *
-     * @access public
-     * @param void
-     * @return void
-     */
-    private function Init($query, $parameters = [])
-    {
-        # Connect to database
-        if ( !$this->isConnected ) {
-            $this->connect();
-        }
-        try {
-            // Prepare query
-            $this->query = $this->pdo->prepare($query);
-            
-            // Add parameters to the parameter array 
-            $this->bindMore($parameters);
-            
-            // Bind parameters
-            if ( !empty($this->parameters) ) {
-
-                foreach ($this->parameters as $param => $value) {
-
-                    if ( is_int($value[1]) ) {
-                        $type = PDO::PARAM_INT;
-
-                    } elseif ( is_bool($value[1]) ) {
-                        $type = PDO::PARAM_BOOL;
-
-                    } elseif ( is_null($value[1]) ) {
-                        $type = PDO::PARAM_NULL;
-
-                    } else {
-                        $type = PDO::PARAM_STR;
-                    }
-
-                    // Add type when binding the values to the column
-                    $this->query->bindValue($value[0],$value[1],$type);
-                }
-            }
-            
-            // Execute SQL 
-            $this->query->execute();
-
-        } catch (PDOException $e) {
-            // Write into log and display Exception
-            echo $this->ExceptionLog($e->getMessage(), $query);
-            die();
-        }
-        
-        // Reset the parameters
-        $this->parameters = [];
     }
 
     /**
@@ -172,7 +85,7 @@ class Db
      */
     public function bindMore($params)
     {
-        if ( empty($this->parameters) && is_array($params) ) {
+        if ( empty($this->parameters) && TypeCheck::isArray($params) ) {
             $columns = array_keys($params);
             foreach ($columns as $i => &$column) {
                 $this->bind($column, $params[$column]);
@@ -187,28 +100,30 @@ class Db
      * @param string $query
      * @param array $params null
      * @param const $fetchmode
-     * @return void
+     * @return mixed
      */
     public function query($query, $params = null, $fetchmode = PDO::FETCH_ASSOC)
     {
-        $query = trim(str_replace("\r", " ", $query));
-        $this->Init($query, $params);
-        $rawStatement = explode(" ", preg_replace("/\s+|\t+|\n+/", " ", $query));
-        
+        $query = trim(Stringify::replace("\r"," ",$query));
+        $this->Init($query,$params);
+        $rawStatement = explode(" ",Stringify::replaceRegex("/\s+|\t+|\n+/"," ",$query));
         // Which SQL statement is used
         $statement = strtolower($rawStatement[0]);
-        
         if ( $statement === 'select' || $statement === 'show' ) {
             return $this->query->fetchAll($fetchmode);
-
-        } elseif ($statement === 'insert' || $statement === 'update' || $statement === 'delete') {
+        } elseif ( $statement === 'insert' || $statement === 'update' || $statement === 'delete' ) {
             return $this->query->rowCount();
-
-        } else {
-            return null;
         }
+        return null;
     }
-    
+
+    /**
+     * Get last insert Id
+     *
+     * @access public
+     * @param void
+     * @return bool
+     */
     public function lastInsertId()
     {
         return $this->pdo->lastInsertId();
@@ -216,6 +131,9 @@ class Db
     
     /**
      * Starts the transaction
+     *
+     * @access public
+     * @param void
      * @return bool
      */
     public function beginTransaction()
@@ -224,8 +142,11 @@ class Db
     }
     
     /**
-     *  Execute Transaction
-     *  @return bool
+     * Execute Transaction
+     *
+     * @access public
+     * @param void
+     * @return bool
      */
     public function executeTransaction()
     {
@@ -233,8 +154,11 @@ class Db
     }
     
     /**
-     *  Rollback of Transaction
-     *  @return bool
+     * Rollback of Transaction
+     *
+     * @access public
+     * @param void
+     * @return bool
      */
     public function rollBack()
     {
@@ -242,15 +166,16 @@ class Db
     }
     
     /**
-     *  Returns an array which represents a column from the result set 
+     * Returns an array which represents a column from the result set 
      *
-     *  @param string $query
-     *  @param array $params
-     *  @return array
+     * @access public
+     * @param string $query
+     * @param array $params
+     * @return array
      */
     public function column($query, $params = null)
     {
-        $this->Init($query, $params);
+        $this->Init($query,$params);
         $columns = $this->query->fetchAll(PDO::FETCH_NUM);
         $column = null;
         foreach ($columns as $cells) {
@@ -260,12 +185,13 @@ class Db
     }
 
     /**
-     *  Returns an array which represents a row from the result set 
+     * Returns an array which represents a row from the result set 
      *
-     *  @param string $query
-     *  @param array $params
-     *  @param int $fetchmode
-     *  @return array
+     * @access public
+     * @param string $query
+     * @param array $params
+     * @param int $fetchmode
+     * @return array
      */
     public function row($query, $params = null, $fetchmode = PDO::FETCH_ASSOC)
     {
@@ -278,9 +204,10 @@ class Db
     /**
      *  Returns the value of one single field/column
      *
-     *  @param  string $query
-     *  @param  array  $params
-     *  @return string
+     * @access public
+     * @param string $query
+     * @param array $params
+     * @return string
      */
     public function single($query, $params = null)
     {
@@ -290,11 +217,91 @@ class Db
         return $result;
     }
 
+    /**
+     * Connect to database
+     *
+     * @access private
+     * @param array $config
+     * @return void
+     */
+    private function connect($config = [])
+    {
+        try {
+            // Read settings & set PDO params
+            $db   = isset($config['db']) ? (string) $config['db'] : '';
+            $host = isset($config['host']) ? (string) $config['host'] : '';
+            $port = isset($config['port']) ? (int) $config['port'] : '';
+            $user = isset($config['user']) ? (string) $config['user'] : '';
+            $pswd = isset($config['pswd']) ? (string) $config['pswd'] : '';
+
+            $dsn = "mysql:dbname={$db};host={$host};port={$port}";
+            $this->pdo = new PDO($dsn,$user,$pswd,[
+                PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'
+            ]);
+            // log any exceptions on Fatal error
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            // Disable emulation of prepared statements
+            $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
+            // Connection succeeded
+            $this->isConnected = true;
+        } catch (PDOException $e) {
+            // Write into logs
+            echo $this->ExceptionLog($e->getMessage());
+            die();
+        }
+    }
+
+    /**
+     * Every method which needs to execute a SQL query uses this method
+     *
+     * @access public
+     * @param void
+     * @return void
+     */
+    private function Init($query, $parameters = [])
+    {
+        // Connect to database
+        if ( !$this->isConnected ) {
+            $this->connect();
+        }
+        try {
+            // Prepare query
+            $this->query = $this->pdo->prepare($query);
+            // Add parameters to the parameter array 
+            $this->bindMore($parameters);
+            // Bind parameters
+            if ( !empty($this->parameters) ) {
+                foreach ($this->parameters as $param => $value) {
+                    if ( TypeCheck::isInt($value[1]) ) {
+                        $type = PDO::PARAM_INT;
+                    } elseif ( TypeCheck::isBool($value[1]) ) {
+                        $type = PDO::PARAM_BOOL;
+                    } elseif ( TypeCheck::isNull($value[1]) ) {
+                        $type = PDO::PARAM_NULL;
+                    } else {
+                        $type = PDO::PARAM_STR;
+                    }
+                    // Add type when binding the values to the column
+                    $this->query->bindValue($value[0],$value[1],$type);
+                }
+            }
+            // Execute SQL 
+            $this->query->execute();
+        } catch (PDOException $e) {
+            // Write into log and display Exception
+            echo $this->ExceptionLog($e->getMessage(), $query);
+            die();
+        }
+        // Reset the parameters
+        $this->parameters = [];
+    }
+
     /** 
      * Writes the log and returns the exception
      *
-     * @param  string $message
-     * @param  string $sql
+     * @access private
+     * @param string $message
+     * @param string $sql
      * @return string
      */
     private function ExceptionLog($message, $sql = '')

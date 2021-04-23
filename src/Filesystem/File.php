@@ -648,4 +648,18 @@ class File
 		}
 		return @file_put_contents($path,$input,$flag);
 	}
+
+	/**
+	 * Parse ini file
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param bool $sections
+	 * @param int $mode
+	 * @return mixed
+	 */
+	public static function parseIni($path, $sections = false, $mode = INI_SCANNER_NORMAL)
+	{
+		return parse_ini_file($path,$sections,$mode);
+	}
 }

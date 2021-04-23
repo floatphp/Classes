@@ -21,7 +21,7 @@ final class Session
      */
     public function __construct()
     {
-        if ( !$this->isSetted() ) {
+        if ( !self::isSetted() ) {
             session_start();
         }
     }
@@ -35,9 +35,9 @@ final class Session
      */
     public function register($time = 60)
     {
-        $this->set('session_id', session_id());
-        $this->set('session_time', intval($time));
-        $this->set('session_start', $this->newTime());
+        self::set('session-id', session_id());
+        self::set('session-time', intval($time));
+        self::set('session-start', $this->newTime());
     }
 
     /**
@@ -49,7 +49,7 @@ final class Session
      */
     public function isRegistered()
     {
-        if ( !empty($this->get('session_id')) ) {
+        if ( !empty(self::get('session-id')) ) {
             return true;
         } else {
             return false;
@@ -64,7 +64,7 @@ final class Session
      * @param mixed $value
      * @return void
      */
-    public function set($key, $value)
+    public static function set($key, $value)
     {
         $_SESSION[$key] = $value;
     }
@@ -76,7 +76,7 @@ final class Session
      * @param string $key
      * @return mixed
      */
-    public function get($key)
+    public static function get($key)
     {
         return $this->isSetted($key) ? $_SESSION[$key] : false;
     }
@@ -85,10 +85,10 @@ final class Session
      * Check key exists
      *
      * @access public
-     * @param string $key null
+     * @param string $key
      * @return bool
      */
-    public function isSetted($key = null)
+    public static function isSetted($key = null)
     {
         if ( $key ) {
             return isset($_SESSION[$key]);
@@ -104,7 +104,7 @@ final class Session
      * @param void
      * @return array
      */
-    public function getSession()
+    public static function getSession()
     {
         return $_SESSION;
     }
@@ -118,7 +118,7 @@ final class Session
      */
     public function getSessionId()
     {
-        return $this->get('session_id');
+        return self::get('session-id');
     }
 
     /**
@@ -130,7 +130,7 @@ final class Session
      */
     public function isExpired()
     {
-        if ( $this->get('session_start') < $this->timeNow() ) {
+        if ( self::get('session-start') < $this->timeNow() ) {
             return false;
         } else {
             return true;
@@ -146,7 +146,7 @@ final class Session
      */
     public function renew()
     {
-        $this->set('session_start', $this->newTime());
+        self::set('session-start', $this->newTime());
     }
 
     /**
@@ -191,7 +191,7 @@ final class Session
         $currentYear = date('y');
         return mktime(
             $currentHour,
-            ($currentMin + $this->get('session_time')),
+            ($currentMin + self::get('session-time')),
             $currentSec,
             $currentMon,
             $currentDay,

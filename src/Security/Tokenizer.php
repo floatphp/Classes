@@ -14,7 +14,7 @@
 
 namespace FloatPHP\Classes\Security;
 
-final class Tokenizer extends Encryption
+final class Tokenizer
 {
     /**
      * @access private
@@ -69,5 +69,16 @@ final class Tokenizer extends Encryption
             $token .= $this->range[$this->getFromRange(0, strlen($this->range))];
         }
         return $token;
+    }
+
+    /**
+     * @access public
+     * @param string $password
+     * @param string $hash
+     * @return bool
+     */
+    public static function isValidPassword($password, $hash)
+    {
+        return password_verify($password,$hash);
     }
 }
