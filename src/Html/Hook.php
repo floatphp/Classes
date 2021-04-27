@@ -14,6 +14,8 @@
 
 namespace FloatPHP\Classes\Html;
 
+use FloatPHP\Classes\Filesystem\TypeCheck;
+
 class Hook
 {
 	/**
@@ -32,17 +34,7 @@ class Hook
 	 * @access private
 	 * @var int const PRIORITY
 	 */
-	const PRIORITY = 50;
-
-	/**
-	 * Prevent object construction
-	 *
-	 * @param void
-	 */
-	public function __construct()
-	{
-		die(__METHOD__.': Construct denied');
-	}
+	private const PRIORITY = 50;
 
 	/**
 	 * Prevent object clone
@@ -67,13 +59,14 @@ class Hook
 	/**
 	 * Returns a Singleton instance of this class
 	 *
+	 * @access public
 	 * @param void
 	 * @return object Hook
 	 */
 	public static function getInstance()
 	{
 		static $instance;
-		if ( null === $instance ) {
+		if ( $instance === null ) {
 			$instance = new self();
 		}
 		return $instance;
@@ -84,17 +77,17 @@ class Hook
 	 *
 	 * @access public
 	 * @param string $tag
-	 * @param string|array $callableTodo
+	 * @param string|array $callable
 	 * @param int $priority
 	 * @param string $path
 	 * @return true
 	 */
-	public function addFilter($tag, $callableTodo, $priority = self::PRIORITY, $path = null)
+	public function addFilter($tag, $callable, $priority = self::PRIORITY, $path = null)
 	{
-		$id = $this->filterUniqueId($callableTodo);
+		$id = $this->filterUniqueId($callable);
 		$this->filters[$tag][$priority][$id] = [
-			'callable' => $callableTodo,
-			'path'     => is_string($path) ? $path : null
+			'callable' => $callable,
+			'path'     => TypeCheck::isString($path) ? $path : null
 		];
 		unset($this->mergedFilters[$tag]);
 		return true;
@@ -105,17 +98,17 @@ class Hook
 	 *
 	 * @access public
 	 * @param string $tag
-	 * @param string|array $callableToRemove
+	 * @param string|array $callable
 	 * @param int $priority
 	 * @return bool
 	 */
-	public function removeFilter($tag, $callableToRemove, $priority = self::PRIORITY)
+	public function removeFilter($tag, $callable, $priority = self::PRIORITY)
 	{
-		$callableToRemove = $this->filterUniqueId($callableToRemove);
-		if ( !isset($this->filters[$tag][$priority][$callableToRemove]) ) {
+		$callable = $this->filterUniqueId($callable);
+		if ( !isset($this->filters[$tag][$priority][$callable]) ) {
 			return false;
 		}
-		unset($this->filters[$tag][$priority][$callableToRemove]);
+		unset($this->filters[$tag][$priority][$callable]);
 		if ( empty($this->filters[$tag][$priority]) ) {
 			unset($this->filters[$tag][$priority]);
 		}
@@ -152,16 +145,16 @@ class Hook
 	 *
 	 * @access public
 	 * @param string $tag
-	 * @param string $callableToCheck false
+	 * @param string $callable
 	 * @return mixed
 	 */
-	public function hasFilter($tag, $callableToCheck = false)
+	public function hasFilter($tag, $callable = false)
 	{
 		$has = isset($this->filters[$tag]);
-		if ( $callableToCheck === false || !$has ) {
+		if ( $callable === false || !$has ) {
 			return $has;
 		}
-		if ( !($id = $this->filterUniqueId($callableToCheck)) ) {
+		if ( !($id = $this->filterUniqueId($callable)) ) {
 			return false;
 		}
 		foreach ( (array)array_keys($this->filters[$tag]) as $priority ) {
@@ -276,9 +269,9 @@ class Hook
 	 * @param array $args
 	 * @return mixed
 	 */
-	public function addAction($tag, $callableTodo, $priority = self::PRIORITY, $path = null)
+	public function addAction($tag, $callable, $priority = self::PRIORITY, $path = null)
 	{
-		return $this->addFilter($tag,$callableTodo,$priority,$path);
+		return $this->addFilter($tag,$callable,$priority,$path);
 	}
 
 	/**
@@ -289,9 +282,9 @@ class Hook
 	 * @param array $args
 	 * @return mixed
 	 */
-	public function hasAction($tag, $callableToCheck = false)
+	public function hasAction($tag, $callable = false)
 	{
-	return $this->hasFilter($tag,$callableToCheck);
+	return $this->hasFilter($tag,$callable);
 	}
 
 	/**
@@ -302,9 +295,9 @@ class Hook
 	 * @param array $args
 	 * @return mixed
 	 */
-	public function removeAction($tag, $callableToRemove, $priority = self::PRIORITY)
+	public function removeAction($tag, $callable, $priority = self::PRIORITY)
 	{
-		return $this->removeFilter($tag,$callableToRemove,$priority);
+		return $this->removeFilter($tag,$callable,$priority);
 	}
 
 	/**
@@ -312,7 +305,7 @@ class Hook
 	 *
 	 * @access public
 	 * @param string $tag
-	 * @param string $callableToCheck false
+	 * @param int $priority
 	 * @return mixed
 	 */
 	public function removeAllActions($tag, $priority = false)
@@ -330,7 +323,7 @@ class Hook
 	 */
 	public function doAction($tag, $arg = '')
 	{
-		if ( !is_array($this->actions) ) {
+		if ( !TypeCheck::isArray($this->actions) ) {
 			$this->actions = [];
 		}
 		if ( !isset($this->actions[$tag]) ) {
@@ -354,7 +347,7 @@ class Hook
 			$this->currentFilter[] = $tag;
 		}
 		$args = [];
-		if ( is_array($arg) && isset($arg[0]) && is_object($arg[0]) && 1 == count($arg) ) {
+		if ( TypeCheck::isArray($arg) && isset($arg[0]) && TypeCheck::isObject($arg[0]) && 1 == count($arg) ) {
 			$args[] =& $arg[0];
 		} else {
 			$args[] = $arg;
@@ -393,7 +386,7 @@ class Hook
 	 */
 	public function doActionArray($tag, $args)
 	{
-		if ( !is_array($this->actions) ) {
+		if ( !TypeCheck::isArray($this->actions) ) {
 			$this->actions = [];
 		}
 		if ( !isset($this->actions[$tag]) ) {
@@ -445,7 +438,7 @@ class Hook
 	 */
 	public function didAction($tag)
 	{
-		if ( !is_array($this->actions) || !isset($this->actions[$tag]) ) {
+		if ( !TypeCheck::isArray($this->actions) || !isset($this->actions[$tag]) ) {
 			return 0;
 		}
 		return $this->actions[$tag];
@@ -455,42 +448,12 @@ class Hook
 	 * Retrieve the name of the current filter or action
 	 *
 	 * @access public
-	 * @param string $tag
-	 * @param string $callableToCheck false
+	 * @param void
 	 * @return mixed
 	 */
 	public function currentFilter()
 	{
 		return end($this->currentFilter);
-	}
-
-	/**
-	 * Build Unique ID for storage and retrieval
-	 *
-	 * @access public
-	 * @param string $callable
-	 * @return mixed
-	 */
-	private function filterUniqueId($callable)
-	{
-		if ( is_string($callable) ) {
-			return $callable;
-		}
-		if ( is_object($callable) ) {
-			// Closures are currently implemented as objects
-			$callable = [$callable,''];
-		} else {
-			$callable = (array)$callable;
-		}
-		if ( is_object($callable[0]) ) {
-			// Object Class Calling
-			return spl_object_hash($callable[0]) . $callable[1];
-		}
-		if ( is_string($callable[0]) ) {
-			// Static Calling
-			return "{$callable[0]}{$callable[1]}";
-		}
-		return false;
 	}
 
 	/**
@@ -525,5 +488,34 @@ class Hook
 	public function callHooksAfter($args)
 	{
 		$this->callHooks($args);
+	}
+	
+	/**
+	 * Build Unique ID for storage and retrieval
+	 *
+	 * @access private
+	 * @param string $callable
+	 * @return mixed
+	 */
+	private function filterUniqueId($callable)
+	{
+		if ( TypeCheck::isString($callable) ) {
+			return $callable;
+		}
+		if ( TypeCheck::isObject($callable) ) {
+			// Closures are currently implemented as objects
+			$callable = [$callable,''];
+		} else {
+			$callable = (array)$callable;
+		}
+		if ( TypeCheck::isObject($callable[0]) ) {
+			// Object Class Calling
+			return spl_object_hash($callable[0]) . $callable[1];
+		}
+		if ( TypeCheck::isString($callable[0]) ) {
+			// Static Calling
+			return "{$callable[0]}{$callable[1]}";
+		}
+		return false;
 	}
 }

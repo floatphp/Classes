@@ -73,12 +73,16 @@ final class Session
      * Retrieve value stored in session by key
      *
      * @access public
-     * @param string $key
+     * @param string $item
      * @return mixed
      */
-    public static function get($key)
+    public static function get($item = null)
     {
-        return $this->isSetted($key) ? $_SESSION[$key] : false;
+        if ( $item ) {
+            return self::isSetted($item) ? $_SESSION[$item] : false;
+        } else {
+            return $_SESSION;
+        }
     }
 
     /**

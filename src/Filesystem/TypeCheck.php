@@ -116,6 +116,37 @@ final class TypeCheck
 
 	/**
 	 * @access public
+	 * @param string $function
+	 * @return bool
+	 */
+	public static function isFunction($function)
+	{
+		return function_exists($function);
+	}
+
+	/**
+	 * @access public
+	 * @param string $class
+	 * @return bool
+	 */
+	public static function isClass($class)
+	{
+		return class_exists($class);
+	}
+
+	/**
+	 * @access public
+	 * @param string $sub
+	 * @param string $class
+	 * @return bool
+	 */
+	public static function isSubClassOf($sub, $class)
+	{
+		return is_subclass_of($sub,$class);
+	}
+
+	/**
+	 * @access public
 	 * @param mixed $data
 	 * @return bool
 	 */

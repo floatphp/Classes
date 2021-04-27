@@ -16,6 +16,7 @@ namespace FloatPHP\Classes\Filesystem;
 
 use Phpfastcache\CacheManager;
 use Phpfastcache\Drivers\Files\Config;
+use Phpfastcache\Config\ConfigurationOption;
 
 /**
  * Wrapper Class for External FileCache
@@ -31,8 +32,8 @@ class FileCache
 	 */
 	private $cache = false;
 	private $adapter = false;
-	private static $config = null;
-	private static $ttl = null;
+	protected static $config = null;
+	protected static $ttl = null;
 
 	/**
 	 * @param void
@@ -50,7 +51,7 @@ class FileCache
 		}
 
 		// Set adapter default params
-		CacheManager::setDefaultConfig(new ConfigurationOption([
+		CacheManager::setDefaultConfig(new Config([
 			'path'               => self::$config['path'],
 			'cacheFileExtension' => self::$config['extension']
 		]));
@@ -95,7 +96,7 @@ class FileCache
 	public function set($data, $tag = null)
 	{
 		$this->cache->set($data)
-		->expiresAfter(self::$config['ttl']);
+		->expiresAfter(self::$ttl);
 		if ( $tag ) {
 			$tag = Stringify::formatKey($tag);
 			$this->cache->addTag($tag);
@@ -114,7 +115,7 @@ class FileCache
 		$key = Stringify::formatKey($key);
 		$this->cache = $this->adapter->getItem($key);
 		$this->cache->set($data)
-		->expiresAfter(self::$config['ttl']);
+		->expiresAfter(self::$ttl);
 		$this->adapter->save($this->cache);
 	}
 
@@ -180,10 +181,10 @@ class FileCache
 
 	/**
 	 * @access public
-	 * @param int $ttl 30
+	 * @param int $ttl
 	 * @return void
 	 */
-	public static function expireIn($ttl = 30)
+	public static function expireIn($ttl = 5)
 	{
 		self::$ttl = intval($ttl);
 	}

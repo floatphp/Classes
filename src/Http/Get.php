@@ -18,7 +18,7 @@ final class Get
 {
 	/**
 	 * @access public
-	 * @param string $item null
+	 * @param string $item
 	 * @return mixed
 	 */
 	public static function get($item = null)

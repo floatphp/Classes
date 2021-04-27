@@ -14,23 +14,15 @@
 
 namespace FloatPHP\Classes\Html;
 
+use FloatPHP\Classes\Filesystem\TypeCheck;
+
 class Shortcode extends Hook
 {
 	/**
 	 * @access public
 	 * @var array $shortcodeTags
 	 */
-	public static $shortcodeTags = [];
-
-	/**
-	 * Prevent object construction
-	 *
-	 * @param void
-	 */
-	public function __construct()
-	{
-		die(__METHOD__.': Construct denied');
-	}
+	public $shortcodeTags = [];
 
 	/**
 	 * Prevent object clone
@@ -63,7 +55,7 @@ class Shortcode extends Hook
 	public function addShortcode($tag, $callable)
 	{
 		if ( is_callable($callable) ) {
-			self::$shortcodeTags[$tag] = $callable;
+			$this->shortcodeTags[$tag] = $callable;
 			return true;
 		}
 		return false;
@@ -78,8 +70,8 @@ class Shortcode extends Hook
 	 */
 	public function removeShortcode($tag)
 	{
-		if ( isset(self::$shortcodeTags[$tag]) ) {
-			unset(self::$shortcodeTags[$tag]);
+		if ( isset($this->shortcodeTags[$tag]) ) {
+			unset($this->shortcodeTags[$tag]);
 			return true;
 		}
 		return false;
@@ -94,7 +86,7 @@ class Shortcode extends Hook
 	 */
 	public function removeAllShortcodes()
 	{
-		self::$shortcodeTags = [];
+		$this->shortcodeTags = [];
 		return true;
 	}
 
@@ -103,12 +95,11 @@ class Shortcode extends Hook
 	 *
 	 * @access public
 	 * @param string $tag
-	 * @param string $callableToCheck false
-	 * @return mixed
+	 * @return bool
 	 */
 	public function shortcodeExists($tag)
 	{
-		return array_key_exists($tag,self::$shortcodeTags);
+		return array_key_exists($tag,$this->shortcodeTags);
 	}
 
 	/**
@@ -146,16 +137,15 @@ class Shortcode extends Hook
 	 *
 	 * @access public
 	 * @param string $tag
-	 * @param string $callableToCheck false
 	 * @return mixed
 	 */
-	public function doShortcode($content)
+	public function doShortcode($tag)
 	{
-		if ( empty(self::$shortcodeTags) || !is_array(self::$shortcodeTags) ) {
-			return $content;
+		if ( empty($this->shortcodeTags) || !TypeCheck::isArray($this->shortcodeTags) ) {
+			return $tag;
 		}
 		$pattern = $this->getShortcodeRegex();
-		return preg_replace_callback("/{$pattern}/s",[$this,'doShortcodeTag'],$content);
+		return preg_replace_callback("/{$pattern}/s",[$this,'doShortcodeTag'],$tag);
 	}
 
 	/**
@@ -167,7 +157,7 @@ class Shortcode extends Hook
 	 */
 	public function getShortcodeRegex()
 	{
-		$tagnames = array_keys(self::$shortcodeTags);
+		$tagnames = array_keys($this->shortcodeTags);
 		$tagregexp = implode('|',array_map('preg_quote',$tagnames));
 		return
 		  '\\['
@@ -205,58 +195,56 @@ class Shortcode extends Hook
 	 *
 	 * @access public
 	 * @param string $tag
-	 * @param string $callableToCheck false
 	 * @return mixed
 	 */
-	private function doShortcodeTag($m)
+	private function doShortcodeTag($tag)
 	{
 		// allow [[foo]] syntax for escaping a tag
-		if ( $m[1] == '[' && $m[6] == ']' ) {
-			return substr($m[0], 1, -1);
+		if ( $tag[1] == '[' && $tag[6] == ']' ) {
+			return substr($tag[0], 1, -1);
 		}
-		$tag = $m[2];
-		$attr = $this->shortcodeParseAtts($m[3]);
+		$tag = $tag[2];
+		$attr = $this->shortcodeParseAtts($tag[3]);
 		// enclosing tag - extra parameter
-		if ( isset($m[5]) ) {
-			return $m[1] . call_user_func(self::$shortcodeTags[$tag],$attr,$m[5],$tag) . $m[6];
+		if ( isset($tag[5]) ) {
+			return $tag[1] . call_user_func($this->shortcodeTags[$tag],$attr,$tag[5],$tag) . $tag[6];
 		}
 		// self-closing tag
-		return $m[1] . call_user_func(self::$shortcodeTags[$tag],$attr,null,$tag) . $m[6];
+		return $tag[1] . call_user_func($this->shortcodeTags[$tag],$attr,null,$tag) . $tag[6];
 	}
 
 	/**
 	 * Retrieve all attributes from the shortcodes tag
 	 *
 	 * @access public
-	 * @param string $tag
-	 * @param string $callableToCheck false
+	 * @param string $content
 	 * @return mixed
 	 */
-	public function shortcodeParseAtts($text)
+	public function shortcodeParseAtts($content)
 	{
 		$atts = [];
 		$pattern = '/(\w+)\s*=\s*"([^"]*)"(?:\s|$)|(\w+)\s*=\s*\'([^\']*)\'(?:\s|$)|(\w+)\s*=\s*([^\s\'"]+)(?:\s|$)|"([^"]*)"(?:\s|$)|(\S+)(?:\s|$)/';
-		$text = preg_replace("/[\x{00a0}\x{200b}]+/u", ' ', $text);
-		if ( preg_match_all($pattern, $text, $match, PREG_SET_ORDER) ) {
-			foreach ($match as $m) {
-				if ( !empty($m[1]) ) {
-					$atts[strtolower($m[1])] = stripcslashes($m[2]);
+		$content = preg_replace("/[\x{00a0}\x{200b}]+/u", ' ', $content);
+		if ( preg_match_all($pattern, $content, $match, PREG_SET_ORDER) ) {
+			foreach ($match as $tag) {
+				if ( !empty($tag[1]) ) {
+					$atts[strtolower($tag[1])] = stripcslashes($tag[2]);
 
-				} elseif ( !empty($m[3]) ) {
-					$atts[strtolower($m[3])] = stripcslashes($m[4]);
+				} elseif ( !empty($tag[3]) ) {
+					$atts[strtolower($tag[3])] = stripcslashes($tag[4]);
 
-				} elseif ( !empty($m[5]) ) {
-					$atts[strtolower($m[5])] = stripcslashes($m[6]);
+				} elseif ( !empty($tag[5]) ) {
+					$atts[strtolower($tag[5])] = stripcslashes($tag[6]);
 
-				} elseif ( isset($m[7]) && $m[7] !== '' ) {
-					$atts[] = stripcslashes($m[7]);
+				} elseif ( isset($tag[7]) && $tag[7] !== '' ) {
+					$atts[] = stripcslashes($tag[7]);
 
-				} elseif ( isset($m[8]) ) {
-					$atts[] = stripcslashes($m[8]);
+				} elseif ( isset($tag[8]) ) {
+					$atts[] = stripcslashes($tag[8]);
 				}
 			}
 		} else {
-			$atts = ltrim($text);
+			$atts = ltrim($content);
 		}
 		return $atts;
 	}
@@ -282,11 +270,7 @@ class Shortcode extends Hook
 			}
 		}
 		if ( $shortcode ) {
-			$out = $this->applyFilter([
-			    $this,
-			    "shortcodeAtts_{$shortcode}"
-			  ], $out, $pairs, $atts
-			);
+			$out = $this->applyFilter([$this,"shortcodeAtts-{$shortcode}"],$out,$pairs,$atts);
 		}
 		return $out;
 	}
@@ -295,13 +279,12 @@ class Shortcode extends Hook
 	 * Remove all shortcode tags from the given content
 	 *
 	 * @access public
-	 * @param string $tag
-	 * @param string $callableToCheck false
-	 * @return mixed
+	 * @param string $content
+	 * @return string
 	 */
 	public function stripShortcodes($content)
 	{
-		if ( empty(self::$shortcodeTags) || !is_array(self::$shortcodeTags) ) {
+		if ( empty($this->shortcodeTags) || !TypeCheck::isArray($this->shortcodeTags) ) {
 			return $content;
 		}
 		$pattern = $this->getShortcodeRegex();
@@ -313,14 +296,13 @@ class Shortcode extends Hook
 	 *
 	 * @access private
 	 * @param string $tag
-	 * @param string $callableToCheck false
-	 * @return mixed
+	 * @return string
 	 */
-	private function stripShortcodeTag($m)
+	private function stripShortcodeTag($tag)
 	{
-		if ( $m[1] == '[' && $m[6] == ']' ) {
-			return substr($m[0], 1, -1);
+		if ( $tag[1] == '[' && $tag[6] == ']' ) {
+			return substr($tag[0], 1, -1);
 		}
-		return $m[1] . $m[6];
+		return "{$tag[1]}{$tag[6]}";
 	}
 }
