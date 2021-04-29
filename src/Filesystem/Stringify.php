@@ -482,6 +482,22 @@ final class Stringify
 
 	/**
 	 * @access private
+	 * @param string $length
+	 * @param string $char
+	 * @return string
+	 */
+	private function randomize($length, $char = '') : string
+	{
+		if ( !$char ) {
+			$char  = implode(range('a','f'));
+			$char .= implode(range('0','9'));
+		}
+		$shuffled = str_shuffle($char);
+		return substr($shuffled,0,$length);
+	}
+
+	/**
+	 * @access private
 	 * @param string $value
 	 * @param callable $callback
 	 * @return string

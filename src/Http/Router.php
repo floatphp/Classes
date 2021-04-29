@@ -14,7 +14,9 @@
 
 namespace FloatPHP\Classes\Http;
 
-final class Router
+use FloatPHP\Interfaces\Classes\RouterInterface;
+
+class Router implements RouterInterface
 {
     /**
      * @access protected
@@ -53,6 +55,7 @@ final class Router
      * Retrieves all routes
      * Useful if you want to process or display routes
      *
+     * @access public
      * @param void
      * @return array
      */
@@ -65,6 +68,7 @@ final class Router
      * Add multiple routes at once from array in the following format
      * $routes = [[$method, $route, $target, $name]]
      *
+     * @access public
      * @param array $routes
      * @return void
      */
@@ -81,6 +85,7 @@ final class Router
     /**
      * Set the base path
      *
+     * @access public
      * @param string $basePath
      * @return void
      */
@@ -92,6 +97,7 @@ final class Router
     /**
      * Add named match types
      *
+     * @access public
      * @param array $matchTypes
      * @return void
      */
@@ -101,10 +107,11 @@ final class Router
     }
 
     /**
-     * Map a route to a target
-     * 5 HTTP Methods, or a pipe-separated list of multiple HTTP Methods (GET|POST|PATCH|PUT|DELETE)
+     * Map route to target
+     * (GET|POST|PATCH|PUT|DELETE)
      * Custom regex must start with an @
      *
+     * @access public
      * @param string $method
      * @param string $route
      * @param mixed $target
@@ -128,6 +135,7 @@ final class Router
      * Reversed routing
      * Generate the URL for a named route
      *
+     * @access public
      * @param string $routeName
      * @param array @params
      * @return string
@@ -167,6 +175,7 @@ final class Router
     /**
      * Match a given Request Url against stored routes
      *
+     * @access public
      * @param string $requestUrl
      * @param string $requestMethod
      * @return array|boolean
@@ -235,6 +244,7 @@ final class Router
     /**
      * Compile the regex for a given route (EXPENSIVE)
      *
+     * @access protected
      * @param $route
      * @return string
      */

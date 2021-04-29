@@ -34,6 +34,24 @@ final class Tokenizer
     }
 
     /**
+     * @access public
+     * @param string $user
+     * @param string $password
+     * @param string $prefix
+     * @return array
+     */
+    public function generateHash($user, $password)
+    {
+        $secret = md5(microtime().rand());
+        $encryption = new Encryption("{$user}:{$password}",$secret);
+        $encryption->setPrefix($prefix);
+        return [
+            'public' => $encryption->encrypt(),
+            'secret' => $secret
+        ];
+    }
+
+    /**
      * @access private
      * @param int $min
      * @param int $max

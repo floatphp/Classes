@@ -103,34 +103,6 @@ final class Server
 	}
 
 	/**
-	 * Get authorization headers
-	 *
-	 * @access private
-	 * @param void
-	 * @return mixed
-	 */
-	public static function getAuthorizationHeaders()
-	{
-        $headers = null;
-        if ( self::isSetted('Authorization') ) {
-            $headers = trim(self::get('Authorization'));
-
-        } elseif ( self::isSetted('HTTP_AUTHORIZATION') ) {
-            $headers = trim(self::get('HTTP_AUTHORIZATION'));
-
-        } elseif ( function_exists('apache_request_headers') ) {
-            $requestHeaders = apache_request_headers();
-            $requestHeaders = array_combine(
-            	array_map('ucwords',array_keys($requestHeaders)),array_values($requestHeaders)
-            );
-            if ( isset($requestHeaders['Authorization']) ) {
-                $headers = trim($requestHeaders['Authorization']);
-            }
-        }
-        return $headers;
-    }
-
-	/**
 	 * Get country code from request headers
 	 *
 	 * @access public
@@ -223,6 +195,46 @@ final class Server
 	{
 		return self::isSetted('PHP_AUTH_PW') ? self::get('PHP_AUTH_PW') : '';
 	}
+
+	/**
+	 * Get authorization header
+	 *
+	 * @access private
+	 * @param void
+	 * @return mixed
+	 */
+	public static function getAuthorizationHeaders()
+	{
+        if ( self::isSetted('Authorization') ) {
+            return trim(self::get('Authorization'));
+
+        } elseif ( self::isSetted('HTTP_AUTHORIZATION') ) {
+            return trim(self::get('HTTP_AUTHORIZATION'));
+
+        } elseif ( function_exists('apache_request_headers') ) {
+            $requestHeaders = apache_request_headers();
+            $requestHeaders = array_combine(
+            	array_map('ucwords',array_keys($requestHeaders)),array_values($requestHeaders)
+            );
+            if ( isset($requestHeaders['Authorization']) ) {
+                return trim($requestHeaders['Authorization']);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @access private
+     * @param void
+     * @return mixed
+     */
+    public static function getBearerToken()
+    {
+        if ( ($headers = self::getAuthorizationHeaders()) ) {
+            return Stringify::match('/Bearer\s(\S+)/',$headers);
+        }
+        return false;
+    }
 
 	/**
 	 * Check protocol is HTTPS

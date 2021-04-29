@@ -14,37 +14,44 @@
 
 namespace FloatPHP\Classes\Security;
 
+use FloatPHP\Classes\Filesystem\Stringify;
+
 class Encryption
 {
 	/**
 	 * @access public
 	 */
-	const VECTOR = 'XRtvQPlFs';
 	const SECRET = 'v6t1pQ97JS';
+	const VECTOR = 'XRtvQPlFs';
 
 	/**
 	 * @access private
-	 * @var string $password
+	 * @var string $data
 	 * @var string $initVector
 	 * @var string $secretKey
+	 * @var int $length
+	 * @var string $prefix
+	 * @var int $options
+	 * @var string $cipher
 	 */
-	private $password;
+	private $data;
 	private $initVector;
 	private $secretKey;
 	private $length;
-	private $prefix = '[floatphp]';
-	private $method = 'AES-256-CBC';
+	private $prefix = '';
+	private $options = 0;
+	private $cipher = 'AES-256-CTR';
 
 	/**
-	 * @param string $password
+	 * @param string $data
 	 * @param string $initVector
 	 * @param string $secretKey
 	 */
-	public function __construct($password, $initVector = self::VECTOR, $secretKey = self::SECRET, $length = 16)
+	public function __construct($data, $secretKey = self::SECRET, $initVector = self::VECTOR, $length = 16)
 	{
-		$this->password = $password;
-		$this->initVector = $initVector;
+		$this->data = $data;
 		$this->secretKey = $secretKey;
+		$this->initVector = $initVector;
 		$this->length = $length;
 		$this->initialize();
 	}
@@ -57,17 +64,28 @@ class Encryption
 	protected function initialize()
 	{
 		$this->secretKey = hash('sha256',$this->secretKey);
-		$this->initVector = substr(hash('sha256',$this->initVector),0,$this->length);
+		$this->initVector = substr(hash('sha256',$this->initVector),$this->options,$this->length);
 	}
 
 	/**
 	 * @access public
-	 * @param string $method
+	 * @param string $cipher
 	 * @param object
 	 */
-	public function setMethod($method)
+	public function setCipher($cipher)
 	{
-		$this->method = $method;
+		$this->cipher = $cipher;
+		return $this;
+	}
+
+	/**
+	 * @access public
+	 * @param string $options
+	 * @param object
+	 */
+	public function setOptions($options)
+	{
+		$this->options = $options;
 		return $this;
 	}
 
@@ -90,7 +108,7 @@ class Encryption
 	public function encrypt()
 	{
 		$crypted = base64_encode(
-			openssl_encrypt($this->password,$this->method,$this->secretKey,0,$this->initVector)
+			openssl_encrypt($this->data,$this->cipher,$this->secretKey,$this->options,$this->initVector)
 		);
 		return "{$this->prefix}{$crypted}";
 	}
@@ -102,9 +120,9 @@ class Encryption
 	 */
 	public function decrypt()
 	{
-		$decrypted = Stringify::replace($this->prefix,'',$this->password);
+		$decrypted = Stringify::replace($this->prefix,'',$this->data);
 		return openssl_decrypt(
-			base64_decode($decrypted),$this->method,$this->secretKey,0,$this->initVector
+			base64_decode($decrypted),$this->cipher,$this->secretKey,$this->options,$this->initVector
 		);
 	}
 
@@ -115,6 +133,6 @@ class Encryption
 	 */
 	public function isCrypted()
 	{
-		return substr($this->password,0,strlen($this->prefix)) === $this->prefix;
+		return substr($this->data,0,strlen($this->prefix)) === $this->prefix;
 	}
 }

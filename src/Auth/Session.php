@@ -30,7 +30,7 @@ final class Session
      * Register the session
      *
      * @access public
-     * @param int $time 60
+     * @param int $time
      * @return void
      */
     public function register($time = 60)
@@ -132,13 +132,12 @@ final class Session
      * @param void
      * @return bool
      */
-    public function isExpired()
+    public function isExpired() : bool
     {
         if ( self::get('session-start') < $this->timeNow() ) {
-            return false;
-        } else {
             return true;
         }
+        return false;
     }
 
     /**
