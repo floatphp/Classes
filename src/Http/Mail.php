@@ -38,15 +38,8 @@ class Mail
     protected $uid;
 
     /**
-     * @return static
-     */
-    public static function make()
-    {
-        return new Mail();
-    }
-
-    /**
      * Resets the class properties
+     * @param void
      */
     public function __construct()
     {
@@ -54,8 +47,22 @@ class Mail
     }
 
     /**
+     * Get instance
+     *
+     * @access public
+     * @param void
+     * @return object
+     */
+    public static function instance()
+    {
+        return new self();
+    }
+
+    /**
      * Resets all properties to initial state
      *
+     * @access public
+     * @param void
      * @return object
      */
     public function reset()
@@ -67,7 +74,7 @@ class Mail
         $this->wrap = 78;
         $this->params = null;
         $this->attachments = [];
-        $this->uid = $this->getUniqueId();
+        $this->uid = Stringify::getUniqueId();
         return $this;
     }
 
@@ -286,7 +293,7 @@ class Mail
     }
 
     /**
-     * addGenericHeader
+     * Add generic header
      *
      * @param string $header
      * @param mixed  $value
@@ -314,19 +321,19 @@ class Mail
     }
 
     /**
-     * setAdditionalParameters
+     * Set additional parameters
      *
-     * @param string $additionalParameters
+     * @param string $params
      * @return object
      */
-    public function setParameters($additionalParameters)
+    public function setParameters($params)
     {
-        $this->params = (string) $additionalParameters;
+        $this->params = (string) $params;
         return $this;
     }
 
     /**
-     * getAdditionalParameters
+     * Get additional parameters
      *
      * @param void
      * @return string
@@ -339,7 +346,7 @@ class Mail
     /**
      * Set The number of characters at which the message will wrap
      *
-     * @param int $wrap 78
+     * @param int $wrap
      * @return object
      */
     public function setWrap($wrap = 78)
@@ -353,7 +360,7 @@ class Mail
     }
 
     /**
-     * getWrap
+     * Get wrap
      *
      * @param void
      * @return int
@@ -385,7 +392,7 @@ class Mail
         $head = [];
         $head[] = "MIME-Version: 1.0";
         $head[] = "Content-Type: multipart/mixed; boundary=\"{$this->uid}\"";
-        return join(PHP_EOL, $head);
+        return join(PHP_EOL,$head);
     }
 
     /**
@@ -408,7 +415,7 @@ class Mail
         foreach ($this->attachments as $attachment) {
             $body[] = $this->getAttachmentMimeTemplate($attachment);
         }
-        return implode(PHP_EOL, $body) . '--';
+        return implode(PHP_EOL,$body) . '--';
     }
 
     /**
@@ -429,19 +436,19 @@ class Mail
         $head[] = $data;
         $head[] = "";
         $head[] = "--{$this->uid}";
-        return implode(PHP_EOL, $head);
+        return implode(PHP_EOL,$head);
     }
 
     /**
-     * send
+     * Send mail
      *
      * @param void
      * @return bool
-     * @throws \RuntimeException on no 'To: ' address to send to.
+     * @throws RuntimeException
      */
     public function send()
     {
-        $to = $this->getToForSend();
+        $to = $this->getMailForSend();
         $headers = $this->getHeadersForSend();
         if (empty($to)) {
             throw new \RuntimeException(
@@ -586,21 +593,19 @@ class Mail
     }
 
     /**
-     * filterOther
-     *
      * Removes ASCII control characters including any carriage return, line
      * feed or tab characters.
      *
-     * @param string $data The data to filter.
+     * @param string $data
      * @return string
      */
     public function filterOther($data)
     {
-        return filter_var($data, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW);
+        return filter_var($data,FILTER_UNSAFE_RAW,FILTER_FLAG_STRIP_LOW);
     }
 
     /**
-     * getHeadersForSend
+     * Get headers for send
      *
      * @param void
      * @return string
@@ -610,36 +615,25 @@ class Mail
         if (empty($this->headers)) {
             return '';
         }
-        return join(PHP_EOL, $this->headers);
+        return join(PHP_EOL,$this->headers);
     }
 
     /**
-     * getToForSend
+     * Get mail for send
      *
      * @param void
      * @return string
      */
-    public function getToForSend()
+    public function getMailForSend()
     {
-        if (empty($this->to)) {
+        if ( empty($this->to) ) {
             return '';
         }
-        return join(', ', $this->to);
+        return join(', ',$this->to);
     }
 
     /**
-     * getUniqueId
-     *
-     * @param void
-     * @return string
-     */
-    public function getUniqueId()
-    {
-        return md5(uniqid(time()));
-    }
-
-    /**
-     * getWrapMessage
+     * Get wrap message
      *
      * @param void
      * @return string

@@ -147,6 +147,18 @@ final class TypeCheck
 
 	/**
 	 * @access public
+	 * @param string $class
+	 * @param string $interface
+	 * @return bool
+	 */
+	public static function hasInterface($class, $interface)
+	{
+		$interfaces = class_implements($class);
+		return Stringify::contains($interfaces,$interface);
+	}
+
+	/**
+	 * @access public
 	 * @param mixed $data
 	 * @return bool
 	 */

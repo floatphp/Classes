@@ -15,6 +15,8 @@
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Interfaces\Classes\RouterInterface;
+use FloatPHP\Classes\Filesystem\Stringify;
+use FloatPHP\Classes\Filesystem\TypeCheck;
 
 class Router implements RouterInterface
 {
@@ -74,7 +76,7 @@ class Router implements RouterInterface
      */
     public function addRoutes($routes)
     {
-        if ( !is_array($routes) && !$routes instanceof Traversable ) {
+        if ( !TypeCheck::isArray($routes) && !$routes instanceof Traversable ) {
             throw new RuntimeException('Routes should be an array or an instance of Traversable');
         }
         foreach ($routes as $route) {
@@ -145,27 +147,27 @@ class Router implements RouterInterface
     {
         // Check if named route exists
         if ( !isset($this->namedRoutes[$routeName]) ) {
-            throw new RuntimeException("Route '{$routeName}' does not exist.");
+            throw new RuntimeException("Route '{$routeName}' does not exist");
         }
         // Replace named parameters
         $route = $this->namedRoutes[$routeName];
         // prepend base path to route url again
         $url = $this->basePath . $route;
-        if ( preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER) ) {
+        if ( $matches = Stringify::matchAll('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`',$route,-1,PREG_SET_ORDER) ) {
             foreach ($matches as $index => $match) {
                 list($block, $pre, $type, $param, $optional) = $match;
                 if ( $pre ) {
-                    $block = substr($block, 1);
+                    $block = substr($block,1);
                 }
                 if ( isset($params[$param]) ) {
                     // Part is found, replace for param value
-                    $url = str_replace($block, $params[$param], $url);
+                    $url = Stringify::replace($block, $params[$param],$url);
                 } elseif ( $optional && $index !== 0 ) {
                     // Only strip preceding slash if it's not at the base
-                    $url = str_replace($pre . $block, '', $url);
+                    $url = Stringify::replace("{$pre}{$block}",'',$url);
                 } else {
                     // Strip match block
-                    $url = str_replace($block, '', $url);
+                    $url = Stringify::replace($block,'',$url);
                 }
             }
         }
@@ -185,7 +187,7 @@ class Router implements RouterInterface
         $params = [];
         // set Request Url if it isn't passed as parameter
         if ( $requestUrl === null ) {
-            $requestUrl = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+            $requestUrl = Server::isSetted('REQUEST_URI') ? Server::get('REQUEST_URI') : '/';
         }
         // strip base path from request url
         $requestUrl = substr($requestUrl, strlen($this->basePath));
@@ -196,11 +198,11 @@ class Router implements RouterInterface
         $lastRequestUrlChar = $requestUrl ? $requestUrl[strlen($requestUrl)-1] : '';
         // set Request Method if it isn't passed as a parameter
         if ( $requestMethod === null ) {
-            $requestMethod = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
+            $requestMethod = Server::isSetted('REQUEST_METHOD') ? Server::get('REQUEST_METHOD') : 'GET';
         }
         foreach ($this->routes as $handler) {
-            list($methods, $route, $target, $name) = $handler;
-            $method = (stripos($methods, $requestMethod) !== false);
+            list($methods,$route,$target,$name) = $handler;
+            $method = (stripos($methods,$requestMethod) !== false);
             // Method did not match, continue to next route.
             if ( !$method ) {
                 continue;
@@ -217,16 +219,16 @@ class Router implements RouterInterface
                 $match = strcmp($requestUrl, $route) === 0;
             } else {
                 // Compare longest non-param string with url before moving on to regex
-                if ( strncmp($requestUrl, $route, $position) !== 0 && ($lastRequestUrlChar === '/' || $route[$position-1] !== '/') ) {
+                if ( strncmp($requestUrl,$route,$position) !== 0 && ($lastRequestUrlChar === '/' || $route[$position-1] !== '/') ) {
                     continue;
                 }
                 $regex = $this->compileRoute($route);
-                $match = preg_match($regex, $requestUrl, $params) === 1;
+                $match = preg_match($regex,$requestUrl,$params) === 1;
             }
             if ( $match ) {
                 if ( $params ) {
                     foreach ($params as $key => $value) {
-                        if ( is_numeric($key) ) {
+                        if ( TypeCheck::isInt($key) ) {
                             unset($params[$key]);
                         }
                     }
@@ -250,7 +252,7 @@ class Router implements RouterInterface
      */
     protected function compileRoute($route)
     {
-        if ( preg_match_all('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`', $route, $matches, PREG_SET_ORDER) ) {
+        if ( ($matches = Stringify::matchAll('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`',$route,-1,PREG_SET_ORDER)) ) {
             $matchTypes = $this->matchTypes;
             foreach ($matches as $match) {
                 list($block, $pre, $type, $param, $optional) = $match;
@@ -272,7 +274,7 @@ class Router implements RouterInterface
                         . ')'
                         . $optional;
 
-                $route = str_replace($block, $pattern, $route);
+                $route = Stringify::replace($block, $pattern, $route);
             }
         }
         return "`^$route$`u";

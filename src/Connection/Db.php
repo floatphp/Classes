@@ -16,6 +16,7 @@ namespace FloatPHP\Classes\Connection;
 
 use FloatPHP\Classes\Filesystem\Logger;
 use FloatPHP\Classes\Filesystem\TypeCheck;
+use FloatPHP\Classes\Filesystem\Stringify;
 use \PDOException;
 use \PDO;
 
@@ -88,7 +89,7 @@ class Db
         if ( empty($this->parameters) && TypeCheck::isArray($params) ) {
             $columns = array_keys($params);
             foreach ($columns as $i => &$column) {
-                $this->bind($column, $params[$column]);
+                $this->bind($column,$params[$column]);
             }
         }
     }
@@ -98,15 +99,15 @@ class Db
      *
      * @access public
      * @param string $query
-     * @param array $params null
+     * @param array $params
      * @param const $fetchmode
      * @return mixed
      */
     public function query($query, $params = null, $fetchmode = PDO::FETCH_ASSOC)
     {
-        $query = trim(Stringify::replace("\r"," ",$query));
+        $query = trim(Stringify::replace("\r",' ',$query));
         $this->Init($query,$params);
-        $rawStatement = explode(" ",Stringify::replaceRegex("/\s+|\t+|\n+/"," ",$query));
+        $rawStatement = explode(' ',Stringify::replaceRegex("/\s+|\t+|\n+/",' ',$query));
         // Which SQL statement is used
         $statement = strtolower($rawStatement[0]);
         if ( $statement === 'select' || $statement === 'show' ) {
@@ -246,7 +247,7 @@ class Db
             $this->isConnected = true;
         } catch (PDOException $e) {
             // Write into logs
-            echo $this->ExceptionLog($e->getMessage());
+            echo $this->log($e->getMessage());
             die();
         }
     }
@@ -257,6 +258,7 @@ class Db
      * @access public
      * @param void
      * @return void
+     * @throws PDOException
      */
     private function Init($query, $parameters = [])
     {
@@ -289,7 +291,7 @@ class Db
             $this->query->execute();
         } catch (PDOException $e) {
             // Write into log and display Exception
-            echo $this->ExceptionLog($e->getMessage(), $query);
+            echo $this->log($e->getMessage(),$query);
             die();
         }
         // Reset the parameters
@@ -304,13 +306,13 @@ class Db
      * @param string $sql
      * @return string
      */
-    private function ExceptionLog($message, $sql = '')
+    private function log($message, $sql = '')
     {
         $exception = 'Unhandled Exception.';
         if ( !empty($sql) ) {
             $message .= "\r\nRaw SQL : {$sql}";
         }
-        $this->log->write($message);
+        $this->log->error($message);
         echo $message;
     }
 }

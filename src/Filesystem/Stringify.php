@@ -481,12 +481,12 @@ final class Stringify
 	}
 
 	/**
-	 * @access private
+	 * @access public
 	 * @param string $length
 	 * @param string $char
 	 * @return string
 	 */
-	private function randomize($length, $char = '') : string
+	public static function randomize($length, $char = '') : string
 	{
 		if ( !$char ) {
 			$char  = implode(range('a','f'));
@@ -495,6 +495,18 @@ final class Stringify
 		$shuffled = str_shuffle($char);
 		return substr($shuffled,0,$length);
 	}
+
+    /**
+     * Get unique Id
+     *
+     * @access public
+     * @param void
+     * @return string
+     */
+    public static function getUniqueId() : string
+    {
+        return md5(uniqid(time()));
+    }
 
 	/**
 	 * @access private

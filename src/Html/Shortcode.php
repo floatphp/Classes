@@ -16,7 +16,7 @@ namespace FloatPHP\Classes\Html;
 
 use FloatPHP\Classes\Filesystem\TypeCheck;
 
-class Shortcode extends Hook
+final class Shortcode extends Hook
 {
 	/**
 	 * @access public

@@ -18,7 +18,7 @@ use Twig\Loader\FilesystemLoader as Loader;
 use Twig\Environment as Environment;
 use Twig\TwigFunction as Module;
 
-class Template
+final class Template
 {
     /**
      * @param string $path

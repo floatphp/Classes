@@ -14,7 +14,7 @@
 
 namespace FloatPHP\Classes\Filesystem;
 
-class Translation
+final class Translation
 {
 	/**
 	 * @access private

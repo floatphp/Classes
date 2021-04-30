@@ -26,7 +26,7 @@ class Exception extends MainException
 	 * @var array $callable
 	 * @return void
 	 */
-	protected function shutdown($callable)
+	public function shutdown($callable)
 	{
 		register_shutdown_function($callable);
 	}

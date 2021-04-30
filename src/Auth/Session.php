@@ -33,11 +33,11 @@ final class Session
      * @param int $time
      * @return void
      */
-    public function register($time = 60)
+    public static function register($time = 60)
     {
         self::set('session-id', session_id());
         self::set('session-time', intval($time));
-        self::set('session-start', $this->newTime());
+        self::set('session-start', self::newTime());
     }
 
     /**
@@ -47,7 +47,7 @@ final class Session
      * @param void
      * @return bool
      */
-    public function isRegistered()
+    public static function isRegistered()
     {
         if ( !empty(self::get('session-id')) ) {
             return true;
@@ -120,7 +120,7 @@ final class Session
      * @param void
      * @return int
      */
-    public function getSessionId()
+    public static function getSessionId()
     {
         return self::get('session-id');
     }
@@ -132,9 +132,9 @@ final class Session
      * @param void
      * @return bool
      */
-    public function isExpired() : bool
+    public static function isExpired() : bool
     {
-        if ( self::get('session-start') < $this->timeNow() ) {
+        if ( self::get('session-start') < self::timeNow() ) {
             return true;
         }
         return false;
@@ -147,9 +147,9 @@ final class Session
      * @param void
      * @return void
      */
-    public function renew()
+    public static function renew()
     {
-        self::set('session-start', $this->newTime());
+        self::set('session-start', self::newTime());
     }
 
     /**
@@ -159,7 +159,7 @@ final class Session
      * @param void
      * @return unix timestamp
      */
-    private function timeNow()
+    private static function timeNow()
     {
         $currentHour = date('H');
         $currentMin  = date('i');
@@ -184,7 +184,7 @@ final class Session
      * @param void
      * @return unix timestamp
      */
-    private function newTime()
+    private static function newTime()
     {
         $currentHour = date('H');
         $currentMin  = date('i');
@@ -209,7 +209,7 @@ final class Session
      * @param void
      * @return void
      */
-    public function end()
+    public static function end()
     {
         session_destroy();
         $_SESSION = [];
