@@ -51,9 +51,8 @@ final class Session
     {
         if ( !empty(self::get('session-id')) ) {
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     /**
@@ -80,9 +79,8 @@ final class Session
     {
         if ( $item ) {
             return self::isSetted($item) ? $_SESSION[$item] : false;
-        } else {
-            return $_SESSION;
         }
+        return $_SESSION;
     }
 
     /**
@@ -96,9 +94,8 @@ final class Session
     {
         if ( $key ) {
             return isset($_SESSION[$key]);
-        } else {
-            return isset($_SESSION);
         }
+        return isset($_SESSION);
     }
 
     /**
