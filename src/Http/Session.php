@@ -2,7 +2,7 @@
 /**
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
- * @subpackage: Classes Auth Component
+ * @subpackage: Classes Http Component
  * @version   : 1.0.0
  * @category  : PHP framework
  * @copyright : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
@@ -12,7 +12,7 @@
  * This file if a part of FloatPHP Framework
  */
 
-namespace FloatPHP\Classes\Auth;
+namespace FloatPHP\Classes\Http;
 
 final class Session
 {

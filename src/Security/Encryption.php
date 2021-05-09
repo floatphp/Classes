@@ -30,7 +30,6 @@ class Encryption
 	 * @var string $initVector
 	 * @var string $secretKey
 	 * @var int $length
-	 * @var string $prefix
 	 * @var int $options
 	 * @var string $cipher
 	 */
@@ -38,9 +37,8 @@ class Encryption
 	private $initVector;
 	private $secretKey;
 	private $length;
-	private $prefix = '';
 	private $options = 0;
-	private $cipher = 'AES-256-CTR';
+	private $cipher = 'AES-256-CBC';
 
 	/**
 	 * @param string $data
@@ -91,26 +89,14 @@ class Encryption
 
 	/**
 	 * @access public
-	 * @param string $prefix
-	 * @param object
-	 */
-	public function setPrefix($prefix)
-	{
-		$this->prefix = $prefix;
-		return $this;
-	}
-
-	/**
-	 * @access public
 	 * @param void
 	 * @param string
 	 */
 	public function encrypt()
 	{
-		$crypted = base64_encode(
+		return base64_encode(
 			openssl_encrypt($this->data,$this->cipher,$this->secretKey,$this->options,$this->initVector)
 		);
-		return "{$this->prefix}{$crypted}";
 	}
 
 	/**
@@ -120,19 +106,8 @@ class Encryption
 	 */
 	public function decrypt()
 	{
-		$decrypted = Stringify::replace($this->prefix,'',$this->data);
 		return openssl_decrypt(
-			base64_decode($decrypted),$this->cipher,$this->secretKey,$this->options,$this->initVector
+			base64_decode($this->data),$this->cipher,$this->secretKey,$this->options,$this->initVector
 		);
-	}
-
-	/**
-	 * @access public
-	 * @param void
-	 * @param bool
-	 */
-	public function isCrypted()
-	{
-		return substr($this->data,0,strlen($this->prefix)) === $this->prefix;
 	}
 }

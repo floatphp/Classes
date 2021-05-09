@@ -76,11 +76,12 @@ class Exception extends MainException
      * @param string $type
      * @param string $path
      * @param array $headers
-     * @return bool
+     * @return string
      */
     public function log($message = '', $type = 0, $path = null, $headers = null)
     {
     	$logger = new Logger();
-        return $logger->log($message,$type,$path,$headers);
+        $logger->log($message,$type,$path,$headers);
+        return $message;
     }
 }

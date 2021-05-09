@@ -17,34 +17,15 @@ namespace FloatPHP\Classes\Security;
 final class Tokenizer
 {
     /**
-     * @access private
-     * @var string $range
-     */
-    private const RANGE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    private const LENGTH = 32;
-    private $range;
-
-    /**
-     * @param string $range
-     * @return void
-     */
-    public function __construct(string $range = self::RANGE)
-    {
-        $this->range = $range;
-    }
-
-    /**
      * @access public
      * @param string $user
      * @param string $password
-     * @param string $prefix
      * @return array
      */
     public function generateHash($user, $password)
     {
         $secret = md5(microtime().rand());
         $encryption = new Encryption("{$user}:{$password}",$secret);
-        $encryption->setPrefix($prefix);
         return [
             'public' => $encryption->encrypt(),
             'secret' => $secret
@@ -60,15 +41,15 @@ final class Tokenizer
     private function getFromRange(int $min, int $max) : int
     {
         $range = $max - $min;
-        if ($range < 0) {
+        if ( $range < 0 ) {
             return $min;
         }
-        $log = log($range, 2);
-        $bytes = (int)($log / 8) + 1;
-        $bits = (int)$log + 1;
+        $log = log($range,2);
+        $bytes = (int) ($log / 8) + 1;
+        $bits = (int) $log + 1;
         $filter = (1 << $bits) - 1;
         do {
-            $randomBytes = (string)openssl_random_pseudo_bytes($bytes);
+            $randomBytes = (string) openssl_random_pseudo_bytes($bytes);
             $rnd = hexdec(bin2hex($randomBytes));
             $rnd = $rnd & $filter;
         } while ($rnd >= $range);
@@ -80,23 +61,13 @@ final class Tokenizer
      * @param int $length
      * @return string
      */
-    public function generate(int $length = self::LENGTH) : string
+    public function generate(int $length = 32) : string
     {
         $token = '';
+        $range = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         for ($i = 0; $i < $length; $i++) {
-            $token .= $this->range[$this->getFromRange(0, strlen($this->range))];
+            $token .= $range[$this->getFromRange(0,strlen($range))];
         }
         return $token;
-    }
-
-    /**
-     * @access public
-     * @param string $password
-     * @param string $hash
-     * @return bool
-     */
-    public static function isValidPassword($password, $hash)
-    {
-        return password_verify($password,$hash);
     }
 }

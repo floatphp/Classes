@@ -2,43 +2,42 @@
 /**
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
- * @subpackage: Filesystem Component
- * @version   : 0.1
+ * @subpackage: Classes Filesystem Component
+ * @version   : 1.0.0
  * @category  : PHP framework
- * @copyright : (c) JIHAD SINNAOUR <mail@jihadsinnaour.com>
- * @link      : https://www.floatphp.com/
- * @license   : non-open-source
+ * @copyright : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @link      : https://www.floatphp.com
+ * @license   : MIT License
+ *
+ * This file if a part of FloatPHP Framework
  */
 
 namespace FloatPHP\Classes\Filesystem;
 
-final class Logger
+use FloatPHP\Interfaces\Classes\LoggerInterface;
+
+class Logger implements LoggerInterface
 {
     /**
-     * @access private
+     * @access protected
+     * @var string $path
+     * @var string $filename
+     * @var string $extension
      */
-    private $extension = 'log';
-    private $filename = 'debug';
-    private $path = '/';
+    protected $path;
+    protected $filename;
+    protected $extension;
 
     /**
-     * @access public
-     * @param string $extension
-     * @return void
-     */
-    public function setExtension($extension)
-    {
-        $this->extension = $extension;
-    }
-
-    /**
-     * @access public
+     * @param string $path
      * @param string $filename
-     * @return void
+     * @param string $extension
      */
-    public function setFilename($filename)
+    public function __construct($path = '/', $filename = 'debug', $extension = 'log')
     {
+        $this->path = $path;
         $this->filename = $filename;
+        $this->extension = $extension;
     }
 
     /**
@@ -53,81 +52,102 @@ final class Logger
 
     /**
      * @access public
-     * @param string $content
+     * @param string $filename
      * @return void
      */
-    public function debug($content)
+    public function setFilename($filename)
     {
-        $this->write('DEBUG',$content);
+        $this->filename = $filename;
     }
 
     /**
      * @access public
-     * @param string $content
+     * @param string $extension
      * @return void
      */
-    public function error($content)
+    public function setExtension($extension)
     {
-        $this->write('ERROR',$content);
+        $this->extension = $extension;
     }
 
     /**
      * @access public
-     * @param string $content
+     * @param string $message
      * @return void
      */
-    public function warning($content)
+    public function debug($message)
     {
-        $this->write('WARNING',$content);
+        $this->write('debug',$message);
     }
 
     /**
      * @access public
-     * @param string $content
+     * @param string $message
      * @return void
      */
-    public function info($content)
+    public function error($message)
     {
-        $this->write('INFO',$content);
+        $this->write('error',$message);
     }
 
     /**
      * @access public
-     * @param void
-     * @return array
+     * @param string $message
+     * @return void
      */
-    public function getTypes()
+    public function warning($message)
     {
-        return ['debug','error','warning','info'];
+        $this->write('warning',$message);
+    }
+
+    /**
+     * @access public
+     * @param string $message
+     * @return void
+     */
+    public function info($message)
+    {
+        $this->write('info',$message);
+    }
+
+    /**
+     * @access public
+     * @param string $message
+     * @param string $type
+     * @return void
+     */
+    public function custom($message, $type = 'custom')
+    {
+        $this->write($type,$message);
     }
 
     /**
      * Log natif errors
      *
      * @access public
-     * @param string $content
+     * @param string $message
      * @param int $type 0
      * @param string $path
      * @param string $headers
      * @return void
      */
-    public function log($content = '', $type = 0, $path = null, $headers = null)
+    public function log($message = '', $type = 0, $path = null, $headers = null)
     {
-        error_log($content,$type,$path,$headers);
+        error_log($message,$type,$path,$headers);
     }
 
     /**
-     * @access private
+     * @access protected
      * @param string $status 
-     * @param string $content 
+     * @param string $message 
      * @return void
      */
-    private function write($status, $content)
+    protected function write($status, $message)
     {
         $date = date('[d-m-Y]');
         $log  = "{$this->path}/{$this->filename}-{$date}.{$this->extension}";
         $date = date('[d-m-Y H:i:s]');
-        $msg  = "{$date} : [{$status}] - {$content}" . PHP_EOL;
+        $msg  = "{$date} : [{$status}] - {$message}" . PHP_EOL;
         File::w($log,$msg,true);
     }
 }

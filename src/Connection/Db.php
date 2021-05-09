@@ -14,6 +14,7 @@
 
 namespace FloatPHP\Classes\Connection;
 
+use FloatPHP\Interfaces\Classes\LoggerInterface;
 use FloatPHP\Classes\Filesystem\Logger;
 use FloatPHP\Classes\Filesystem\TypeCheck;
 use FloatPHP\Classes\Filesystem\Stringify;
@@ -27,12 +28,12 @@ class Db
      * @var object $pdo
      * @var bool $isConnected
      * @var array $parameters
-     * @var object $log
+     * @var object $logger
      */
     private $pdo;
     private $isConnected = false;
     private $parameters;
-    private $log;
+    private $logger;
 
     /**
      * @access protected
@@ -44,10 +45,11 @@ class Db
      * Connect to database
      *
      * @param array $config
+     * @param object LoggerInterface $logger
      */
-    public function __construct($config = [])
+    public function __construct($config = [], LoggerInterface $logger = null)
     {
-        $this->log = new Logger();
+        $this->logger = $logger;
         $this->connect($config);
         $this->parameters = [];
     }
@@ -229,15 +231,16 @@ class Db
     {
         try {
             // Read settings & set PDO params
-            $db   = isset($config['db']) ? (string) $config['db'] : '';
-            $host = isset($config['host']) ? (string) $config['host'] : '';
-            $port = isset($config['port']) ? (int) $config['port'] : '';
-            $user = isset($config['user']) ? (string) $config['user'] : '';
+            $db = isset($config['db']) ? (string) $config['db'] : '';
+            $host = isset($config['host']) ? (string) $config['host'] : 'localhost';
+            $port = isset($config['port']) ? (int) $config['port'] : 3306;
+            $user = isset($config['user']) ? (string) $config['user'] : 'root';
             $pswd = isset($config['pswd']) ? (string) $config['pswd'] : '';
+            $charset = isset($config['charset']) ? (string) $config['charset'] : 'utf8';
 
             $dsn = "mysql:dbname={$db};host={$host};port={$port}";
             $this->pdo = new PDO($dsn,$user,$pswd,[
-                PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset}"
             ]);
             // log any exceptions on Fatal error
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -308,11 +311,13 @@ class Db
      */
     private function log($message, $sql = '')
     {
-        $exception = 'Unhandled Exception.';
+        $exception = 'Unhandled Exception';
         if ( !empty($sql) ) {
             $message .= "\r\nRaw SQL : {$sql}";
         }
-        $this->log->error($message);
+        if ( $this->logger ) {
+            $this->logger->error($message);
+        }
         echo $message;
     }
 }
