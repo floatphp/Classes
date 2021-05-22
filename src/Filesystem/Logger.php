@@ -35,9 +35,9 @@ class Logger implements LoggerInterface
      */
     public function __construct($path = '/', $filename = 'debug', $extension = 'log')
     {
-        $this->path = $path;
-        $this->filename = $filename;
-        $this->extension = $extension;
+        $this->setPath($path);
+        $this->setFilename($filename);
+        $this->setExtension($extension);
     }
 
     /**
@@ -48,6 +48,9 @@ class Logger implements LoggerInterface
     public function setPath($path)
     {
         $this->path = $path;
+        if ( !File::isDir($this->path) ) {
+            File::addDir($this->path);
+        }
     }
 
     /**

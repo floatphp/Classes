@@ -25,4 +25,14 @@ final class Arrayify
 	{
 		return array_merge(...$arrays);
 	}
+
+	/**
+	 * @access public
+	 * @param array $array
+	 * @return mixed
+	 */
+	public static function shift(array &$array)
+	{
+		return array_shift($array);
+	}
 }

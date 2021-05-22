@@ -54,7 +54,7 @@ final class Shortcode extends Hook
 	 */
 	public function addShortcode($tag, $callable)
 	{
-		if ( is_callable($callable) ) {
+		if ( TypeCheck::isCallable($callable) ) {
 			$this->shortcodeTags[$tag] = $callable;
 			return true;
 		}

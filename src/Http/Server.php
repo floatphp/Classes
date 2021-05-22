@@ -97,7 +97,7 @@ final class Server
 
 		} elseif ( self::isSetted('remote-addr') ) {
 			$ip = self::get('remote-addr');
-			return Stringify::sanitizeText(Stringify::slashStrip($ip));
+			return Stringify::slashStrip($ip);
 		}
 		return false;
 	}
@@ -133,7 +133,7 @@ final class Server
 			if ( self::isSetted($header) ) {
 				$code = self::get($header);
 				if ( !empty($code) ) {
-					$code = Stringify::sanitizeText(Stringify::slashStrip($code));
+					$code = Stringify::slashStrip($code);
 					return Stringify::uppercase($code);
 					break;
 				}

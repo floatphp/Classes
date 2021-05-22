@@ -124,14 +124,14 @@ final class Stringify
 	  	// Replace non letter or digits by -
 	  	$slug = self::replaceRegex('~[^\pL\d]+~u','-',$string);
 	  	// Transliterate
-		$json = new Json(dirname(__FILE__).'/bin/accents.json');
-		$accents = $json->parse(true);
-	  	$slug = strtr($slug, $accents);
-	  	$slug = self::encode($slug, 'ASCII//TRANSLIT//IGNORE');
+		$json = new Json(dirname(__FILE__).'/bin/special.json');
+		$special = $json->parse(true);
+	  	$slug = strtr($slug,$special);
+	  	$slug = self::encode($slug,'ASCII//TRANSLIT//IGNORE');
 	  	// Remove unwanted characters
 	  	$slug = self::replaceRegex('~[^-\w]+~','',$slug);
 	  	// Trim
-	  	$slug = trim($slug, '-');
+	  	$slug = trim($slug,'-');
 	  	// Remove duplicate -
 	  	$slug = self::replaceRegex('~-+~','-',$slug);
 	  	// Lowercase
@@ -384,12 +384,12 @@ final class Stringify
 	}
 
 	/**
-	 * @access private
+	 * @access public
 	 * @param array $array
 	 * @param bool $strict
 	 * @return bool
 	 */
-	private static function isSerialized($data, $strict = true)
+	public static function isSerialized($data, $strict = true)
 	{
 	    if ( !TypeCheck::isString($data) ) {
 	        return false;

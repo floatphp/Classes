@@ -207,11 +207,11 @@ final class Translation
 	    if ( $this->byteOrder == 0 ) {
 			// Low endian
 			$input = unpack('V',$this->read(4));
-			return array_shift($input);
+			return Arrayify::shift($input);
 	    } else {
 			// Big endian
 			$input = unpack('N',$this->read(4));
-			return array_shift($input);
+			return Arrayify::shift($input);
 	    }
 	}
 

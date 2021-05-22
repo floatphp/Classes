@@ -15,6 +15,7 @@
 namespace FloatPHP\Classes\Html;
 
 use FloatPHP\Classes\Filesystem\TypeCheck;
+use FloatPHP\Classes\Filesystem\Arrayify;
 
 class Hook
 {
@@ -200,7 +201,7 @@ class Hook
 		if ( empty($args) ) {
 			$args = func_get_args();
 		}
-		array_shift($args);
+		Arrayify::shift($args);
 		do {
 			foreach ( (array)current($this->filters[$tag]) as $current ) {
 				if ( $current['callable'] !== null ) {
