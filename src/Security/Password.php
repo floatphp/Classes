@@ -44,6 +44,6 @@ final class Password extends Tokenizer
         if ( !$uppercase || !$lowercase || !$number || !$special || strlen($password) < 8 ) {
             return false;
         }
-        return false;
+        return true;
     }
 }

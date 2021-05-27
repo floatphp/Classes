@@ -2,7 +2,7 @@
 /**
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
- * @subpackage: Classes Security Component
+ * @subpackage: Classes Server Component
  * @version   : 1.0.0
  * @category  : PHP framework
  * @copyright : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>

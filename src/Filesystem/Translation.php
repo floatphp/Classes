@@ -38,6 +38,7 @@ final class Translation
 
 	/**
 	 * @param string $locale
+	 * @param string $path
 	 */
 	public function __construct($locale = '', $path = 'locale')
 	{
@@ -60,12 +61,14 @@ final class Translation
 	 * @param string $string
 	 * @return string
 	 */
-	public function translate($string) : string
+	public function translate($string = '') : string
 	{
 		if ( $this->canTranslate ) {
-			return $this->gettext($string);
+			if ( !empty($string) ) {
+				return $this->gettext($string);
+			}
 		}
-		return $string;
+		return (string)$string;
 	}
 
 	/**
@@ -75,7 +78,7 @@ final class Translation
 	 * @param string $string
 	 * @return string|false
 	 */
-	public function gettext($string)
+	public function gettext($string = '')
 	{
 		if ( $this->canTranslate ) {
 			$this->loadTables();
