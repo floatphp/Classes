@@ -32,35 +32,32 @@ class FileCache
 	 */
 	private $cache = false;
 	private $adapter = false;
-	protected static $config = null;
-	protected static $ttl = null;
+	private $config = [];
+	private $ttl;
 
 	/**
-	 * @param void
+	 * @param array $config
+	 * @param int|string $ttl
 	 */
-	public function __construct()
+	public function __construct(array $config = [], $ttl = 5)
 	{
-		// Set cache default params
-		if ( TypeCheck::isNull(self::$config) ) {
-			self::setConfig();
-		}
+		// Set cache ttl
+		$this->ttl = intval($ttl);
 
-		// Set default ttl
-		if ( TypeCheck::isNull(self::$ttl) ) {
-			self::expireIn();
-		}
+		// Set cache config
+		$this->config = Arrayify::merge([
+			'path'               => 'cache',
+			'autoTmpFallback'    => true,
+			'compressData'       => true,
+			'defaultChmod'       => 755,
+			'cacheFileExtension' => 'db'
+		],$config);
 
-		// Set adapter default params
-		CacheManager::setDefaultConfig(new Config([
-			'path'               => self::$config['path'],
-			'cacheFileExtension' => self::$config['extension']
-		]));
+		// Set adapter default config
+		CacheManager::setDefaultConfig(new Config($this->config));
 
-		global $cacheAdapter;
-		if ( !$cacheAdapter ) {
-			$cacheAdapter = CacheManager::getInstance('Files');
-		}
-		$this->adapter = $cacheAdapter;
+		// Init adapter
+		$this->adapter = CacheManager::getInstance('Files');
 	}
 
 	/**
@@ -91,53 +88,53 @@ class FileCache
 	 * @access public
 	 * @param mixed $data
 	 * @param string $tag
-	 * @return void
+	 * @return bool
 	 */
 	public function set($data, $tag = null)
 	{
 		$this->cache->set($data)
-		->expiresAfter(self::$ttl);
+		->expiresAfter($this->ttl);
 		if ( $tag ) {
 			$tag = Stringify::formatKey($tag);
 			$this->cache->addTag($tag);
 		}
-		$this->adapter->save($this->cache);
+		return $this->adapter->save($this->cache);
 	}
 
 	/**
 	 * @access public
 	 * @param string $key
 	 * @param mixed $data
-	 * @return void
+	 * @return bool
 	 */
 	public function update($key, $data)
 	{
 		$key = Stringify::formatKey($key);
 		$this->cache = $this->adapter->getItem($key);
 		$this->cache->set($data)
-		->expiresAfter(self::$ttl);
-		$this->adapter->save($this->cache);
+		->expiresAfter($this->ttl);
+		return $this->adapter->save($this->cache);
 	}
 
 	/**
 	 * @access public
 	 * @param string $key
-	 * @return void
+	 * @return bool
 	 */
 	public function delete($key)
 	{
 		$key = Stringify::formatKey($key);
-		$this->adapter->deleteItem($key);
+		return $this->adapter->deleteItem($key);
 	}
 
 	/**
 	 * @access public
 	 * @param string $tag
-	 * @return void
+	 * @return bool
 	 */
 	public function deleteByTag($tag)
 	{
-		$this->adapter->deleteItemsByTag($tag);
+		return $this->adapter->deleteItemsByTag($tag);
 	}
 
 	/**
@@ -151,41 +148,26 @@ class FileCache
 	}
 
 	/**
+	 * Set filecache TTL
+	 *
+	 * @access public
+	 * @param int|string
+	 * @return void
+	 */
+	public function setTTL($ttl = 5)
+	{
+		$this->ttl = intval($ttl);
+	}
+
+	/**
 	 * Purge filecache
 	 *
 	 * @access public
 	 * @param void
-	 * @return void
+	 * @return bool
 	 */
-	public static function purge()
+	public function purge()
 	{
-		File::clearDir(self::$config['path']);
-	}
-
-	/**
-	 * Set filecache config
-	 *
-	 * @access public
-	 * @param array $config
-	 * @return void
-	 */
-	public static function setConfig($config = [])
-	{
-		// Set defaults
-		self::$config = [
-			'path'      => 'cache',
-			'extension' => 'db'
-		];
-		self::$config = Arrayify::merge(self::$config,$config);
-	}
-
-	/**
-	 * @access public
-	 * @param int $ttl
-	 * @return void
-	 */
-	public static function expireIn($ttl = 5)
-	{
-		self::$ttl = intval($ttl);
+		return File::clearDir($this->config['path']);
 	}
 }

@@ -492,21 +492,19 @@ final class Stringify
 			$char  = implode(range('a','f'));
 			$char .= implode(range('0','9'));
 		}
-		$shuffled = str_shuffle($char);
+		$shuffled = self::shuffle($char);
 		return substr($shuffled,0,$length);
 	}
 
-    /**
-     * Get unique Id
-     *
-     * @access public
-     * @param void
-     * @return string
-     */
-    public static function getUniqueId() : string
-    {
-        return md5(uniqid(time()));
-    }
+	/**
+	 * @access public
+	 * @param string $string
+	 * @return string
+	 */
+	public static function shuffle($string) : string
+	{
+		return str_shuffle($string);
+	}
 
 	/**
 	 * @access private

@@ -22,23 +22,27 @@ class Tokenizer
      * @param string $password
      * @return array
      */
-    public static function generateHash($user, $password) : array
+    public static function get($user, $password) : array
     {
-        $secret = md5(microtime().rand());
-        $encryption = new Encryption("{$user}:{$password}",$secret);
-        return [
-            'public' => $encryption->encrypt(),
-            'secret' => $secret
-        ];
+        $tokens = [];
+        if ( Password::isStrong($password) ) {
+            $secret = md5(microtime().rand());
+            $encryption = new Encryption(trim("{{$user}}:{{$password}}"),$secret);
+            $tokens = [
+                'public' => $encryption->encrypt(),
+                'secret' => $secret
+            ];
+        }
+        return $tokens;
     }
 
     /**
-     * @access private
+     * @access public
      * @param int $min
      * @param int $max
      * @return int
      */
-    private static function getFromRange(int $min, int $max) : int
+    public static function range(int $min, int $max) : int
     {
         $range = $max - $min;
         if ( $range < 0 ) {
@@ -50,26 +54,75 @@ class Tokenizer
         $filter = (1 << $bits) - 1;
         do {
             $randomBytes = (string) openssl_random_pseudo_bytes($bytes);
-            $rnd = hexdec(bin2hex($randomBytes));
-            $rnd = $rnd & $filter;
-        } while ($rnd >= $range);
-        return $min + $rnd;
+            $rand = hexdec(bin2hex($randomBytes));
+            $rand = $rand & $filter;
+        } while ($rand >= $range);
+        return $min + $rand;
     }
 
     /**
      * @access public
      * @param int $length
+     * @param string $seeds
      * @return string
      */
-    public static function generate(int $length = 32) : string
+    public static function generate(int $length = 32, $seeds = '') : string
     {
         $token = '';
-        $chars  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $chars .= 'abcdefghijklmnopqrstuvwxyz';
-        $chars .= '1234567890';
+        if ( empty($seeds) ) {
+            $seeds  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            $seeds .= 'abcdefghijklmnopqrstuvwxyz';
+            $seeds .= '0123456789';
+        }
         for ($i = 0; $i < $length; $i++) {
-            $token .= $chars[self::getFromRange(0,strlen($chars))];
+            $token .= $seeds[self::range(0,strlen($seeds))];
         }
         return $token;
+    }
+
+    /**
+     * base64 encode
+     *
+     * @access public
+     * @param string $data
+     * @param int $loop
+     * @return string
+     */
+    public static function base64(string $data = '', int $loop = 1) : string
+    {
+        $encode = base64_encode($data);
+        for ($i = 1; $i < $loop; $i++) {
+            $encode = base64_encode($encode);
+        }
+        return $encode;
+    }
+
+    /**
+     * base64 decode
+     *
+     * @access public
+     * @param string $data
+     * @param int $loop
+     * @return string
+     */
+    public static function unbase64(string $data = '', int $loop = 1) : string
+    {
+        $decode = base64_decode($data);
+        for ($i = 1; $i < $loop; $i++) {
+            $decode = base64_decode($decode);
+        }
+        return $decode;
+    }
+
+    /**
+     * Get unique Id
+     *
+     * @access public
+     * @param void
+     * @return string
+     */
+    public static function getUniqueId() : string
+    {
+        return md5(uniqid(time()));
     }
 }

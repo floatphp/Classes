@@ -19,10 +19,10 @@ use FloatPHP\Classes\Filesystem\Stringify;
 class Encryption
 {
 	/**
-	 * @access public
+	 * @access private
 	 */
-	const SECRET = 'v6t1pQ97JS';
-	const VECTOR = 'XRtvQPlFs';
+	private const SECRET = 'v6t1pQ97JS';
+	private const VECTOR = 'XRtvQPlFs';
 
 	/**
 	 * @access private
@@ -31,6 +31,7 @@ class Encryption
 	 * @var string $secretKey
 	 * @var int $length
 	 * @var int $options
+	 * @var string $algorithm
 	 * @var string $cipher
 	 */
 	private $data;
@@ -38,6 +39,7 @@ class Encryption
 	private $secretKey;
 	private $length;
 	private $options = 0;
+	private $algorithm = 'sha256';
 	private $cipher = 'AES-256-CBC';
 
 	/**
@@ -48,21 +50,40 @@ class Encryption
 	public function __construct($data, $secretKey = self::SECRET, $initVector = self::VECTOR, $length = 16)
 	{
 		$this->data = $data;
-		$this->secretKey = $secretKey;
-		$this->initVector = $initVector;
-		$this->length = $length;
+		$this->setSecretKey($secretKey);
+		$this->setInitVector($initVector);
+		$this->setLength($length);
 		$this->initialize();
 	}
 
 	/**
-	 * @access protected
-	 * @param void
+	 * @access public
+	 * @param string $key
 	 * @param void
 	 */
-	protected function initialize()
+	public function setSecretKey(string $key)
 	{
-		$this->secretKey = hash('sha256',$this->secretKey);
-		$this->initVector = substr(hash('sha256',$this->initVector),$this->options,$this->length);
+		$this->secretKey = $key;
+	}
+
+	/**
+	 * @access public
+	 * @param string $vector
+	 * @param void
+	 */
+	public function setInitVector(string $vector)
+	{
+		$this->initVector = $vector;
+	}
+
+	/**
+	 * @access public
+	 * @param int $length
+	 * @param void
+	 */
+	public function setLength(int $length)
+	{
+		$this->length = $length;
 	}
 
 	/**
@@ -70,7 +91,7 @@ class Encryption
 	 * @param string $cipher
 	 * @param object
 	 */
-	public function setCipher($cipher)
+	public function setCipher(string $cipher) : object
 	{
 		$this->cipher = $cipher;
 		return $this;
@@ -78,10 +99,10 @@ class Encryption
 
 	/**
 	 * @access public
-	 * @param string $options
+	 * @param int $options
 	 * @param object
 	 */
-	public function setOptions($options)
+	public function setOptions(int $options = OPENSSL_ZERO_PADDING) : object
 	{
 		$this->options = $options;
 		return $this;
@@ -90,24 +111,35 @@ class Encryption
 	/**
 	 * @access public
 	 * @param void
-	 * @param string
+	 * @param object
 	 */
-	public function encrypt()
+	public function initialize() : object
 	{
-		return base64_encode(
-			openssl_encrypt($this->data,$this->cipher,$this->secretKey,$this->options,$this->initVector)
-		);
+		$this->secretKey = hash($this->algorithm,$this->secretKey);
+		$this->initVector = substr(hash($this->algorithm,$this->initVector),0,$this->length);
+		return $this;
 	}
 
 	/**
 	 * @access public
-	 * @param void
+	 * @param int $loop
 	 * @param string
 	 */
-	public function decrypt()
+	public function encrypt(int $loop = 1) : string
+	{
+		$encrypt = openssl_encrypt($this->data,$this->cipher,$this->secretKey,$this->options,$this->initVector);
+		return Tokenizer::base64($encrypt,$loop);
+	}
+
+	/**
+	 * @access public
+	 * @param int $loop
+	 * @param string
+	 */
+	public function decrypt($loop = 1) : string
 	{
 		return openssl_decrypt(
-			base64_decode($this->data),$this->cipher,$this->secretKey,$this->options,$this->initVector
+			Tokenizer::unbase64($this->data,$loop),$this->cipher,$this->secretKey,$this->options,$this->initVector
 		);
 	}
 }

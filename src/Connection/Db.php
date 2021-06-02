@@ -18,6 +18,7 @@ use FloatPHP\Interfaces\Classes\LoggerInterface;
 use FloatPHP\Classes\Filesystem\Logger;
 use FloatPHP\Classes\Filesystem\TypeCheck;
 use FloatPHP\Classes\Filesystem\Stringify;
+use FloatPHP\Classes\Filesystem\Arrayify;
 use \PDOException;
 use \PDO;
 
@@ -89,7 +90,7 @@ class Db
     public function bindMore($params)
     {
         if ( empty($this->params) && TypeCheck::isArray($params) ) {
-            $columns = array_keys($params);
+            $columns = Arrayify::keys($params);
             foreach ($columns as $i => &$column) {
                 $this->bind($column,$params[$column]);
             }

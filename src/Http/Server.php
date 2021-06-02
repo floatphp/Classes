@@ -15,6 +15,7 @@
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\Stringify;
+use FloatPHP\Classes\Server\System;
 
 final class Server
 {
@@ -249,7 +250,7 @@ final class Server
     public static function getBearerToken()
     {
         if ( ($headers = self::getAuthorizationHeaders()) ) {
-            return Stringify::match('/Bearer\s(\S+)/',$headers);
+            return Stringify::match('/Bearer\s(\S+)/',$headers,1);
         }
         return false;
     }
@@ -385,14 +386,99 @@ final class Server
 	    return [$ip,''];
 	}
 
+    /**
+     * Change the MAC address on given interface
+     *
+     * @access public
+     * @param string $interface
+     * @param string $address
+     * @return bool
+     */
+    public static function setFakeMac($interface = 'eth0', $address = null) : bool
+    {
+        // Generate MAC address
+        if ( !self::isValidMac($address) ) {
+            $address = self::generateMac();
+        }
+
+        // Bring the interface down, set the new mac, bring it back up
+        System::runCommand("ifconfig {$interface} down");
+        System::runCommand("ifconfig {$interface} hw ether {$address}");
+        System::runCommand("ifconfig {$interface} up");
+
+        // Run DHCP client to grab a new IP address
+        System::runCommand("dhclient {$interface}");
+
+        // Run a test to see if the operation was a success
+        if ( self::getMac($interface) == $address ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Generate MAC address
+     *
+     * @access public
+     * @param void
+     * @return string
+     */
+    public static function generateMac() : string
+    {
+        $vals = [
+			'0', '1', '2', '3', '4', '5', '6', '7',
+        	'8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+        ];
+        $address = '';
+        if ( count($vals) >= 1 ) {
+            $address = ['00'];
+            while (count($address) < 6) {
+                shuffle($vals);
+                $address[] = "{$vals[0]}{$vals[1]}";
+            }
+            $address = implode(':', $address);
+        }
+        return $address;
+    }
+
+    /**
+     * Validate MAC address
+     *
+     * @access public
+     * @param string $address
+     * @return bool
+     */
+    public static function isValidMac($address = '') : bool
+    {
+        return (bool)preg_match("/^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$/i", $address);
+    }
+
+    /**
+     * Get system current MAC address
+     *
+     * @access public
+     * @param string $interface
+     * @return mixed
+     */
+    public static function getMac($interface = 'eth0')
+    {
+        $ifconfig = System::runCommand("ifconfig {$interface}");
+        preg_match("/([0-9A-F]{2}[:-]){5}([0-9A-F]{2})/i", $ifconfig, $ifconfig);
+        if ( isset($ifconfig[0]) ) {
+            return trim(strtoupper($ifconfig[0]));
+        }
+        return false;
+    }
+
 	/**
 	 * Format args
 	 *
-	 * @access public
+	 * @access private
 	 * @param string $arg
 	 * @return string
 	 */
-	public static function formatArgs($arg)
+	private static function formatArgs($arg)
 	{
 	    $arg = Stringify::replace('-','_',$arg);
 	    return Stringify::uppercase($arg);

@@ -80,54 +80,70 @@ final class System
      * @param void
      * @return string
      */
-    public static function getOs()
+    public static function getPhpVersion()
     {
-    	return strtolower(PHP_OS);
+    	return strtolower(PHP_VERSION);
     }
 
     /**
-     * Get OS var
+     * Get OS
      *
      * @access public
-     * @param string $var
+     * @param void
      * @return string
      */
-    public static function getOsVar($var = '')
+    public static function getOs()
     {
-        $var = strtolower($var);
+        return strtolower(PHP_OS);
+    }
+
+    /**
+     * Get OS command
+     *
+     * @access public
+     * @param string $data
+     * @return string
+     */
+    public static function getOsCommand($data = '')
+    {
+        if ( self::getIni('safe_mode') ) {
+            return false;
+        }
+        $data = strtolower($data);
         switch ( self::getOs() ) {
+            case 'winnt':
+                switch ($data) {
+                    case 'mac':
+                        $command = 'getmac';
+                        break;
+                }
+                break;
             case 'freebsd':
             case 'netbsd':
             case 'solaris':
             case 'sunos':
             case 'darwin':
-                switch ($var) {
-                    case 'conf':
-                        $var = '/sbin/ifconfig';
-                        break;
+                switch ($data) {
                     case 'mac':
-                        $var = 'ether';
+                        $command = 'ether';
                         break;
                     case 'ip':
-                        $var = 'inet ';
+                        $command = 'inet';
                         break;
                 }
                 break;
             case 'linux':
-                switch ($var) {
-                    case 'conf':
-                        $var = '/sbin/ifconfig';
-                        break;
+                switch ($data) {
                     case 'mac':
-                        $var = 'HWaddr';
+                        $command = 'HWaddr';
                         break;
                     case 'ip':
-                        $var = 'inet addr:';
+                        $command = 'inet addr:';
                         break;
                 }
                 break;
         }
-        return $var;
+        return $command;
     }
 
     /**
@@ -185,5 +201,62 @@ final class System
     public static function setMemoryLimit($value = '128M')
     {
         return self::setIni('memory_limit',$value);
+    }
+
+    /**
+     * Run shell command
+     *
+     * @access public
+     * @param string $command
+     * @return string
+     */
+    public static function runCommand(string $command = '')
+    {
+        return @shell_exec($command);
+    }
+
+    /**
+     * Run command
+     *
+     * @access public
+     * @param string $command
+     * @param string $output
+     * @param int $result
+     * @return mixed
+     */
+    public static function execute(string $command = '', array &$output = null, int &$result = null)
+    {
+        return @exec($command,$output,$result);
+    }
+
+    /**
+     * Get system config data
+     *
+     * @access public
+     * @param void
+     * @return mixed
+     */
+    public static function getConfig()
+    {
+        // Check windows environment
+        if ( substr(self::getOs(),0,3) === 'win' ) {
+            // Execute ipconfig
+            self::execute('ipconfig/all',$lines);
+            if ( count($lines) == 0 ) {
+                return false;
+            }
+            $config = implode(PHP_EOL,$lines);
+        } else {
+            // Get config file
+            $file = $this->getOsFile('conf');
+            // Open the ipconfig
+            $fp = @popen($file,'rb');
+            if ( !$fp ) {
+                return false;
+            }
+            $config = @fread($fp,4096);
+            @pclose($fp);
+        }
+        return $config;
     }
 }

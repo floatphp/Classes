@@ -14,6 +14,8 @@
 
 namespace FloatPHP\Classes\Server;
 
+use FloatPHP\Classes\Security\Tokenizer;
+
 class Mail
 {
     /**
@@ -74,7 +76,7 @@ class Mail
         $this->wrap = 78;
         $this->params = null;
         $this->attachments = [];
-        $this->uid = Stringify::getUniqueId();
+        $this->uid = Tokenizer::getUniqueId();
         return $this;
     }
 

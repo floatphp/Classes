@@ -14,10 +14,10 @@
 
 namespace FloatPHP\Classes\Filesystem;
 
-final class Translation
+class Translation
 {
 	/**
-	 * @access private
+	 * @access protected
 	 * @var int $byteOrder
 	 * @var string $pluralHeader
 	 * @var array $tableOriginals
@@ -27,20 +27,20 @@ final class Translation
 	 * @var array $count
 	 * @var bool $canTranslate
 	 */
-	private $byteOrder = 0;
-	private $pluralHeader = null;
-	private $tableOriginals = null;
-	private $tableTranslations = null;
-	private $position = 0;
-	private $mo;
-	private $count = [];
-	private $canTranslate = false;
+	protected $byteOrder = 0;
+	protected $pluralHeader = null;
+	protected $tableOriginals = null;
+	protected $tableTranslations = null;
+	protected $position = 0;
+	protected $mo;
+	protected $count = [];
+	protected $canTranslate = false;
 
 	/**
 	 * @param string $locale
 	 * @param string $path
 	 */
-	public function __construct($locale = '', $path = 'locale')
+	public function __construct($locale = '', $path = '')
 	{
 		if ( $this->load($locale,$path) ) {
 			$magic = $this->read(4);
@@ -167,11 +167,11 @@ final class Translation
 	/**
 	 * Init 32 bit integer from stream
 	 *
-	 * @access private
+	 * @access protected
 	 * @param void
 	 * @return void
 	 */
-	private function initCount()
+	protected function initCount()
 	{
 		// Revision
 		$this->readInt(); 
@@ -184,12 +184,12 @@ final class Translation
 	/**
 	 * Load mo file with given local
 	 *
-	 * @access private
+	 * @access protected
 	 * @param string $locale
 	 * @param string $path
 	 * @return bool
 	 */
-	private function load($locale, $path) : bool
+	protected function load($locale, $path) : bool
 	{
 	    if ( File::exists(($file = "{$path}/{$locale}.mo")) ) {
 			$this->mo = fopen($file,'rb');
@@ -201,11 +201,11 @@ final class Translation
 	/**
 	 * Read 32 bit integer from stream
 	 *
-	 * @access private
+	 * @access protected
 	 * @param void
 	 * @return int
 	 */
-	private function readInt() : int
+	protected function readInt() : int
 	{
 	    if ( $this->byteOrder == 0 ) {
 			// Low endian
@@ -221,11 +221,11 @@ final class Translation
 	/**
 	 * Read bytes
 	 *
-	 * @access private
+	 * @access protected
 	 * @param int $bytes
 	 * @return string
 	 */
-	private function read($bytes) : string
+	protected function read($bytes) : string
 	{
 		$data = '';
 	    if ( $bytes ) {
@@ -243,11 +243,11 @@ final class Translation
 	/**
 	 * Read array of integers from stream
 	 *
-	 * @access private
+	 * @access protected
 	 * @param int $count
 	 * @return array
 	 */
-	private function readIntArray($count) : array
+	protected function readIntArray($count) : array
 	{
 		if ( $this->byteOrder == 0 ) {
 			// low endian
@@ -261,11 +261,11 @@ final class Translation
 	/**
 	 * Load the translations tables from the Mo file
 	 *
-	 * @access private
+	 * @access protected
 	 * @param void
 	 * @return void
 	 */
-	private function loadTables()
+	protected function loadTables()
 	{
 		if ( TypeCheck::isArray($this->tableOriginals) && TypeCheck::isArray($this->tableTranslations) ) {
 			return;
@@ -283,11 +283,11 @@ final class Translation
 	/**
 	 * Return string from originals table
 	 *
-	 * @access private
+	 * @access protected
 	 * @param int $num
 	 * @return string
 	 */
-	private function getOriginalString($num) : string
+	protected function getOriginalString($num) : string
 	{
 		$length = $this->tableOriginals[$num * 2 + 1];
 		$offset = $this->tableOriginals[$num * 2 + 2];
@@ -302,11 +302,11 @@ final class Translation
 	/**
 	 * Return string from translations table
 	 *
-	 * @access private
+	 * @access protected
 	 * @param int $num
 	 * @return string
 	 */
-	private function getTranslationString($num) : string
+	protected function getTranslationString($num) : string
 	{
 		$length = $this->tableTranslations[$num * 2 + 1];
 		$offset = $this->tableTranslations[$num * 2 + 2];
@@ -321,13 +321,13 @@ final class Translation
 	/**
 	 * Binary search for string
 	 *
-	 * @access private
+	 * @access protected
 	 * @param string $string
 	 * @param int $start
 	 * @param int $end
 	 * @return string
 	 */
-	private function findString($string, $start = -1, $end = -1) : string
+	protected function findString($string, $start = -1, $end = -1) : string
 	{
 		if ( ($start == -1) || ($end == -1) ) {
 		  $start = 0;
@@ -358,11 +358,11 @@ final class Translation
 	/**
 	 * Sanitize plural form expression for use in PHP eval call
 	 *
-	 * @access private
+	 * @access protected
 	 * @param string $exp
 	 * @return string
 	 */
-	private function sanitizePluralExpression($exp) : string
+	protected function sanitizePluralExpression($exp) : string
 	{
 		$exp = Stringify::replaceRegex('@[^a-zA-Z0-9_:;\(\)\?\|\&=!<>+*/\%-]@','',$exp) . ';';
 		$res = '';
@@ -391,11 +391,11 @@ final class Translation
 	/**
 	 * Parse full PO header and extract only plural forms line
 	 *
-	 * @access private
+	 * @access protected
 	 * @param string $header
 	 * @return string
 	 */
-	private function extractPluralForms($header) : string
+	protected function extractPluralForms($header) : string
 	{
 		if ( ($regs = Stringify::match("/(^|\n)plural-forms: ([^\n]*)\n/i",$header,-1)) ) {
 			$exp = $regs[2];
@@ -408,11 +408,11 @@ final class Translation
 	/**
 	 * Get possible plural forms from Mo header
 	 *
-	 * @access private
+	 * @access protected
 	 * @param void
 	 * @return string
 	 */
-	private function getPluralForms() : string
+	protected function getPluralForms() : string
 	{
 		$this->loadTables();
 		if ( !TypeCheck::isString($this->pluralHeader) ) {
@@ -426,11 +426,11 @@ final class Translation
 	/**
 	 * Detect which plural form to take
 	 *
-	 * @access private
+	 * @access protected
 	 * @param int $n
 	 * @return int|array
 	 */
-	private function selectString($n)
+	protected function selectString($n)
 	{
 		$string = $this->getPluralForms();
 		$string = Stringify::replace('nplurals',"\$total",$string);
@@ -448,11 +448,11 @@ final class Translation
   	/**
   	 * Set position
   	 *
-  	 * @access private
+  	 * @access protected
   	 * @param int $position
   	 * @return void
   	 */
-	private function setPosition($position)
+	protected function setPosition($position)
 	{
 		fseek($this->mo,$position);
 		$this->position = ftell($this->mo);

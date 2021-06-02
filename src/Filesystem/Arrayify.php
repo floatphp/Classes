@@ -44,7 +44,7 @@ final class Arrayify
 	 */
 	public static function diff(array $array, array ...$arrays)
 	{
-		return array_diff($array,$arrays);
+		return array_diff($array,...$arrays);
 	}
 
 	/**
@@ -56,6 +56,16 @@ final class Arrayify
 	public static function hasKey($key, array $array) : bool
 	{
 		return array_key_exists($key,$array);
+	}
+
+	/**
+	 * @access public
+	 * @param array $array
+	 * @return array
+	 */
+	public static function keys(array $array) : array
+	{
+		return array_keys($array);
 	}
 
 	/**
