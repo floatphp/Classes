@@ -2,7 +2,7 @@
 /**
  * @author    : JIHAD SINNAOUR
  * @package   : FloatPHP
- * @subpackage: Classes Filesystem Component
+ * @subpackage: Classes Security Component
  * @version   : 1.0.0
  * @category  : PHP framework
  * @copyright : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
@@ -12,11 +12,14 @@
  * This file if a part of FloatPHP Framework
  */
 
-namespace FloatPHP\Classes\Filesystem;
+namespace FloatPHP\Classes\Security;
 
 use FloatPHP\Classes\Http\Server;
 use FloatPHP\Classes\Server\System;
-use FloatPHP\Classes\Security\Tokenizer;
+use FloatPHP\Classes\Server\Date;
+use FloatPHP\Classes\Filesystem\Arrayify;
+use FloatPHP\Classes\Filesystem\Stringify;
+use FloatPHP\Classes\Filesystem\TypeCheck;
 
 class License
 {
@@ -33,6 +36,14 @@ class License
     protected $strings = [];
     protected $key;
     protected $id;
+
+    /**
+     * @access private
+     * @var string $error, License error
+     * @var array $data, License data
+     */
+    private $error;
+    private $data;
     
     /**
      * @param array $settings
@@ -95,82 +106,168 @@ class License
     }
 
     /**
-     * Validate license and return data
+     * Get license data
      *
      * @access public
-     * @param string $license
+     * @param void
      * @return array
      */
-    public function validate(string $license = '') : array
+    public function getData() : array
     {
-        // Content validation
-        if ( strlen($license) <= 0 ) {
-            return ['error' => 'empty'];
-        }
+        return (array)$this->data;
+    }
 
-        // Decrypt license
-        $data = $this->unwrap($license);
+    /**
+     * Get license error
+     *
+     * @access public
+     * @param void
+     * @return string
+     */
+    public function getError() : string
+    {
+        return (string)$this->error;
+    }
 
-        // Type validation
-        if ( !TypeCheck::isArray($data) ) {
-            return ['error' => 'invalid'];
-        }
+    /**
+     * Get license data var
+     *
+     * @access public
+     * @param string $var
+     * @return mixed
+     */
+    public function getDataVar($var = '')
+    {
+        return isset($this->data['args'][$var]) ? $this->data['args'][$var] : '';
+    }
 
-        // ID validation
-        if ( $data['ID'] !== md5($this->key) ) {
-            return ['error' => 'corrupted'];
-        }
+    /**
+     * Generate licence
+     *
+     * @access public
+     * @param int $start
+     * @param mixed $expireIn
+     * @param array $args
+     * @return mixed
+     */
+    public function generate(int $start = 0, $expireIn = 31449600, array $args = [])
+    {
+        // Include key id
+        $data['id'] = md5($this->key);
 
-        // Time validation
+        // Include server IP
+        $data['server']['ip'] = $this->server['ip'];
+        // Include server HOST
+        $data['server']['host'] = $this->server['host'];
+        
+        // Include time
         if ( $this->useTime() ) {
 
-            // License used before start
-            if ( $data['date']['start'] > (time() + $this->settings['start']) ) {
-                return ['error' => 'minus'];
-            } else {
-                $data['date']['formated']['start'] = date($this->settings['date-format'],$data['date']['start']);
-            }
+            $current = time();
+            $start = ($current < $start) ? $start : $current + $start;
 
-            if ( $data['date']['end'] !== 'never' ) {
-                // License expired
-                if ( ($data['date']['end'] - time()) < 0 ) {
-                    return ['error' => 'expired'];
-                } else {
-                    $data['date']['formated']['end'] = date($this->settings['date-format'],$data['date']['end']);
-                }
+            // Set dates
+            $data['date']['start'] = $start;
+            $data['date']['span'] = $expireIn;
+
+            if ( $expireIn === false ) {
+                $data['date']['end'] = 'never';
+
+            } elseif ( TypeCheck::isString($expireIn) ) {
+                $data['date']['end'] = $start + Date::expireIn($expireIn);
+
+            } else {
+                $data['date']['end'] = $start + $expireIn;
             }
+        }
+
+        // Include args
+        $args = Arrayify::merge($this->getDefaultArgs(),$args);
+        $data['args'] = $args;
+
+        // Encrypt the key
+        return $this->wrap($data);
+    }
+
+    /**
+     * Validate license secret
+     *
+     * @access public
+     * @param string $secret
+     * @return bool
+     */
+    public function validate(string $secret = '') : bool
+    {
+        // Content validation
+        if ( strlen($secret) <= 0 ) {
+            $this->error = 'Empty';
+            return false;
+        }
+
+        // Decrypt secret
+        $this->data = $this->unwrap($secret);
+
+        // Type validation
+        if ( !TypeCheck::isArray($this->data) ) {
+            $this->error = 'Invalid';
+            return false;
+        }
+
+        // Id validation
+        if ( $this->data['id'] !== md5($this->key) ) {
+            $this->error = 'Corrupted';
+            return false;
         }
 
         // Server validation
         if ( $this->useServer() ) {
 
             // Check localhost
-            if ( $this->isLocalhost($data) && !$this->allowLocalhost() ) {
-                return ['error' => 'localhost-denied'];
-            }
-
-            // Check domain
-            if ( !$this->validateIP($data['server']['domain']) ) {
-                return ['error' => 'domain-denied'];
-            }
-
-            // Check mac
-            if ( $data['server']['mac'] !== $this->server['mac'] ) {
-                return ['error' => 'mac-denied'];
+            if ( $this->isLocalhost($this->data) && !$this->allowLocalhost() ) {
+                $this->error = 'Denied localhost';
+                return false;
             }
 
             // Check host
-            if ( $data['server']['host'] !== $this->server['host'] ) {
-                return ['error' => 'host-denied'];
+            if ( $this->data['server']['host'] !== $this->server['host'] ) {
+                $this->error = 'Denied host';
+                return false;
             }
 
             // Check host
-            if ( $data['server']['ip'] !== $this->server['ip'] ) {
-                return ['error' => 'ip-denied'];
+            if ( $this->data['server']['ip'] !== $this->server['ip'] ) {
+                $this->error = 'Denied ip';
+                return false;
             }
         }
 
-        return ['result' => 'success'];
+        // Time validation
+        if ( $this->useTime() ) {
+
+            // License used before start
+            if ( $this->data['date']['start'] > (time() + $this->settings['start']) ) {
+                $this->error = 'Minus';
+                return false;
+
+            } else {
+                $formated = date($this->settings['date-format'],$this->data['date']['start']);
+                $this->data['date']['formated']['start'] = $formated;
+            }
+
+            if ( $this->data['date']['end'] !== 'never' ) {
+                // License expired
+                if ( ($this->data['date']['end'] - time()) < 0 ) {
+                    $this->error = 'Expired';
+                    return false;
+
+                } else {
+                    $formated = date($this->settings['date-format'],$this->data['date']['end']);
+                    $this->data['date']['formated']['end'] = $formated;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -183,10 +280,8 @@ class License
     protected function setServerData()
     {
         $this->server = [
-            'ip'      => Server::getIP(),
-            'mac'     => Server::getMac(),
-            'address' => Server::isSetted('server-addr') ? Server::get('server-addr') : '',
-            'host'    => Server::isSetted('http-host') ? Server::get('http-host') : ''
+            'ip'   => Server::getIP(),
+            'host' => Server::isSetted('http-host') ? Server::get('http-host') : ''
         ];
     }
 
@@ -199,7 +294,7 @@ class License
      */
     protected function useServer() : bool
     {
-        return $this->settings['server'];
+        return (bool)$this->settings['server'];
     }
 
     /**
@@ -211,7 +306,7 @@ class License
      */
     protected function useTime() : bool
     {
-        return $this->settings['time'];
+        return (bool)$this->settings['time'];
     }
 
     /**
@@ -223,7 +318,7 @@ class License
      */
     protected function allowLocalhost() : bool
     {
-        return $this->settings['localhost'];
+        return (bool)$this->settings['localhost'];
     }
 
     /**
@@ -283,7 +378,7 @@ class License
             'server'      => true,
             'localhost'   => true,
             'start'       => 129600,
-            'wrap'      => 120,
+            'wrap'        => 120,
             'date-format' => 'm/d/Y H:i:s'
         ];
     }
@@ -298,90 +393,9 @@ class License
     protected function getDefaultArgs() : array
     {
         return [
-            '--PHP-OS'      => System::getOs(),
+            '--PHP-OS'      => System::getOsName(),
             '--PHP-VERSION' => System::getPhpVersion()
         ];
-    }
-
-    /**
-     * Generate licence
-     *
-     * @access public
-     * @param string $domain
-     * @param int $start
-     * @param int|bool $expireIn
-     * @param array $args
-     * @return string
-     */
-    public function generate(string $domain = '', int $start = 0, $expireIn = 31449600, array $args = []) : string
-    {
-        // Include key id
-        $data['id'] = md5($this->key);
-
-        // Include server vars
-        if ( $this->useServer() ) {
-
-            // Validate domain IP
-            if ( !$this->validateIP($domain) ) {
-                return ['error' => 'domain-denied'];
-            }
-
-            // Set domain
-            $data['server']['domain'] = $domain;
-            // Set MAC
-            $data['server']['mac'] = $this->server['mac'];
-            // Set server HOST
-            $data['server']['host'] = $this->server['host'];
-            // Set server ADDRESS
-            $data['server']['address'] = $this->server['address'];
-            // Set server IP
-            $data['server']['ip'] = $this->server['ip'];
-        }
-        
-        // Include time
-        if ( $this->useTime() ) {
-
-            $current = time();
-            $start = ($current < $start) ? $start : $current + $start;
-
-            // Set dates
-            $data['date']['start'] = $start;
-            $data['date']['SPAN'] = $expireIn;
-            if ( $expireIn === false ) {
-                $data['date']['end'] = 'never';
-            } else {
-                $data['date']['end'] = $start + $expireIn;
-            }
-        }
-
-        // Include args
-        $args = Arrayify::merge($this->getDefaultArgs(),$args);
-        $data['DATA'] = $args;
-
-        // Encrypt the key
-        return $this->wrap($data);
-    }
-
-    /**
-     * Validate domain IP
-     *
-     * @access protected
-     * @param string $domain
-     * @return bool
-     */
-    protected function validateIP(string $domain) : bool
-    {
-        // Get domain IP list
-        $ips = gethostbynamel($domain);
-        if ( $domain == 'localhost' ) {
-            $ips[] = '::1';
-        }
-        if ( TypeCheck::isArray($ips) && count($ips) > 0 ) {
-            if ( Stringify::contains($ips,$this->server['ip']) ) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -391,7 +405,7 @@ class License
      * @param string $string
      * @return string
      */
-    protected function inline(string $string) : string
+    protected function inlineString(string $string) : string
     {
         $length = strlen($string);
         $spaces = ($this->settings['wrap'] - $length) / 2;
@@ -424,7 +438,7 @@ class License
         $key = "{$random}{$this->key}";
 
         // Init encryption
-        $license = '';
+        $secret = '';
 
         // Regular encryption method
         $data = Stringify::serialize($data);
@@ -432,12 +446,12 @@ class License
             $char = substr($data,$i - 1,1);
             $keyChar = substr($key,($i % strlen($key)) - 1,1);
             $char = chr(ord($char) + ord($keyChar));
-            $license .= $char;
+            $secret .= $char;
         }
 
-        // Return license
-        $license = Tokenizer::base64(trim($license),2);
-        return "{$random}{$license}";
+        // Return license secret
+        $secret = Tokenizer::base64(trim($secret),2);
+        return "{$random}{$secret}";
     }
 
     /**
@@ -445,13 +459,12 @@ class License
      *
      * @access public
      * @param string $license
-     * @param string $type
      * @return array
      */
-    protected function decrypt(string $license, string $type = 'KEY') : array
+    protected function decrypt(string $secret) : array
     {
-        $random = substr($license,0,5);
-        $license = Tokenizer::unbase64(substr($license,5),2);
+        $random = substr($secret,0,5);
+        $secret = Tokenizer::unbase64(substr($secret,5),2);
 
         // Get key
         $key = "{$random}{$this->key}";
@@ -460,8 +473,8 @@ class License
         $data = '';
 
         // Regular decryption method
-        for ($i = 1; $i <= strlen($license); $i++) {
-            $char = substr($license, $i - 1, 1);
+        for ($i = 1; $i <= strlen($secret); $i++) {
+            $char = substr($secret, $i - 1, 1);
             $keyChar = substr($key, ($i % strlen($key)) - 1, 1);
             $char = chr(ord($char) - ord($keyChar));
             $data .= $char;
@@ -476,17 +489,16 @@ class License
      *
      * @access protected
      * @param array $data
-     * @param string $type
      * @return string
      */
-    protected function wrap($data, $type = 'KEY') : string
+    protected function wrap($data) : string
     {
         // Encrypt license data
-        $license = $this->encrypt($data,$type);
-        // Wrap license
-        $result  = $this->inline($this->strings['begin']) . PHP_EOL;
-        $result .= wordwrap($license,$this->settings['wrap'],PHP_EOL,1);
-        $result .= PHP_EOL . $this->inline($this->strings['end']);
+        $secret = $this->encrypt($data);
+        // Wrap secret
+        $result  = $this->inlineString($this->strings['begin']) . PHP_EOL;
+        $result .= wordwrap($secret,$this->settings['wrap'],PHP_EOL,1);
+        $result .= PHP_EOL . $this->inlineString($this->strings['end']);
         return $result;
     }
 
@@ -494,19 +506,18 @@ class License
      * Unwrap license
      *
      * @access public
-     * @param string $license
-     * @param string $type
+     * @param string $secret
      * @return array
      */
-    protected function unwrap($license, $type = 'KEY') : array
+    protected function unwrap($secret) : array
     {
         // Sort variables
-        $begin = $this->inline($this->strings['begin']);
-        $end = $this->inline($this->strings['end']);
-        // Format license
-        $license = trim(Stringify::replace([$begin,$end,"\r","\n","\t"],'',$license));
-        // Decrypt license
-        return $this->decrypt($license,$type);
+        $begin = $this->inlineString($this->strings['begin']);
+        $end = $this->inlineString($this->strings['end']);
+        // Format license secret
+        $secret = trim(Stringify::replace([$begin,$end,"\r","\n","\t"],'',$secret));
+        // Decrypt license secret
+        return $this->decrypt($secret);
     }
 
     /**
@@ -523,12 +534,6 @@ class License
 			if ( Stringify::contains($local,$data['server']['ip']) ) {
 				return true;
 			}
-
-		} elseif ( isset($data['server']['address'] )) {
-			if ( Stringify::contains($local,$data['server']['address']) ) {
-				return true;
-			}
-
 		} elseif ( isset($data['server']['host'] )) {
 			if ( Stringify::contains($local,$data['server']['host']) ) {
 				return true;

@@ -16,6 +16,7 @@ namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\Arrayify;
 use FloatPHP\Classes\Filesystem\Stringify;
+use FloatPHP\Classes\Filesystem\Json;
 
 class Client
 {
@@ -152,6 +153,21 @@ class Client
     }
 
     /**
+     * Get response status code
+     * 
+     * @access public
+     * @param void
+     * @return mixed
+     */
+    public function getStatusCode()
+    {
+        if ( isset($this->response['status']['statusCode']) ) {
+            return intval($this->response['status']['statusCode']);
+        }
+        return false;
+    }
+
+    /**
      * Get response header
      * 
      * @access public
@@ -217,12 +233,50 @@ class Client
      * Get response body
      * 
      * @access public
-     * @param void
+     * @param bool $json
      * @return mixed
      */
-    public function getBody()
+    public function getBody($json = false)
     {
+        if ( $json ) {
+           return Json::decode($this->response['body'],true);
+        }
         return $this->response['body'];
+    }
+
+    /**
+     * Track url
+     * 
+     * @access public
+     * @param string $url
+     * @param bool $parse
+     * @return string
+     */
+    public function trackUrl($url = '', $parse = false)
+    {
+        if ( empty($url) ) {
+            $url = $this->url;
+        }
+        $handler  = curl_init();
+        curl_setopt($handler,CURLOPT_URL,$url);
+        curl_setopt($handler,CURLOPT_HEADER,true);
+        curl_setopt($handler,CURLOPT_FOLLOWLOCATION,true);
+        curl_setopt($handler,CURLOPT_RETURNTRANSFER,true);
+        if ( !Server::isHttps() ) {
+            curl_setopt($handler,CURLOPT_SSL_VERIFYHOST,false);
+            curl_setopt($handler,CURLOPT_SSL_VERIFYPEER,false);
+        }
+        curl_exec($handler);
+        $url = curl_getinfo($handler,CURLINFO_EFFECTIVE_URL);
+        curl_close($handler);
+        if ( $parse ) {
+            $parts = parse_url($url);
+            if ( isset($parts['query']) ) {
+                unset($parts['query']);
+            }
+            $url = "{$parts['scheme']}://{$parts['host']}{$parts['path']}";
+        }
+        return (string)$url;
     }
 
     /**
@@ -275,6 +329,11 @@ class Client
 
         } else {
             curl_setopt($handler,CURLOPT_CUSTOMREQUEST,Stringify::uppercase($this->method));
+        }
+
+        if ( !Server::isHttps() ) {
+            curl_setopt($handler,CURLOPT_SSL_VERIFYHOST,false);
+            curl_setopt($handler,CURLOPT_SSL_VERIFYPEER,false);
         }
 
         // Execute request

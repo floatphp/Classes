@@ -18,12 +18,58 @@ final class Arrayify
 {
 	/**
 	 * @access public
+	 * @param mixed $needle
+	 * @param array $haystack
+	 * @param bool $strict
+	 * @return bool
+	 */
+	public static function inArray($needle, array $haystack, bool $strict = false) : bool
+	{
+		return in_array($needle,$haystack,$strict);
+	}
+
+	/**
+	 * @access public
 	 * @param array $arrays
 	 * @return array
 	 */
 	public static function merge(array ...$arrays) : array
 	{
 		return array_merge(...$arrays);
+	}
+
+	/**
+	 * @access public
+	 * @param array $array
+	 * @param mixed $values
+	 * @return int
+	 */
+	public static function push(array &$array, ...$values) : int
+	{
+		return array_push($array, ...$values);
+	}
+
+	/**
+	 * @access public
+	 * @param array $keys
+	 * @param array $values
+	 * @return array
+	 */
+	public static function combine(array $keys, array $values) : array
+	{
+		return array_combine($keys,$values);
+	}
+
+	/**
+	 * @access public
+	 * @param callback $callback
+	 * @param array $array
+	 * @param array $arrays
+	 * @return array
+	 */
+	public static function map($callback = null, array $array, array ...$arrays) : array
+	{
+		return array_map($callback,$array,...$arrays);
 	}
 
 	/**
@@ -71,10 +117,62 @@ final class Arrayify
 	/**
 	 * @access public
 	 * @param array $array
-	 * @param int $num
-	 * @return int|string|array
+	 * @return array
 	 */
-	public static function rand(array $array, int $num = 1) : array
+	public static function values(array $array) : array
+	{
+		return array_values($array);
+	}
+
+	/**
+	 * @access public
+	 * @param array $array
+	 * @param int $flags
+	 * @return array
+	 */
+	public static function unique(array $array, int $flags = SORT_STRING) : array
+	{
+		return array_unique($array,$flags);
+	}
+
+	/**
+	 * @access public
+	 * @param array $array
+	 * @param string $key
+	 * @return array
+	 */
+	public static function uniqueMultiple(array $array, string $key = '') : array
+	{
+		$temp = [];
+		foreach ($array as &$val) {
+			if ( !isset($temp[$val[$key]]) ) {
+				$temp[$val[$key]] =& $val;
+			}
+		}
+       	$array = self::values($temp);
+       	return $array;
+	    // $i = 0;
+	    // $wrapper = [];
+	    // $temp = [];
+	    // foreach($array as $val) {
+	    // 	if ( isset($val[$key]) ) {
+		   //      if ( !self::inArray($val[$key],$temp) ) {
+		   //          $temp[$i] = $val[$key];
+		   //          $wrapper[$i] = $val;
+		   //      }
+	    // 	}
+	    //     $i++;
+	    // }
+	    // return $wrapper;
+	}
+
+	/**
+	 * @access public
+	 * @param array $array
+	 * @param int $num
+	 * @return mixed
+	 */
+	public static function rand(array $array, int $num = 1)
 	{
 		return array_rand($array,$num);
 	}
@@ -90,5 +188,17 @@ final class Arrayify
 	public static function slice(array $array, int $offset, $length = null, bool $preserve = false) : array
 	{
 		return array_slice($array,$offset,$length,$preserve);
+	}
+
+	/**
+	 * @access public
+	 * @param array $array
+	 * @param callable $callable
+	 * @param int $mode
+	 * @return array
+	 */
+	public static function filter(array $array, $callable = null, $mode = 0) : array
+	{
+		return array_filter($array,$callable,$mode);
 	}
 }

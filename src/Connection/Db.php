@@ -31,10 +31,10 @@ class Db
      * @var array $parameters
      * @var object $logger
      */
-    private $pdo;
+    private $pdo = null;
     private $isConnected = false;
-    private $params;
-    private $logger;
+    private $parameters = [];
+    private $logger = null;
 
     /**
      * @access protected
@@ -52,7 +52,7 @@ class Db
     {
         $this->logger = $logger;
         $this->connect($config);
-        $this->params = [];
+        $this->parameters = [];
     }
     
     /**
@@ -71,28 +71,30 @@ class Db
      * Bind params
      *
      * @access public
-     * @param array $params
+     * @param array $bind
      * @param string $value
      * @return void
      */
-    public function bind($params, $value)
+    public function bind($bind, $value)
     {
-        $this->params[sizeof($this->params)] = [":{$params}",$value];
+        $this->parameters[sizeof($this->parameters)] = [":{$bind}",$value];
     }
 
     /**
      * Bind more params
      *
      * @access public
-     * @param array $params
+     * @param array $bind
      * @return void
      */
-    public function bindMore($params)
+    public function bindMore($bind)
     {
-        if ( empty($this->params) && TypeCheck::isArray($params) ) {
-            $columns = Arrayify::keys($params);
-            foreach ($columns as $i => &$column) {
-                $this->bind($column,$params[$column]);
+        if ( empty($this->parameters) ) {
+            if ( TypeCheck::isArray($bind) ) {
+                $columns = Arrayify::keys($bind);
+                foreach ($columns as $i => &$column) {
+                    $this->bind($column,$bind[$column]);
+                }
             }
         }
     }
@@ -274,11 +276,11 @@ class Db
         try {
             // Prepare query
             $this->query = $this->pdo->prepare($query);
-            // Add parameters
+            // Add bind parameters
             $this->bindMore($params);
             // Bind parameters
-            if ( !empty($this->params) ) {
-                foreach ($this->params as $param => $value) {
+            if ( !empty($this->parameters) ) {
+                foreach ($this->parameters as $param => $value) {
                     if ( TypeCheck::isInt($value[1]) ) {
                         $type = PDO::PARAM_INT;
                     } elseif ( TypeCheck::isBool($value[1]) ) {
@@ -299,8 +301,8 @@ class Db
             echo $this->log($e->getMessage(),$query);
             die();
         }
-        // Reset the parameters
-        $this->params = [];
+        // Reset bind parameters
+        $this->parameters = [];
     }
 
     /** 

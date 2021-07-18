@@ -30,6 +30,19 @@ final class Stringify
 
 	/**
 	 * @access public
+	 * @param mixed $search
+	 * @param mixed $replace
+	 * @param mixed $offset
+	 * @param mixed $length
+	 * @return mixed
+	 */
+	public static function subreplace($search, $replace, $offset, $length = null)
+	{
+		return substr_replace($search,$replace,$offset,$length);
+	}
+
+	/**
+	 * @access public
 	 * @param array $search
 	 * @param array $replace
 	 * @return string
@@ -72,9 +85,9 @@ final class Stringify
 	 * @param string $string
 	 * @return string
 	 */
-	public static function lowercase($string)
+	public static function lowercase($string) : string
 	{
-		return strtolower($string);
+		return strtolower((string)$string);
 	}
 
 	/**
@@ -124,9 +137,7 @@ final class Stringify
 	  	// Replace non letter or digits by -
 	  	$slug = self::replaceRegex('~[^\pL\d]+~u','-',$string);
 	  	// Transliterate
-		$json = new Json(dirname(__FILE__).'/bin/special.json');
-		$special = $json->parse(true);
-	  	$slug = strtr($slug,$special);
+	  	$slug = strtr($slug,self::getSpecialChars());
 	  	$slug = self::encode($slug,'ASCII//TRANSLIT//IGNORE');
 	  	// Remove unwanted characters
 	  	$slug = self::replaceRegex('~[^-\w]+~','',$slug);
@@ -136,6 +147,17 @@ final class Stringify
 	  	$slug = self::replaceRegex('~-+~','-',$slug);
 	  	// Lowercase
 	  	return strtolower($slug);
+	}
+
+	/**
+	 * @access public
+	 * @param void
+	 * @return string
+	 */
+	public static function getSpecialChars()
+	{
+		$json = new Json(dirname(__FILE__).'/bin/special.json');
+		return $json->parse(true);
 	}
 
 	/**
@@ -149,9 +171,9 @@ final class Stringify
 	public static function contains($string, $search)
 	{
 		if ( TypeCheck::isArray($string) ) {
-			return in_array($search, $string);
+			return Arrayify::inArray($search,$string);
 		}
-		if ( strpos($string, $search) !== false ) {
+		if ( strpos($string,$search) !== false ) {
 			return true;
 		}
 		return false;
@@ -203,7 +225,7 @@ final class Stringify
 	    }
 	    // Untrailing Slash
 	    if ( $untrailing ) {
-	    	return Stringify::untrailingSlash("{$wrapper}{$path}");
+	    	return self::untrailingSlash("{$wrapper}{$path}");
 	    }
 	    return "{$wrapper}{$path}";
 	}
@@ -220,7 +242,7 @@ final class Stringify
 	}
 
 	/**
-	 * Encode string UTF-8
+	 * Encode string
 	 *
 	 * @access public
 	 * @param string $string
@@ -230,14 +252,20 @@ final class Stringify
 	 */
 	public static function encode($string, $from = 'ISO-8859-1', $to = 'UTF-8')
 	{
-		if ( self::lowercase($to) == 'utf-8' && self::lowercase($from) == 'iso-8859-1' ) {
-			return utf8_encode($string);
+		$from = self::uppercase($from);
+		$to = self::uppercase($to);
+		if ( self::getEncoding($string,$to) !== $to ) {
+			if ( $from  == 'ISO-8859-1' && $to == 'UTF-8' ) {
+				$string = self::encodeUTF8($string);
+			} else {
+				$string = @iconv($to,$from,$string);
+			}
 		}
-		return @iconv(self::uppercase($to), self::uppercase($from), $string);
+		return $string;
 	}
 
 	/**
-	 * Decode string ISO-8859-1
+	 * Decode string
 	 *
 	 * @access public
 	 * @param string $string
@@ -247,10 +275,87 @@ final class Stringify
 	 */
 	public static function decode($string, $from = 'UTF-8', $to = 'ISO-8859-1')
 	{
-		if ( self::lowercase($from) == 'utf-8' && self::lowercase($to) == 'iso-8859-1' ) {
-			return utf8_decode($string);
+		$from = self::uppercase($from);
+		$to = self::uppercase($to);
+		if ( self::getEncoding($string,$to) !== $to ) {
+			if ( $from == 'UTF-8' && $to == 'ISO-8859-1' ) {
+				$string = self::decodeUTF8($string);
+			} else {
+				$string = @iconv($from,$to,$string);
+			}
 		}
-		return @iconv(self::uppercase($from), self::uppercase($to), $string);
+		return $string;
+	}
+
+	/**
+	 * Decode string UTF-8
+	 *
+	 * @access public
+	 * @param string $string
+	 * @return string
+	 */
+	public static function decodeUTF8($string)
+	{
+		return utf8_decode($string);
+	}
+
+	/**
+	 * Encode string UTF-8
+	 *
+	 * @access public
+	 * @param string $string
+	 * @return string
+	 */
+	public static function encodeUTF8($string)
+	{
+		return utf8_encode($string);
+	}
+
+	/**
+	 * Detect encoding
+	 *
+	 * @access public
+	 * @param string $string
+	 * @param mixed $encodings
+	 * @return mixed
+	 */
+	public static function getEncoding($string, $encodings = null)
+	{
+		return mb_detect_encoding($string,$encodings);
+	}
+
+	/**
+	 * Parse string
+	 *
+	 * @access public
+	 * @param string $string
+	 * @param array $result
+	 * @return mixed
+	 */
+	public static function parse($string, &$result = null)
+	{
+		parse_str($string,$result);
+		return $result;
+	}
+
+	/**
+	 * @access public
+	 * @param string $string
+	 * @return string
+	 */
+	public static function unSlash($string)
+	{
+	    return ltrim($string,'/\\');
+	}
+	
+	/**
+	 * @access public
+	 * @param string $string
+	 * @return string
+	 */
+	public static function slash($string)
+	{
+	    return '/' . self::unSlash($string);
 	}
 
 	/**
@@ -348,10 +453,7 @@ final class Stringify
 	 */
 	public static function normalizeSpace($string)
 	{
-	    $string = trim($string);
-	    $string = self::replace("\r","\n",$string);
-	    $string = self::replaceRegex(['/\n+/', '/[ \t]+/'],["\n", ' '],$string);
-	    return $string;
+	    return self::replaceRegex('/\s+/u',' ',trim($string));
 	}
 
 	/**

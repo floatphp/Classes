@@ -19,6 +19,7 @@ use FloatPHP\Interfaces\Classes\RouterInterface;
 use FloatPHP\Classes\Filesystem\Stringify;
 use FloatPHP\Classes\Filesystem\TypeCheck;
 use FloatPHP\Classes\Filesystem\Arrayify;
+use \RuntimeException;
 
 class Router implements RouterInterface
 {
@@ -120,12 +121,13 @@ class Router implements RouterInterface
      * @param string $route
      * @param mixed $target
      * @param string $name
+     * @param string $permissions
      * @return void
      * @throws Exception
      */
-    public function map($method, $route, $target, $name = null)
+    public function map($method, $route, $target, $name = null, $permissions = null)
     {
-        $this->routes[] = [$method,$route,$target,$name];
+        $this->routes[] = [$method,$route,$target,$name,$permissions];
         if ( $name ) {
             if ( isset($this->namedRoutes[$name]) ) {
                 throw new RuntimeException("Can not redeclare route '{$name}'");
@@ -203,7 +205,7 @@ class Router implements RouterInterface
             $requestMethod = Server::isSetted('REQUEST_METHOD') ? Server::get('REQUEST_METHOD') : 'GET';
         }
         foreach ($this->routes as $handler) {
-            list($methods,$route,$target,$name) = $handler;
+            list($methods,$route,$target,$name,$permissions) = $handler;
             $method = (stripos($methods,$requestMethod) !== false);
             // Method did not match, continue to next route.
             if ( !$method ) {
@@ -236,9 +238,10 @@ class Router implements RouterInterface
                     }
                 }
                 return [
-                    'target' => $target,
-                    'params' => $params,
-                    'name'   => $name
+                    'target'      => $target,
+                    'params'      => $params,
+                    'name'        => $name,
+                    'permissions' => $permissions
                 ];
             }
         }

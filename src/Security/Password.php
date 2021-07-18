@@ -32,6 +32,18 @@ final class Password extends Tokenizer
     /**
      * @access public
      * @param string $password
+     * @param string $algo
+     * @param string $options
+     * @return mixed
+     */
+    public static function hash(string $password, string $algo = PASSWORD_BCRYPT, array $options = [])
+    {
+        return password_hash($password,$algo,$options);
+    }
+
+    /**
+     * @access public
+     * @param string $password
      * @return bool
      */
     public static function isStrong(string $password) : bool

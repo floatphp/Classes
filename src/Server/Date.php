@@ -14,7 +14,9 @@
 
 namespace FloatPHP\Classes\Server;
 
+use FloatPHP\Classes\Filesystem\TypeCheck;
 use \DateTime;
+use \DateInterval;
 
 final class Date extends DateTime
 {
@@ -22,35 +24,50 @@ final class Date extends DateTime
 	 * @access public
 	 * @param string $date
 	 * @param string $format
-	 * @return object $date
-	 */
-	public static function get($date, $format = 'd/m/Y H:i:s')
-	{
-		$date = new self($date);
-		$date->format($format);
-		return $date;
-	}
-
-	/**
-	 * @access public
-	 * @param object $date
-	 * @param object $expire
 	 * @return mixed
 	 */
-	public static function difference($date, $expire)
+	public static function get($date = 'now', $format = 'Y-m-d H:i:s', $object = false)
 	{
-		$interval = $date->diff($expire)->format('%R%a');
-		return intval($interval);
+		$date = new self($date);
+        if ( $object ) {
+            $date->format($format);
+            return $date;
+        }
+        return $date->format($format);
 	}
+
+    /**
+     * @access public
+     * @param mixed $date
+     * @param mixed $expire
+     * @param string $format
+     * @return int
+     */
+    public static function difference($date, $expire, $format = null)
+    {
+        if ( TypeCheck::isString($date) ) {
+            $date = new self($date);
+        }
+        if ( TypeCheck::isString($expire) ) {
+            $expire = new self($expire);
+        }
+        if ( $format ) {
+            // '%R%a'
+            $interval = $date->diff($expire)->format($format);
+        } else {
+            $interval = $expire->getTimestamp() - $date->getTimestamp();
+        }
+        return intval($interval);
+    }
 
 	/**
 	 * @access public
 	 * @param string $date
 	 * @param string $format
 	 * @param string $to
-	 * @return object $date
+	 * @return object
 	 */
-	public static function createFrom($date, $format, $to = 'd/m/Y H:i:s')
+	public static function createFrom($date, $format, $to = 'Y-m-d H:i:s')
 	{
 		$date = self::createFromFormat($format, $date);
 		$date->format($to);
@@ -64,17 +81,17 @@ final class Date extends DateTime
 	 * @param string $to
 	 * @return string
 	 */
-	public static function toString($date, $format, $to = 'd/m/Y H:i:s')
+	public static function toString($date, $format, $to = 'Y-m-d H:i:s') : string
 	{
-		return Date::createFrom($date,$format)->format($to);
+		return self::createFrom($date,$format)->format($to);
 	}
-
+    
     /**
      * Return current time
      *
      * @access public
      * @param void
-     * @return unix timestamp
+     * @return int
      */
     public static function timeNow()
     {
@@ -104,7 +121,7 @@ final class Date extends DateTime
      * @param int $mt
      * @param int $d
      * @param int $y
-     * @return unix timestamp
+     * @return int
      */
     public static function newTime($h = 0, $m = 0, $s = 0, $mt = 0, $d = 0, $y = 0)
     {
@@ -122,5 +139,43 @@ final class Date extends DateTime
             ($currentDay + $d),
             ($currentYear + $y)
         );
+    }
+
+    /**
+     * @access public
+     * @param string $duration
+     * @return int
+     */
+    public static function expireIn($duration = 'P1Y') : int
+    {
+        $date = new self('now');
+        $now = mktime(
+            $date->format('H'),
+            $date->format('i'),
+            $date->format('s'),
+            $date->format('m'),
+            $date->format('d'),
+            $date->format('Y')
+        );
+        $expire = $date->add(new DateInterval($duration));
+        $limit = mktime(
+            $expire->format('H'),
+            $expire->format('i'),
+            $expire->format('s'),
+            $expire->format('m'),
+            $expire->format('d'),
+            $expire->format('Y')
+        );
+        return (int)$limit - $now;
+    }
+
+    /**
+     * @access public
+     * @param string $timezone
+     * @return void
+     */
+    public static function setDefaultTimezone($timezone = '')
+    {
+        date_default_timezone_set($timezone);
     }
 }

@@ -18,6 +18,7 @@ use FloatPHP\Classes\Filesystem\Stringify;
 use FloatPHP\Classes\Filesystem\TypeCheck;
 use FloatPHP\Classes\Filesystem\Arrayify;
 use FloatPHP\Classes\Http\Request;
+use FloatPHP\Classes\Http\Server;
 
 class Form
 {
@@ -112,7 +113,17 @@ class Form
 			// Override inputs values
 			foreach ($this->inputs as $key => $value) {
 				if ( isset($values[$value['name']]) ) {
-					$this->inputs[$key]['value'] = $values[$value['name']];
+					if ( $value['type'] == 'select' ) {
+						$this->inputs[$key]['selected'] = $values[$value['name']];
+
+					} elseif ( $value['type'] == 'checkbox' || $value['type'] == 'radio' ) {
+						if ( count($value['options']) == 1 && $values[$value['name']] == 1 ) {
+							$this->inputs[$key]['checked'] = true;
+						}
+
+					} else {
+						$this->inputs[$key]['value'] = $values[$value['name']];
+					}
 				}
 			}
 		}
@@ -258,17 +269,22 @@ class Form
 			if ( count($this->attributes['class']) > 0 ) {
 				$source = Arrayify::shift($this->attributes['class']);
 			}
-			
 		} elseif ( TypeCheck::isString($this->attributes['class']) ) {
 			if ( !empty($this->attributes['class']) ) {
 				$source = $this->attributes['class'];
 			}
-			
-		} elseif ( !empty($this->attributes['id']) ) {
-			$source = $this->attributes['id'];
+		}
+		if ( empty($source) ) {
+			if ( !empty($this->attributes['id']) ) {
+				$source = $this->attributes['id'];
 
-		}elseif ( !empty($this->attributes['name']) ) {
-			$source = $this->attributes['name'];
+			} elseif ( !empty($this->attributes['name']) ) {
+				$source = $this->attributes['name'];
+
+			} else {
+				$source = Server::get('request-uri');
+				$source = Stringify::slugify($source);
+			}
 		}
 		return $source;
 	}
@@ -416,13 +432,17 @@ class Form
 				$classes = $this->outputClasses($this->options['submit-wrap-class']);
 				$this->output .= '<div class="' . $classes . '">';
 			}
+			// type attribute
 			$this->output .= '<input type="submit" ';
+			// name attribute
 			if ( !empty($this->options['submit-name']) ) {
 				$this->output .= 'name="' . $this->options['submit-name'] . '" ';
 			}
+			// class attribute
 			if ( !empty($this->options['submit-class']) ) {
 				$this->output .= 'class="' . $this->options['submit-class'] . '" ';
 			}
+			// value attribute
 			$this->output .= 'value="' . $this->options['submit-text'] . '">';
 			if ( !empty($this->options['submit-wrap-class']) ) {
 				$this->output .= '</div>';
@@ -461,14 +481,15 @@ class Form
 
 			// Init temp html
 			$this->html = [
-				'before'     => '',
-				'label'      => '',
-				'opening'    => '',
-				'element'    => '',
-				'attributes' => '',
-				'content'    => '',
-				'closing'    => '',
-				'after'      => ''
+				'before'      => '',
+				'label'       => '',
+				'opening'     => '',
+				'element'     => '',
+				'attributes'  => '',
+				'content'     => '',
+				'closing'     => '',
+				'description' => '',
+				'after'       => ''
 			];
 
 			// Validate input type
@@ -499,9 +520,10 @@ class Form
 				}
 				$this->html['opening'] = $this->getInputOpening($input['type']);
 				$this->html['element'] = $this->getInputElement($input['type']);
-				$this->html['content'] = $this->getInputContent($input);
 				$this->html['attributes'] = $this->getInputAttributes($input);
+				$this->html['content'] = $this->getInputContent($input);
 				$this->html['closing'] = $this->getInputClosing($input['type']);
+				$this->html['description'] = $this->getInputDescription($input);
 				$this->html['after'] = $this->getInputAfter($input);
 			}
 
@@ -526,9 +548,10 @@ class Form
 			$this->output .= $this->html['label'];
 			$this->output .= $this->html['opening'];
 			$this->output .= $this->html['element'];
-			$this->output .= $this->html['content'];
 			$this->output .= $this->html['attributes'];
+			$this->output .= $this->html['content'];
 			$this->output .= $this->html['closing'];
+			$this->output .= $this->html['description'];
 			$this->output .= $this->html['after'];
 		}
 	}
@@ -596,11 +619,12 @@ class Form
 		return [
 			'type'          => 'text',
 			'name'          => $slug,
-			'id'            => $slug,
 			'label'         => $label,
+			'id'            => '',
 			'class'         => 'form-control',
 			'value'         => '',
 			'placeholder'   => '',
+			'description'   => '',
 			'min'           => '',
 			'max'           => '',
 			'step'          => '',
@@ -608,12 +632,14 @@ class Form
 			'multiple'      => false,
 			'autofocus'     => false,
 			'checked'       => false,
+			'disabled'      => false,
 			'required'      => false,
+			'readonly'      => false,
 			'use-request'   => false,
 			'selected'      => '',
 			'options'       => [],
-			'wrap-tag'      => 'div',
-			'wrap-class'    => 'form-group',
+			'wrap-tag'      => '',
+			'wrap-class'    => '',
 			'wrap-id'       => '',
 			'wrap-style'    => '',
 			'before-html'   => '',
@@ -837,6 +863,22 @@ class Form
 	}
 
 	/**
+	 * Get input description
+	 *
+	 * @access private
+	 * @param array $input
+	 * @return string
+	 */
+	private function getInputDescription($input = []) : string
+	{
+		$description = '';
+		if ( !empty($input['description']) ) {
+			$description = '<small>' . $input['description'] . '</small>';
+		}
+		return $description;
+	}
+
+	/**
 	 * Get input label
 	 *
 	 * @access private
@@ -849,17 +891,36 @@ class Form
 		switch ($input['type']) {
 			case 'radio':
 			case 'checkbox':
-				$label .= '<p>';
-				$label .= $input['label'];
-				if ( $input['required'] ) {
-					$label .= ' <strong>(*)</strong>';
+				if ( count($input['options']) > 0 ) {
+					if ( count($input['options']) > 1 ) {
+						$label .= '<p>';
+						$label .= $input['label'];
+						if ( $input['required'] ) {
+							$label .= ' <strong>(*)</strong>';
+						}
+						$label .= '</p>';
+					} else {
+						if ( !empty($input['id']) ) {
+							$label .= '<label for="' . $input['id'] . '">';
+						} else {
+							$label .= '<label>';
+						}
+						$label .= $input['label'];
+						if ( $input['required'] ) {
+							$label .= ' <strong>(*)</strong>';
+						}
+						$label .= '</label>';
+					}
 				}
-				$label .= '</p>';
 				break;
 			
 			default:
-				if ( $input['type'] !== 'hidden' ) {
-					$label .= '<label for="' . $input['id'] . '">';
+				if ( $input['type'] !== 'hidden' && $input['type'] !== 'submit' ) {
+					if ( !empty($input['id']) ) {
+						$label .= '<label for="' . $input['id'] . '">';
+					} else {
+						$label .= '<label>';
+					}
 					$label .= $input['label'];
 					if ( $input['required'] ) {
 						$label .= ' <strong>(*)</strong>';
@@ -983,6 +1044,8 @@ class Form
 			case 'checkbox':
 				if ( count($input['options']) > 0 ) {
 					foreach ( $input['options'] as $key => $option ) {
+
+						// checked input
 						$checked = false;
 						if ( $input['checked'] ) {
 							$checked = true;
@@ -996,24 +1059,55 @@ class Form
 								}
 							}
 						}
-						$slug = Stringify::slugify($option);
+						
+
+						// Open input
 						$content .= '<input';
-						$content .= ' id="' . $slug . '"';
+
+						// id attribute
+						if ( count($input['options']) > 1 ) {
+							$slug = Stringify::slugify($option);
+							$content .= ' id="' . $slug . '"';
+						} else {
+							if ( !empty($input['id']) ) {
+								$content .= ' id="' . $input['id'] . '"';
+							}
+						}
+
+						// type attribute
 						$content .= ' type="' . $input['type'] . '"';
-						$content .= ' name="' . $input['name'] . '[]"';
+
+						// name attribute
+						$content .= ' name="' . $input['name'] . '';
+						if ( count($input['options']) > 1 ) {
+							$content .= '[]';
+						}
+						$content .= '"';
+
+						// class attribute
 						$class = $this->outputClasses($input['class']);
 						if ( !empty($class) ) {
 							$content .= ' class="' . $class . '"';
 						}
-						$content .= ' value="' . $key . '"';
+
+						// value attribute
+						if ( count($input['options']) > 1 ) {
+							$content .= ' value="' . $key . '"';
+						}
+						
+						// Single attribute
 						if ( $checked ) {
 							$content .= ' checked';
 						}
 						if ( $input['required'] ) {
 							$content .= ' required';
 						}
+
+						// Close input
 						$content .= '>';
-						$content .= '<label for="' . $slug . '">' . $option . '</label>';
+						if ( count($input['options']) > 1 ) {
+							$content .= '<label for="' . $slug . '">' . $option . '</label>';
+						}
 					}
 				}
 				break;
@@ -1033,22 +1127,40 @@ class Form
 		$attributes = '';
 		if ( $input['type'] !== 'radio' && $input['type'] !== 'checkbox' ) {
 			$attributes = ' ';
+			// id attributes
 			if ( !empty($input['id']) ) {
 				$attributes .= 'id="' . $input['id'] . '" ';
 			}
-			if ( !empty($input['type']) ) {
-				$attributes .= 'type="' . $input['type'] . '" ';
+			// type textarea
+			if ( $input['type'] !== 'textarea' && $input['type'] !== 'select' ) {
+				if ( !empty($input['type']) ) {
+					$attributes .= 'type="' . $input['type'] . '" ';
+				}
 			}
+			// name attributes
 			if ( !empty($input['name']) ) {
 				$attributes .= 'name="' . $input['name'] . '" ';
 			}
-			if ( !empty($input['class']) ) {
-				$class = $this->outputClasses($input['class']);
-				$attributes .= 'class="' . $class . '" ';
+			// class attributes
+			if ( $input['type'] !== 'hidden' ) {
+				if ( !empty($input['class']) ) {
+					$class = $this->outputClasses($input['class']);
+					$attributes .= 'class="' . $class . '" ';
+				}
 			}
-			if ( !empty($input['placeholder']) ) {
-				$attributes .= 'placeholder="' . $input['placeholder'] . '" ';
+			// placeholder attributes
+			if ( $input['type'] !== 'textarea' && $input['type'] !== 'select' ) {
+				if ( !empty($input['placeholder']) ) {
+					$attributes .= 'placeholder="' . $input['placeholder'] . '" ';
+				}
 			}
+			// value attributes
+			if ( $input['type'] !== 'textarea' && $input['type'] !== 'select' ) {
+				if ( !empty($input['value']) ) {
+					$attributes .= 'value="' . $input['value'] . '" ';
+				}
+			}
+			// Special attributes
 			if ( $input['type'] == 'number' || $input['type'] == 'range' ) {
 				if ( !empty($input['min']) ) {
 					$attributes .= 'min="' . $input['min'] . '" ';
@@ -1060,17 +1172,22 @@ class Form
 					$attributes .= 'step="' . $input['step'] . '" ';
 				}
 			}
-			if ( !empty($input['value']) ) {
-				$attributes .= 'value="' . $input['value'] . '" ';
-			}
+			// style attribute
 			if ( !empty($input['style']) ) {
 				$attributes .= 'style="' . $input['style'] . '" ';
 			}
+			// Single attributes
 			if ( $input['autofocus'] ) {
 				$attributes .= 'autofocus ';
 			}
+			if ( $input['disabled'] ) {
+				$attributes .= 'disabled ';
+			}
 			if ( $input['required'] ) {
 				$attributes .= 'required ';
+			}
+			if ( $input['readonly'] ) {
+				$attributes .= 'readonly ';
 			}
 			$attributes = rtrim($attributes);
 			$attributes = $attributes . '>';

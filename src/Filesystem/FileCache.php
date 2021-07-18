@@ -37,7 +37,7 @@ class FileCache
 
 	/**
 	 * @param array $config
-	 * @param int|string $ttl
+	 * @param int $ttl
 	 */
 	public function __construct(array $config = [], $ttl = 5)
 	{
@@ -49,7 +49,7 @@ class FileCache
 			'path'               => 'cache',
 			'autoTmpFallback'    => true,
 			'compressData'       => true,
-			'defaultChmod'       => 755,
+			'defaultChmod'       => 0755,
 			'cacheFileExtension' => 'db'
 		],$config);
 
@@ -57,6 +57,7 @@ class FileCache
 		CacheManager::setDefaultConfig(new Config($this->config));
 
 		// Init adapter
+		$this->reset();
 		$this->adapter = CacheManager::getInstance('Files');
 	}
 
@@ -68,6 +69,18 @@ class FileCache
 	 * @return void
 	 */
 	public function __destruct()
+	{
+		$this->reset();
+	}
+
+	/**
+	 * Reset cache instance
+	 *
+	 * @access private
+	 * @param void
+	 * @return void
+	 */
+	private function reset()
 	{
 		CacheManager::clearInstances();
 	}
@@ -87,16 +100,20 @@ class FileCache
 	/**
 	 * @access public
 	 * @param mixed $data
-	 * @param string $tag
+	 * @param mixed $tag
 	 * @return bool
 	 */
-	public function set($data, $tag = null)
+	public function set($data, $tag = null) : bool
 	{
 		$this->cache->set($data)
 		->expiresAfter($this->ttl);
 		if ( $tag ) {
 			$tag = Stringify::formatKey($tag);
-			$this->cache->addTag($tag);
+			if ( TypeCheck::isArray($tag) ) {
+				$this->cache->addTags($tag);
+			} else {
+				$this->cache->addTag($tag);
+			}
 		}
 		return $this->adapter->save($this->cache);
 	}
@@ -107,7 +124,7 @@ class FileCache
 	 * @param mixed $data
 	 * @return bool
 	 */
-	public function update($key, $data)
+	public function update($key, $data) : bool
 	{
 		$key = Stringify::formatKey($key);
 		$this->cache = $this->adapter->getItem($key);
@@ -121,7 +138,7 @@ class FileCache
 	 * @param string $key
 	 * @return bool
 	 */
-	public function delete($key)
+	public function delete($key) : bool
 	{
 		$key = Stringify::formatKey($key);
 		return $this->adapter->deleteItem($key);
@@ -129,12 +146,16 @@ class FileCache
 
 	/**
 	 * @access public
-	 * @param string $tag
+	 * @param mixed $tag
 	 * @return bool
 	 */
-	public function deleteByTag($tag)
+	public function deleteByTag($tag = '') : bool
 	{
-		return $this->adapter->deleteItemsByTag($tag);
+		if ( TypeCheck::isArray($tag) ) {
+			return $this->adapter->deleteItemsByTags($tag);
+		} else {
+			return $this->adapter->deleteItemsByTag($tag);
+		}
 	}
 
 	/**
@@ -142,7 +163,7 @@ class FileCache
 	 * @param void
 	 * @return bool
 	 */
-	public function isCached()
+	public function isCached() : bool
 	{
 		return $this->cache->isHit();
 	}
@@ -151,7 +172,7 @@ class FileCache
 	 * Set filecache TTL
 	 *
 	 * @access public
-	 * @param int|string
+	 * @param int
 	 * @return void
 	 */
 	public function setTTL($ttl = 5)
@@ -166,7 +187,7 @@ class FileCache
 	 * @param void
 	 * @return bool
 	 */
-	public function purge()
+	public function purge() : bool
 	{
 		return File::clearDir($this->config['path']);
 	}

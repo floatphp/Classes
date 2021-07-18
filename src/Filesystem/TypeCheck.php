@@ -21,7 +21,7 @@ final class TypeCheck
 	 * @param mixed $data
 	 * @return bool
 	 */
-	public static function isString($data)
+	public static function isString($data) : bool
 	{
 		return is_string($data);
 	}
@@ -31,7 +31,7 @@ final class TypeCheck
 	 * @param mixed $data
 	 * @return bool
 	 */
-	public static function isObject($data)
+	public static function isObject($data) : bool
 	{
 		return is_object($data);
 	}
@@ -41,7 +41,7 @@ final class TypeCheck
 	 * @param mixed $data
 	 * @return bool
 	 */
-	public static function isArray($data)
+	public static function isArray($data) : bool
 	{
 		return is_array($data);
 	}
@@ -52,7 +52,7 @@ final class TypeCheck
 	 * @param bool $string
 	 * @return bool
 	 */
-	public static function isInt($data, $string = false)
+	public static function isInt($data, $string = false) : bool
 	{
 		if ( $string ) {
 			return is_numeric($data);
@@ -66,7 +66,7 @@ final class TypeCheck
 	 * @param bool $string
 	 * @return bool
 	 */
-	public static function isFloat($data, $string = false)
+	public static function isFloat($data, $string = false) : bool
 	{
 		if ( $string ) {
 			$data = (float)$data;
@@ -79,7 +79,7 @@ final class TypeCheck
 	 * @param mixed $data
 	 * @return bool
 	 */
-	public static function isBool($data)
+	public static function isBool($data) : bool
 	{
 		return is_bool($data);
 	}
@@ -89,7 +89,7 @@ final class TypeCheck
 	 * @param mixed $data
 	 * @return bool
 	 */
-	public static function isNull($data)
+	public static function isNull($data) : bool
 	{
 		return is_null($data);
 	}
@@ -99,7 +99,7 @@ final class TypeCheck
 	 * @param mixed $data
 	 * @return bool
 	 */
-	public static function isNan($data)
+	public static function isNan($data) : bool
 	{
 		return is_nan($data);
 	}
@@ -109,7 +109,7 @@ final class TypeCheck
 	 * @param mixed $data
 	 * @return bool
 	 */
-	public static function isCallable($data)
+	public static function isCallable($data) : bool
 	{
 		return is_callable($data);
 	}
@@ -119,7 +119,7 @@ final class TypeCheck
 	 * @param string $function
 	 * @return bool
 	 */
-	public static function isFunction($function)
+	public static function isFunction($function) : bool
 	{
 		return function_exists($function);
 	}
@@ -129,7 +129,7 @@ final class TypeCheck
 	 * @param string $class
 	 * @return bool
 	 */
-	public static function isClass($class)
+	public static function isClass($class) : bool
 	{
 		return class_exists($class);
 	}
@@ -140,7 +140,7 @@ final class TypeCheck
 	 * @param string $class
 	 * @return bool
 	 */
-	public static function isSubClassOf($sub, $class)
+	public static function isSubClassOf($sub, $class) : bool
 	{
 		return is_subclass_of($sub,$class);
 	}
@@ -151,7 +151,7 @@ final class TypeCheck
 	 * @param string $interface
 	 * @return bool
 	 */
-	public static function hasInterface($class, $interface)
+	public static function hasInterface($class, $interface) : bool
 	{
 		$interfaces = class_implements($class);
 		return Stringify::contains($interfaces,$interface);
@@ -159,10 +159,21 @@ final class TypeCheck
 
 	/**
 	 * @access public
+	 * @param object $object
+	 * @param string $method
+	 * @return bool
+	 */
+	public static function hasMethod($object, $method) : bool
+	{
+		return method_exists($object,$method);
+	}
+
+	/**
+	 * @access public
 	 * @param mixed $data
 	 * @return bool
 	 */
-	public static function isCountable($data)
+	public static function isCountable($data) : bool
 	{
 		return is_countable($data);
 	}
@@ -172,7 +183,7 @@ final class TypeCheck
 	 * @param mixed $data
 	 * @return bool
 	 */
-	public static function isResource($data)
+	public static function isResource($data) : bool
 	{
 		return is_resource($data);
 	}
@@ -182,7 +193,7 @@ final class TypeCheck
 	 * @param mixed $data
 	 * @return bool
 	 */
-	public static function isScalar($data)
+	public static function isScalar($data) : bool
 	{
 		return is_scalar($data);
 	}
@@ -192,13 +203,13 @@ final class TypeCheck
 	 * @param string $path
 	 * @return bool
 	 */
-	public static function isStream($path)
+	public static function isStream($path) : bool
 	{
 	    $scheme = strpos($path,'://');
 	    if ( false === $scheme ) {
 	        return false;
 	    }
 	    $stream = substr($path,0,$scheme);
-	    return in_array($stream,stream_get_wrappers(),true);
+	    return Arrayify::inArray($stream,stream_get_wrappers(),true);
 	}
 }

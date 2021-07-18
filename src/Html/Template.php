@@ -18,6 +18,9 @@ use Twig\Loader\FilesystemLoader as Loader;
 use Twig\Environment as Environment;
 use Twig\TwigFunction as Module;
 
+/**
+ * Wrapper Class for Twig
+ */
 final class Template
 {
     /**

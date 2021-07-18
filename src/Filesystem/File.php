@@ -14,8 +14,6 @@
 
 namespace FloatPHP\Classes\Filesystem;
 
-use FloatPHP\Interfaces\Classes\FileInterface;
-
 class File
 {
 	/**
@@ -282,7 +280,7 @@ class File
 	 */
 	public function getLines($length = null)
 	{
-		return fgets($this->handler, $length);
+		return fgets($this->handler,$length);
 	}
 
 	/**
@@ -301,7 +299,7 @@ class File
 			} else {
 				$this->content = @fread($this->handler, $this->size);
 			}
-			if ($return) {
+			if ( $return ) {
 				$this->close();
 				return $this->content;
 			}
@@ -655,13 +653,85 @@ class File
 	 * @param string $append
 	 * @return mixed
 	 */
-	public static function w($path, $input = '', $append = false)
+	public static function w($path = '', $input = '', $append = false)
 	{
 		$flag = 0;
 		if ( $append ) {
 			$flag = FILE_APPEND;
 		}
 		return @file_put_contents($path,$input,$flag);
+	}
+
+	/**
+	 * Copy file without stream
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param string $copy
+	 * @return bool
+	 */
+    public static function cp($path = '', $copy = '')
+    {
+    	if ( self::exists($path) ) {
+	        if ( copy($path,$copy) ) {
+	            return true;
+	        }
+    	}
+        return false;
+    }
+
+	/**
+	 * Index path files
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return array
+	 */
+	public static function index($path = '') : array
+	{
+		$files = glob($path);
+		return Arrayify::combine($files,Arrayify::map('filectime',$files));
+	}
+
+	/**
+	 * Get last created file path
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return string
+	 */
+	public static function last($path = '') : string
+	{
+		$files = self::index($path);
+		arsort($files);
+		return (string)key($files);
+	}
+
+	/**
+	 * Get first created file path
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return string
+	 */
+	public static function first($path = '') : string
+	{
+		$files = self::index($path);
+		asort($files);
+		return (string)key($files);
+	}
+
+	/**
+	 * Get files count
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return int
+	 */
+	public static function count($path = '') : int
+	{
+		$files = self::index($path);
+		return (int)count($files);
 	}
 
 	/**
@@ -676,5 +746,24 @@ class File
 	public static function parseIni($path, $sections = false, $mode = INI_SCANNER_NORMAL)
 	{
 		return parse_ini_file($path,$sections,$mode);
+	}
+
+	/**
+	 * Download file
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return mixed
+	 */
+	public static function download($path = '')
+	{
+		if ( self::exists($path) ) {
+			$file = self::r($path);
+			$filename = Stringify::replace(' ','-',basename($path));
+			header('Content-type: application/force-download');
+			header("Content-Disposition: attachment; filename={$filename};");
+			echo $file;
+		}
+		return false;
 	}
 }
