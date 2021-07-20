@@ -151,19 +151,6 @@ final class Arrayify
 		}
        	$array = self::values($temp);
        	return $array;
-	    // $i = 0;
-	    // $wrapper = [];
-	    // $temp = [];
-	    // foreach($array as $val) {
-	    // 	if ( isset($val[$key]) ) {
-		   //      if ( !self::inArray($val[$key],$temp) ) {
-		   //          $temp[$i] = $val[$key];
-		   //          $wrapper[$i] = $val;
-		   //      }
-	    // 	}
-	    //     $i++;
-	    // }
-	    // return $wrapper;
 	}
 
 	/**
@@ -197,8 +184,11 @@ final class Arrayify
 	 * @param int $mode
 	 * @return array
 	 */
-	public static function filter(array $array, $callable = null, $mode = 0) : array
+	public static function filter(array $array, $callable = null, $mode = null) : array
 	{
-		return array_filter($array,$callable,$mode);
+		if ( $callable ) {
+			return array_filter($array,$callable,$mode);
+		}
+		return array_filter($array);
 	}
 }

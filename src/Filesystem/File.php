@@ -658,6 +658,7 @@ class File
 		$flag = 0;
 		if ( $append ) {
 			$flag = FILE_APPEND;
+			$input .= PHP_EOL;
 		}
 		return @file_put_contents($path,$input,$flag);
 	}
