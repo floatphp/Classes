@@ -242,8 +242,8 @@ final class System
         } else {
             $load = self::getLoadAvg();
             $usage = [
-                'usage' => $load,
-                'count' => $load[0]
+                'usage' => $load[0],
+                'count' => count($load)
             ];
         }
         return $usage;
@@ -290,14 +290,13 @@ final class System
             });
             // Reset array positions
             $memory = Arrayify::merge($memory);
-
             $total = round($memory[1] / 1000000,2);
-            $available = round($memory[6] / 1000000,2);
+            $available = round($memory[3] / 1000000,2);
             $usage = [
                 'total'     => $total,
                 'available' => $available,
                 'used'      => round($memory[2] / 1000000,2),
-                'free'      => round($memory[3] / 1000000,2),
+                'free'      => round($memory[6] / 1000000,2),
                 'shared'    => round($memory[4] / 1000000,2),
                 'cached'    => round($memory[5] / 1000000,2),
                 'usage'     => round(($available / $total) * 100)
