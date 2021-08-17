@@ -30,6 +30,7 @@ final class Response extends Status
 		self::setHttpHeaders($code);
 		echo Json::encode([
 			'status'  => $status,
+			'code'    => $code,
 			'message' => $message,
 			'content' => $content
 		]);
@@ -45,7 +46,7 @@ final class Response extends Status
 	public static function setHttpHeaders($code, $type = 'application/json')
 	{
 		$status = self::getMessage($code);
-		$protocol = Server::get('SERVER_PROTOCOL');
+		$protocol = Server::get('server-protocol');
 		header("Content-Type: {$type}");
 		header("{$protocol} {$code} {$status}");
 	}
