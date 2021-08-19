@@ -18,7 +18,7 @@ final class Upload
 {
 	/**
 	 * @access public
-	 * @param string $item null
+	 * @param string $item
 	 * @return mixed
 	 */
 	public static function get($item = null)
@@ -43,7 +43,7 @@ final class Upload
 	
 	/**
 	 * @access public
-	 * @param string $item null
+	 * @param string $item
 	 * @return bool
 	 */
 	public static function isSetted($item = null)
@@ -58,16 +58,30 @@ final class Upload
 	/**
 	 * @access public
 	 * @param string $upload
-	 * @param string $file null
+	 * @param string $file
 	 * @return mixed
 	 */
 	public static function doUpload($upload, $file = null)
 	{
-		if ( isset($_FILES) && !$_FILES['file']['error'] ) {
-			$tmp = ($file) ? $file : $_FILES['file']['tmp_name'];
-			$name = ($file) ? basename($file) : $_FILES['file']['name'];
-			move_uploaded_file($tmp, "{$upload}/{$name}");
-			return "{$upload}/{$name}";
-		} else return false;
+		if ( self::isSetted() ) {
+			if ( !$_FILES['file']['error'] ) {
+				$tmp = ($file) ? $file : $_FILES['file']['tmp_name'];
+				$name = ($file) ? basename($file) : $_FILES['file']['name'];
+				self::moveUploadedFile($tmp,"{$upload}/{$name}");
+				return "{$upload}/{$name}";
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * @access public
+	 * @param string $tmp
+	 * @param string $file
+	 * @return bool
+	 */
+	public static function moveUploadedFile($tmp, $file)
+	{
+		return move_uploaded_file($tmp,$file);
 	}
 }
