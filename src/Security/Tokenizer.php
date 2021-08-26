@@ -73,6 +73,7 @@ class Tokenizer
             $seeds  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             $seeds .= 'abcdefghijklmnopqrstuvwxyz';
             $seeds .= '0123456789';
+            $seeds .= '!#$%&()*+,-.:;<>?@[]^{}~';
         }
         for ($i = 0; $i < $length; $i++) {
             $token .= $seeds[self::range(0,strlen($seeds))];
