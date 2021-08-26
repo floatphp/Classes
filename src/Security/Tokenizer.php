@@ -63,17 +63,20 @@ class Tokenizer
     /**
      * @access public
      * @param int $length
+     * @param bool $special
      * @param string $seeds
      * @return string
      */
-    public static function generate(int $length = 32, $seeds = '') : string
+    public static function generate(int $length = 32, $special = false, $seeds = '') : string
     {
         $token = '';
         if ( empty($seeds) ) {
             $seeds  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             $seeds .= 'abcdefghijklmnopqrstuvwxyz';
             $seeds .= '0123456789';
-            $seeds .= '!#$%&()*+,-.:;<>?@[]^{}~';
+            if ( $special ) {
+                $seeds .= '!#$%&()*+,-.:;<>?@[]^{}~';
+            }
         }
         for ($i = 0; $i < $length; $i++) {
             $token .= $seeds[self::range(0,strlen($seeds))];
