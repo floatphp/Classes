@@ -255,14 +255,14 @@ class License
             }
 
             if ( $this->data['date']['end'] !== 'never' ) {
+                
+                $formated = date($this->settings['date-format'],$this->data['date']['end']);
+                $this->data['date']['formated']['end'] = $formated;
+
                 // License expired
                 if ( ($this->data['date']['end'] - time()) < 0 ) {
                     $this->error = 'Expired';
                     return false;
-
-                } else {
-                    $formated = date($this->settings['date-format'],$this->data['date']['end']);
-                    $this->data['date']['formated']['end'] = $formated;
                 }
             }
         }
