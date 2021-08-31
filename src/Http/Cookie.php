@@ -18,7 +18,7 @@ final class Cookie
 {
 	/**
 	 * @access public
-	 * @param string $item null
+	 * @param string $item
 	 * @return mixed
 	 */
 	public static function get($item = null)
@@ -37,14 +37,14 @@ final class Cookie
 	 * @param array $options
 	 * @return bool
 	 */
-	public static function set($item , $value = '', $options = [])
+	public static function set($item, $value = null, $options = [])
 	{
 		return setcookie($item,$value,$options);
 	}
 	
 	/**
 	 * @access public
-	 * @param string $item null
+	 * @param string $item
 	 * @return bool
 	 */
 	public static function isSetted($item = null)

@@ -36,14 +36,14 @@ final class Get
 	 * @param mixed $value
 	 * @return void
 	 */
-	public static function set($item, $value)
+	public static function set($item, $value = null)
 	{
 		$_GET[$item] = $value;
 	}
 	
 	/**
 	 * @access public
-	 * @param string $item null
+	 * @param string $item
 	 * @return bool
 	 */
 	public static function isSetted($item = null)

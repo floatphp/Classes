@@ -15,7 +15,6 @@
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\Stringify;
-use FloatPHP\Classes\Server\System;
 
 final class Server
 {
@@ -48,7 +47,7 @@ final class Server
 	 * @param bool $format
 	 * @return void
 	 */
-	public static function set($item, $value, $format = true)
+	public static function set($item, $value = null, $format = true)
 	{
 		if ( $format ) {
 			$value = self::formatArgs($value);

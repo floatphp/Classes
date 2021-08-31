@@ -20,6 +20,7 @@ use FloatPHP\Classes\Filesystem\Stringify;
 use FloatPHP\Classes\Filesystem\TypeCheck;
 use FloatPHP\Classes\Filesystem\Arrayify;
 use \RuntimeException;
+use \Traversable;
 
 class Router implements RouterInterface
 {
@@ -123,7 +124,7 @@ class Router implements RouterInterface
      * @param string $name
      * @param string $permissions
      * @return void
-     * @throws Exception
+     * @throws RuntimeException
      */
     public function map($method, $route, $target, $name = null, $permissions = null)
     {
@@ -145,7 +146,7 @@ class Router implements RouterInterface
      * @param string $routeName
      * @param array @params
      * @return string
-     * @throws Exception
+     * @throws RuntimeException
      */
     public function generate($routeName, $params = [])
     {

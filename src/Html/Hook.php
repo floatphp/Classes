@@ -319,7 +319,7 @@ class Hook
 	 *
 	 * @access public
 	 * @param string $tag
-	 * @param string $arg
+	 * @param mixed $arg
 	 * @return mixed
 	 */
 	public function doAction($tag, $arg = '')

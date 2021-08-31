@@ -378,7 +378,7 @@ class Client
      * @param string $body
      * @return int
      */
-    private function catchBody($handler, $body) : int
+    private function catchBody($handler, string $body) : int
     {
         $this->response['body'] .= $body;
         return strlen($body);

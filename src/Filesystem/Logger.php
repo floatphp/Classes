@@ -78,7 +78,7 @@ class Logger implements LoggerInterface
      * @param string $message
      * @return void
      */
-    public function debug($message)
+    public function debug($message = '')
     {
         $this->write('debug',$message);
     }
@@ -88,7 +88,7 @@ class Logger implements LoggerInterface
      * @param string $message
      * @return void
      */
-    public function error($message)
+    public function error($message = '')
     {
         $this->write('error',$message);
     }
@@ -98,7 +98,7 @@ class Logger implements LoggerInterface
      * @param string $message
      * @return void
      */
-    public function warning($message)
+    public function warning($message = '')
     {
         $this->write('warning',$message);
     }
@@ -108,7 +108,7 @@ class Logger implements LoggerInterface
      * @param string $message
      * @return void
      */
-    public function info($message)
+    public function info($message = '')
     {
         $this->write('info',$message);
     }
@@ -119,13 +119,13 @@ class Logger implements LoggerInterface
      * @param string $type
      * @return void
      */
-    public function custom($message, $type = 'custom')
+    public function custom($message = '', $type = 'custom')
     {
         $this->write($type,$message);
     }
 
     /**
-     * Log natif errors
+     * Log natif PHP errors
      *
      * @access public
      * @param string $message

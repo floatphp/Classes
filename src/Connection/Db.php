@@ -15,7 +15,6 @@
 namespace FloatPHP\Classes\Connection;
 
 use FloatPHP\Interfaces\Classes\LoggerInterface;
-use FloatPHP\Classes\Filesystem\Logger;
 use FloatPHP\Classes\Filesystem\TypeCheck;
 use FloatPHP\Classes\Filesystem\Stringify;
 use FloatPHP\Classes\Filesystem\Arrayify;
@@ -313,9 +312,11 @@ class Db
      * @param string $sql
      * @return string
      */
-    private function log($message, $sql = '')
+    private function log($message = '', $sql = '')
     {
-        $exception = 'Unhandled Exception';
+        if ( empty($message) ) {
+            $message = 'Unhandled Exception';
+        }
         if ( !empty($sql) ) {
             $message .= "\r\nRaw SQL : {$sql}";
         }

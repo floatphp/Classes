@@ -50,8 +50,8 @@ final class Password extends Tokenizer
     {
         $uppercase = Stringify::match('@[A-Z]@',$password);
         $lowercase = Stringify::match('@[a-z]@',$password);
-        $number = Stringify::match('@[0-9]@',$password);
-        $special = Stringify::match('@[^\w]@',$password);
+        $number    = Stringify::match('@[0-9]@',$password);
+        $special   = Stringify::match('@[^\w]@',$password);
 
         if ( !$uppercase || !$lowercase || !$number || !$special || strlen($password) < 8 ) {
             return false;

@@ -253,8 +253,8 @@ final class Shortcode extends Hook
 	 * Combine user attributes with known attributes and fill in defaults when needed
 	 *
 	 * @access public
-	 * @param string $pairs
-	 * @param string $atts
+	 * @param array $pairs
+	 * @param mixed $atts
 	 * @param string $shortcode
 	 * @return mixed
 	 */

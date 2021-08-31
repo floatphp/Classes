@@ -18,7 +18,7 @@ final class Post
 {
 	/**
 	 * @access public
-	 * @param string $item null
+	 * @param string $item
 	 * @return mixed
 	 */
 	public static function get($item = null)
@@ -36,14 +36,14 @@ final class Post
 	 * @param mixed $value
 	 * @return void
 	 */
-	public static function set($item, $value)
+	public static function set($item, $value = null)
 	{
 		$_POST[$item] = $value;
 	}
 
 	/**
 	 * @access public
-	 * @param string $item null
+	 * @param string $item
 	 * @return bool
 	 */
 	public static function isSetted($item = null)

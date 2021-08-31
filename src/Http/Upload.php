@@ -36,7 +36,7 @@ final class Upload
 	 * @param mixed $value
 	 * @return void
 	 */
-	public static function set($item, $value)
+	public static function set($item, $value = null)
 	{
 		$_FILES[$item] = $value;
 	}

@@ -14,8 +14,6 @@
 
 namespace FloatPHP\Classes\Security;
 
-use FloatPHP\Classes\Filesystem\Stringify;
-
 class Encryption
 {
 	/**

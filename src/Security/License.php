@@ -16,7 +16,6 @@ namespace FloatPHP\Classes\Security;
 
 use FloatPHP\Classes\Http\Server;
 use FloatPHP\Classes\Server\System;
-use FloatPHP\Classes\Server\Date;
 use FloatPHP\Classes\Filesystem\Arrayify;
 use FloatPHP\Classes\Filesystem\Stringify;
 use FloatPHP\Classes\Filesystem\TypeCheck;
@@ -150,7 +149,7 @@ class License
      * @param array $args
      * @return mixed
      */
-    public function generate(int $start = 0, $expireIn = 31449600, array $args = [])
+    public function generate(int $start = 0, $expireIn = 3600, array $args = [])
     {
         // Include key id
         $data['id'] = md5($this->key);
@@ -172,9 +171,6 @@ class License
 
             if ( $expireIn === false ) {
                 $data['date']['end'] = 'never';
-
-            } elseif ( TypeCheck::isString($expireIn) ) {
-                $data['date']['end'] = $start + Date::expireIn($expireIn);
 
             } else {
                 $data['date']['end'] = $start + $expireIn;
@@ -244,20 +240,21 @@ class License
         // Time validation
         if ( $this->useTime() ) {
 
+            // Formated start date
+            $formated = date($this->settings['date-format'],$this->data['date']['start']);
+            $this->data['date']['formated']['start'] = $formated;
+            
+            // Formated end date
+            $formated = date($this->settings['date-format'],$this->data['date']['end']);
+            $this->data['date']['formated']['end'] = $formated;
+
             // License used before start
             if ( $this->data['date']['start'] > (time() + $this->settings['start']) ) {
                 $this->error = 'Minus';
                 return false;
-
-            } else {
-                $formated = date($this->settings['date-format'],$this->data['date']['start']);
-                $this->data['date']['formated']['start'] = $formated;
             }
 
             if ( $this->data['date']['end'] !== 'never' ) {
-                
-                $formated = date($this->settings['date-format'],$this->data['date']['end']);
-                $this->data['date']['formated']['end'] = $formated;
 
                 // License expired
                 if ( ($this->data['date']['end'] - time()) < 0 ) {

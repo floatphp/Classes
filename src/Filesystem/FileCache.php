@@ -16,7 +16,6 @@ namespace FloatPHP\Classes\Filesystem;
 
 use Phpfastcache\CacheManager;
 use Phpfastcache\Drivers\Files\Config;
-use Phpfastcache\Config\ConfigurationOption;
 
 /**
  * Wrapper Class for External FileCache

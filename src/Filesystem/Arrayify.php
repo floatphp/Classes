@@ -62,7 +62,7 @@ final class Arrayify
 
 	/**
 	 * @access public
-	 * @param callback $callback
+	 * @param mixed $callback
 	 * @param array $array
 	 * @param array $arrays
 	 * @return array

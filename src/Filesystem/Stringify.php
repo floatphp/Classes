@@ -152,12 +152,12 @@ final class Stringify
 	/**
 	 * @access public
 	 * @param void
-	 * @return string
+	 * @return array
 	 */
-	public static function getSpecialChars()
+	public static function getSpecialChars() : array
 	{
 		$json = new Json(dirname(__FILE__).'/bin/special.json');
-		return $json->parse(true);
+		return (array)$json->parse(true);
 	}
 
 	/**
@@ -610,9 +610,9 @@ final class Stringify
 
 	/**
 	 * @access private
-	 * @param string $value
+	 * @param mixed $value
 	 * @param callable $callback
-	 * @return string
+	 * @return mixed
 	 */
 	private static function deepMap($value, $callback)
 	{

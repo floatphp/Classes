@@ -144,11 +144,12 @@ final class Date extends DateTime
     /**
      * @access public
      * @param string $duration
+     * @param string $date
      * @return int
      */
-    public static function expireIn($duration = 'P1Y') : int
+    public static function expireIn($duration = 'P1Y', $date = 'now') : int
     {
-        $date = new self('now');
+        $date = new self($date);
         $now = mktime(
             $date->format('H'),
             $date->format('i'),
