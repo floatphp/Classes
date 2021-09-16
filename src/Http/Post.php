@@ -51,7 +51,7 @@ final class Post
 		if ( $item ) {
 			return isset($_POST[$item]);
 		} else {
-			return isset($_POST);
+			return isset($_POST) && !empty($_POST);
 		}
 	}
 }

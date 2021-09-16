@@ -12,7 +12,6 @@
  * This file if a part of FloatPHP Framework
  */
 
-
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Interfaces\Classes\RouterInterface;

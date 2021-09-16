@@ -52,6 +52,6 @@ final class ResponseXML
 	 */
 	public static function parseFile($xml, $args = 16384|20908)
 	{
-		return simplexml_load_file($xml,'SimpleXMLElement',$args);
+		return @simplexml_load_file($xml,'SimpleXMLElement',$args);
 	}
 }

@@ -51,7 +51,7 @@ final class Request
 		if ( $item ) {
 			return isset($_REQUEST[$item]);
 		} else {
-			return isset($_REQUEST);
+			return isset($_REQUEST) && !empty($_REQUEST);
 		}
 	}
 }

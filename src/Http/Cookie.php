@@ -52,7 +52,7 @@ final class Cookie
 		if ( $item ) {
 			return isset($_COOKIE[$item]);
 		} else {
-			return isset($_COOKIE);
+			return isset($_COOKIE) && !empty($_COOKIE);
 		}
 	}
 }

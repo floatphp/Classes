@@ -21,7 +21,7 @@ use FloatPHP\Classes\Filesystem\Stringify;
 final class System
 {
 	/**
-	 * PHP CLI mode
+	 * PHP CLI mode.
 	 *
 	 * @access public
 	 * @param void
@@ -36,7 +36,7 @@ final class System
 	}
 
     /**
-     * PHP Memory exceeded
+     * PHP Memory exceeded.
      *
      * @access public
      * @param float $percent
@@ -53,7 +53,7 @@ final class System
     }
 
 	/**
-	 * Get memory limit
+	 * Get memory limit.
 	 *
 	 * @access public
 	 * @param void
@@ -79,7 +79,7 @@ final class System
 	}
 
 	/**
-	 * Get PHP memory usage
+	 * Get PHP memory usage.
 	 *
 	 * @access public
 	 * @param bool $real
@@ -96,7 +96,7 @@ final class System
 	}
 
     /**
-     * Get PHP version
+     * Get PHP version.
      *
      * @access public
      * @param void
@@ -108,7 +108,7 @@ final class System
     }
 
     /**
-     * Get OS
+     * Get OS.
      *
      * @access public
      * @param void
@@ -120,7 +120,7 @@ final class System
     }
 
     /**
-     * Get OS name
+     * Get OS name.
      *
      * @access public
      * @param void
@@ -132,7 +132,7 @@ final class System
     }
 
     /**
-     * Set ini
+     * Set ini.
      *
      * @access public
      * @param mixed $option
@@ -152,7 +152,7 @@ final class System
     }
 
     /**
-     * Get ini
+     * Get ini value.
      *
      * @access public
      * @param string $option
@@ -164,7 +164,7 @@ final class System
     }
 
     /**
-     * Set time limit
+     * Set time limit.
      *
      * @access public
      * @param int $seconds
@@ -189,7 +189,7 @@ final class System
     }
 
     /**
-     * Run shell command
+     * Run shell command.
      *
      * @access public
      * @param string $command
@@ -201,7 +201,7 @@ final class System
     }
 
     /**
-     * Run command
+     * Run command.
      *
      * @access public
      * @param string $command
@@ -215,7 +215,7 @@ final class System
     }
 
     /**
-     * Get CPU usage
+     * Get CPU usage.
      *
      * @access public
      * @param void
@@ -250,7 +250,7 @@ final class System
     }
 
     /**
-     * Get memory usage
+     * Get memory usage.
      *
      * @access public
      * @param void
@@ -306,7 +306,7 @@ final class System
     }
 
     /**
-     * Get network usage
+     * Get network usage.
      *
      * @access public
      * @param void
@@ -342,7 +342,7 @@ final class System
     }
 
     /**
-     * Get disk usage
+     * Get disk usage.
      *
      * @access public
      * @param void
@@ -359,7 +359,7 @@ final class System
     }
 
     /**
-     * Get disk usage
+     * Get disk usage.
      *
      * @access public
      * @param void
@@ -378,7 +378,7 @@ final class System
     }
 
     /**
-     * Get disk free space
+     * Get disk free space.
      *
      * @access public
      * @param string $directory
@@ -395,7 +395,7 @@ final class System
     }
 
     /**
-     * Get disk total space
+     * Get disk total space.
      *
      * @access public
      * @param string $directory
@@ -412,7 +412,7 @@ final class System
     }
 
     /**
-     * Get load avg
+     * Get load avg.
      *
      * @access public
      * @param void
@@ -424,7 +424,7 @@ final class System
     }
 
     /**
-     * Generate MAC address
+     * Generate MAC address.
      *
      * @access public
      * @param void
@@ -449,7 +449,7 @@ final class System
     }
 
     /**
-     * Validate MAC address
+     * Validate MAC address.
      *
      * @access public
      * @param string $address
@@ -461,7 +461,7 @@ final class System
     }
 
     /**
-     * Get system current MAC address
+     * Get system current MAC address.
      *
      * @access public
      * @param void
@@ -474,7 +474,7 @@ final class System
     }
 
     /**
-     * Get system file size
+     * Get system file size.
      *
      * @access public
      * @param string $directory

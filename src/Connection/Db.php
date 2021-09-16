@@ -212,7 +212,7 @@ class Db
      * @access public
      * @param string $query
      * @param array $params
-     * @return string
+     * @return mixed
      */
     public function single($query, $params = null)
     {

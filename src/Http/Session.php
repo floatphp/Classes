@@ -97,7 +97,7 @@ final class Session
         if ( $key ) {
             return isset($_SESSION[$key]);
         }
-        return isset($_SESSION);
+        return isset($_SESSION) && !empty($_SESSION);
     }
 
     /**

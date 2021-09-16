@@ -80,7 +80,7 @@ final class Archive
 		  		$zip->extractTo($to);
 		  		$zip->close();
 		  		if ( $clear ) {
-		  			unlink($archive);
+		  			@unlink($archive);
 		  		}
 		  		return true;
 			}

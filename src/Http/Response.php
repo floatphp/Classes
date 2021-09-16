@@ -53,7 +53,7 @@ final class Response extends Status
 
 	/**
 	 * @param string $reponse
-	 * @param bool $isArray false
+	 * @param bool $isArray
 	 * @return mixed
 	 */
 	public static function get($reponse, $isArray = false)

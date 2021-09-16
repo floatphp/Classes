@@ -51,7 +51,7 @@ final class Get
 		if ( $item ) {
 			return isset($_GET[$item]);
 		} else {
-			return isset($_GET);
+			return isset($_GET) && !empty($_GET);
 		}
 	}
 }

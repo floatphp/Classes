@@ -51,7 +51,7 @@ final class Upload
 		if ( $item ) {
 			return isset($_FILES[$item]);
 		} else {
-			return isset($_FILES);
+			return isset($_FILES) && !empty($_FILES);
 		}
 	}
 

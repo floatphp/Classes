@@ -308,7 +308,7 @@ class File
 	}
 
 	/**
-	 * Write file & create folder if not exists
+	 * Write file & create folder if not exists.
 	 *
 	 * @access public
 	 * @param string $input
@@ -322,7 +322,7 @@ class File
 			}
 		}
 		if ( $this->open('w', true) ) {
-			fwrite($this->handler, $input);
+			fwrite($this->handler,$input);
 		}
 		$this->close();
 	}
@@ -338,7 +338,7 @@ class File
 	{
 		$this->open('a');
 		if ( $this->handler ) {
-			fwrite($this->handler, $input);
+			fwrite($this->handler,$input);
 		}
 		$this->close();
 	}
@@ -653,7 +653,7 @@ class File
 	 * @param string $append
 	 * @return mixed
 	 */
-	public static function w($path = '', $input = '', $append = false)
+	public static function w($path, $input = '', $append = false)
 	{
 		$flag = 0;
 		if ( $append ) {

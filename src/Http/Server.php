@@ -19,7 +19,7 @@ use FloatPHP\Classes\Filesystem\Stringify;
 final class Server
 {
 	/**
-	 * Get global server variable
+	 * Get global server variable.
 	 *
 	 * @access public
 	 * @param string $item
@@ -39,7 +39,7 @@ final class Server
 	}
 
 	/**
-	 * Set global server variable
+	 * Set global server variable.
 	 *
 	 * @access public
 	 * @param string $item
@@ -56,7 +56,7 @@ final class Server
 	}
 
 	/**
-	 * Check is global server variable setted
+	 * Check is global server variable setted.
 	 *
 	 * @access public
 	 * @param string $item
@@ -71,12 +71,12 @@ final class Server
 			}
 			return isset($_SERVER[$item]);
 		} else {
-			return isset($_SERVER);
+			return isset($_SERVER) && !empty($_SERVER);
 		}
 	}
 	
 	/**
-	 * Get remote IP address
+	 * Get remote IP address.
 	 *
 	 * @access public
 	 * @param void
@@ -103,7 +103,7 @@ final class Server
 	}
 
 	/**
-	 * Get prefered protocol
+	 * Get prefered protocol.
 	 *
 	 * @access public
 	 * @param void
@@ -115,7 +115,7 @@ final class Server
 	}
 
 	/**
-	 * Get country code from request headers
+	 * Get country code from request headers.
 	 *
 	 * @access public
 	 * @param void
@@ -143,7 +143,7 @@ final class Server
 	}
 	
 	/**
-	 * Redirect URL
+	 * Redirect URL.
 	 *
 	 * @access public
 	 * @param string $url
@@ -159,7 +159,7 @@ final class Server
 	}
 
 	/**
-	 * Get base URL
+	 * Get base URL.
 	 *
 	 * @access public
 	 * @param void
@@ -176,7 +176,7 @@ final class Server
 	}
 
 	/**
-	 * Get current URL
+	 * Get current URL.
 	 *
 	 * @access public
 	 * @param void
@@ -188,7 +188,7 @@ final class Server
 	}
 
 	/**
-	 * Check is authenticated
+	 * Check is authenticated.
 	 *
 	 * @access public
 	 * @param void
@@ -203,7 +203,7 @@ final class Server
 	}
 
 	/**
-	 * Get authentication user
+	 * Get authentication user.
 	 *
 	 * @access public
 	 * @param void
@@ -215,7 +215,7 @@ final class Server
 	}
 
 	/**
-	 * Get authentication password
+	 * Get authentication password.
 	 *
 	 * @access public
 	 * @param void
@@ -227,7 +227,7 @@ final class Server
 	}
 
 	/**
-	 * Get authorization header
+	 * Get authorization header.
 	 *
 	 * @access private
 	 * @param void
@@ -253,7 +253,9 @@ final class Server
         return false;
     }
 
-    /**
+	/**
+	 * Get authorization token.
+	 *
      * @access private
      * @param void
      * @return mixed
@@ -267,7 +269,7 @@ final class Server
     }
 
 	/**
-	 * Check protocol is HTTPS
+	 * Check protocol is HTTPS.
 	 *
 	 * @access public
 	 * @param void
@@ -284,7 +286,7 @@ final class Server
 	}
 
 	/**
-	 * Check IP address
+	 * Check IP address.
 	 *
 	 * @access public
 	 * @param string $ip
@@ -300,7 +302,7 @@ final class Server
 	}
 
 	/**
-	 * Check IPv6 address
+	 * Check IPv6 address.
 	 *
 	 * @access public
 	 * @param string $ip
@@ -343,7 +345,7 @@ final class Server
 	}
 
 	/**
-	 * Uncompresses IPv6 address
+	 * Uncompresses IPv6 address.
 	 *
 	 * @access public
 	 * @param void
@@ -380,7 +382,7 @@ final class Server
 	}
 
 	/**
-	 * Splits IPv6 address into the IPv6 and IPv4 representation parts
+	 * Splits IPv6 address into the IPv6 and IPv4 representation parts.
 	 *
 	 * @access public
 	 * @param string $ip
@@ -398,7 +400,7 @@ final class Server
 	}
 
 	/**
-	 * Format args
+	 * Format args.
 	 *
 	 * @access private
 	 * @param string $arg
