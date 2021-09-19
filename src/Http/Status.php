@@ -21,7 +21,7 @@ class Status
 	 * @param int $code
 	 * @return string
 	 */
-	public static function getMessage($code = ''){
+	public static function getMessage($code){
 		$status = [
 			100 => 'Continue',
 			101 => 'Switching Protocols',

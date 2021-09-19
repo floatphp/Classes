@@ -41,7 +41,7 @@ class FileCache
 	public function __construct(array $config = [], $ttl = 5)
 	{
 		// Set cache ttl
-		$this->ttl = intval($ttl);
+		$this->ttl = (int)$ttl;
 
 		// Set cache config
 		$this->config = Arrayify::merge([
@@ -62,10 +62,6 @@ class FileCache
 
 	/**
 	 * Clear adapter instances
-	 *
-	 * @access public
-	 * @param void
-	 * @return void
 	 */
 	public function __destruct()
 	{
@@ -99,19 +95,22 @@ class FileCache
 	/**
 	 * @access public
 	 * @param mixed $data
-	 * @param mixed $tag
+	 * @param mixed $tags
 	 * @return bool
 	 */
-	public function set($data, $tag = null) : bool
+	public function set($data, $tags = null) : bool
 	{
 		$this->cache->set($data)
 		->expiresAfter($this->ttl);
-		if ( $tag ) {
-			$tag = Stringify::formatKey($tag);
-			if ( TypeCheck::isArray($tag) ) {
-				$this->cache->addTags($tag);
+		if ( $tags ) {
+			if ( TypeCheck::isArray($tags) ) {
+				foreach ($tags as $key => $value) {
+					$tags[$key] = Stringify::formatKey($value);
+				}
+				$this->cache->addTags($tags);
 			} else {
-				$this->cache->addTag($tag);
+				$tags = Stringify::formatKey($tags);
+				$this->cache->addTag($tags);
 			}
 		}
 		return $this->adapter->save($this->cache);
@@ -176,7 +175,7 @@ class FileCache
 	 */
 	public function setTTL($ttl = 5)
 	{
-		$this->ttl = intval($ttl);
+		$this->ttl = (int)$ttl;
 	}
 
 	/**

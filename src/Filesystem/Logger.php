@@ -75,11 +75,15 @@ class Logger implements LoggerInterface
 
     /**
      * @access public
-     * @param string $message
+     * @param mixed $message
+     * @param bool $isArray
      * @return void
      */
-    public function debug($message = '')
+    public function debug($message = '', $isArray = false)
     {
+        if ( $isArray ) {
+            $message = print_r($message,true);
+        }
         $this->write('debug',$message);
     }
 

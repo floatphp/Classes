@@ -750,7 +750,23 @@ class File
 	}
 
 	/**
-	 * Download file
+	 * Import file from url.
+	 * 
+	 * @access public
+	 * @param string $url
+	 * @param string $path
+	 * @return bool
+	 */
+	public static function import($url,$path)
+	{
+		$tmp = @fopen($path,'w');
+		$status = fwrite($tmp,self::r($url));
+		fclose($tmp);
+		return (bool)$status;
+	}
+
+	/**
+	 * Download file.
 	 *
 	 * @access public
 	 * @param string $path
@@ -764,6 +780,7 @@ class File
 			header('Content-type: application/force-download');
 			header("Content-Disposition: attachment; filename={$filename};");
 			echo $file;
+			die();
 		}
 		return false;
 	}
