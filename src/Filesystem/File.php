@@ -523,16 +523,35 @@ class File
     }
 
     /**
-     * Remove directory
+     * Remove directory,
+     * [silent].
 	 *
 	 * @access public
-	 * @param string $dir
+	 * @param string $path
 	 * @return bool
 	 */
     public static function removeDir($path)
     {
     	if ( self::isDir($path) ) {
     		if ( @rmdir($path) ) {
+            	return true;
+        	}
+    	}
+        return false;
+    }
+
+    /**
+     * Remove file,
+     * [silent].
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return bool
+	 */
+    public static function removeFile($path)
+    {
+    	if ( is_file($path) ) {
+    		if ( @unlink($path) ) {
             	return true;
         	}
     	}

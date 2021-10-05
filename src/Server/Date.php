@@ -67,7 +67,7 @@ final class Date extends DateTime
 	 * @param string $to
 	 * @return object
 	 */
-	public static function createFrom($date, $format, $to = 'Y-m-d H:i:s')
+	public static function create($date, $format, $to = 'Y-m-d H:i:s')
 	{
 		$date = self::createFromFormat($format, $date);
 		$date->format($to);
@@ -83,9 +83,28 @@ final class Date extends DateTime
 	 */
 	public static function toString($date, $format, $to = 'Y-m-d H:i:s') : string
 	{
-		return self::createFrom($date,$format)->format($to);
+		return self::create($date,$format)->format($to);
 	}
     
+    /**
+     * @access public
+     * @param string $dates
+     * @param string $format
+     * @return array
+     */
+    public static function order($dates = [], $sort = 'asc', $format = 'Y-m-d H:i:s')
+    {
+        usort($dates,function($a, $b) use ($sort,$format) {
+            if ( Stringify::lowercase($sort) == 'asc' ) {
+                return self::create($a,$format) <=> self::create($b,$format);
+
+            } elseif ( Stringify::lowercase($sort) == 'desc' ) {
+                return self::create($b,$format) <=> self::create($a,$format);
+            }
+        });
+        return $dates;
+    }
+
     /**
      * Return current time
      *

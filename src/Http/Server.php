@@ -79,11 +79,15 @@ final class Server
 	 * Get remote IP address.
 	 *
 	 * @access public
-	 * @param void
+	 * @param string $domain
 	 * @return mixed
 	 */
-	public static function getIP()
+	public static function getIP($domain = null)
 	{
+		if ( $domain ) {
+			$ip = gethostbyname($domain);
+			return self::isValidIP($ip);
+		}
 		if ( self::isSetted('http-x-real-ip') ) {
 			$ip = self::get('http-x-real-ip');
 			return Stringify::slashStrip($ip);

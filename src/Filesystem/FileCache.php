@@ -144,15 +144,19 @@ class FileCache
 
 	/**
 	 * @access public
-	 * @param mixed $tag
+	 * @param mixed $tags
 	 * @return bool
 	 */
-	public function deleteByTag($tag = '') : bool
+	public function deleteByTag($tags = '') : bool
 	{
-		if ( TypeCheck::isArray($tag) ) {
-			return $this->adapter->deleteItemsByTags($tag);
+		if ( TypeCheck::isArray($tags) ) {
+			foreach ($tags as $key => $value) {
+				$tags[$key] = Stringify::formatKey($value);
+			}
+			return $this->adapter->deleteItemsByTags($tags);
 		} else {
-			return $this->adapter->deleteItemsByTag($tag);
+			$tags = Stringify::formatKey($tags);
+			return $this->adapter->deleteItemsByTag($tags);
 		}
 	}
 
