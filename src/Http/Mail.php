@@ -49,7 +49,7 @@ class Mail
     }
 
     /**
-     * Get instance
+     * Get instance.
      *
      * @access public
      * @param void
@@ -61,7 +61,7 @@ class Mail
     }
 
     /**
-     * Resets all properties to initial state
+     * Resets all properties to initial state.
      *
      * @access public
      * @param void
@@ -81,21 +81,21 @@ class Mail
     }
 
     /**
-     * Set To
+     * Set To.
      *
      * @access public
      * @param string $email
      * @param string $name
      * @return object
      */
-    public function setTo($email, $name) : object
+    public function setTo($email, $name = null) : object
     {
         $this->to[] = $this->formatHeader((string)$email,(string)$name);
         return $this;
     }
 
     /**
-     * Get To
+     * Get To.
      *
      * @access public
      * @param void
@@ -107,21 +107,21 @@ class Mail
     }
 
     /**
-     * Set From
+     * Set From.
      *
      * @access public
      * @param string $email
      * @param string $name
      * @return object
      */
-    public function setFrom($email, $name) : object
+    public function setFrom($email, $name = null) : object
     {
         $this->addMailHeader('From',(string)$email,(string)$name);
         return $this;
     }
 
     /**
-     * Set Cc
+     * Set Cc.
      *
      * @access public
      * @param array $pairs
@@ -133,7 +133,7 @@ class Mail
     }
 
     /**
-     * Set Bcc
+     * Set Bcc.
      *
      * @access public
      * @param array $pairs
@@ -145,7 +145,7 @@ class Mail
     }
 
     /**
-     * Set ReplyTo
+     * Set ReplyTo.
      *
      * @access public
      * @param string $email
@@ -158,7 +158,7 @@ class Mail
     }
 
     /**
-     * Set Html
+     * Set Html.
      *
      * @access public
      * @param void
@@ -172,7 +172,7 @@ class Mail
     }
 
     /**
-     * Set subject
+     * Set subject.
      *
      * @access public
      * @param string $subject
@@ -187,7 +187,7 @@ class Mail
     }
 
     /**
-     * Get subject
+     * Get subject.
      *
      * @access public
      * @param void
@@ -199,7 +199,7 @@ class Mail
     }
 
     /**
-     * Set message
+     * Set message.
      *
      * @access public
      * @param string $message
@@ -212,7 +212,7 @@ class Mail
     }
 
     /**
-     * Get message
+     * Get message.
      *
      * @access public
      * @param void
@@ -224,7 +224,7 @@ class Mail
     }
 
     /**
-     * Add attachment
+     * Add attachment.
      *
      * @access public
      * @param string $path
@@ -245,7 +245,7 @@ class Mail
     }
 
     /**
-     * Get attachment data
+     * Get attachment data.
      *
      * @access public
      * @param string $path
@@ -261,7 +261,7 @@ class Mail
     }
 
     /**
-     * Add mail header
+     * Add mail header.
      *
      * @access public
      * @param string $header
@@ -277,7 +277,7 @@ class Mail
     }
 
     /**
-     * Add mail headers
+     * Add mail headers.
      *
      * @access public
      * @param string $header
@@ -302,7 +302,7 @@ class Mail
     }
 
     /**
-     * Add generic header
+     * Add generic header.
      *
      * @access public
      * @param string $header
@@ -320,7 +320,7 @@ class Mail
     }
 
     /**
-     * Get headers
+     * Get headers.
      *
      * @access public
      * @param void
@@ -332,7 +332,7 @@ class Mail
     }
 
     /**
-     * Set additional parameters
+     * Set additional parameters.
      *
      * @access public
      * @param string $params
@@ -345,7 +345,7 @@ class Mail
     }
 
     /**
-     * Get additional parameters
+     * Get additional parameters.
      *
      * @access public
      * @param void
@@ -357,7 +357,7 @@ class Mail
     }
 
     /**
-     * Set message number of characters
+     * Set message number of characters.
      *
      * @access public
      * @param int $wrap
@@ -374,7 +374,7 @@ class Mail
     }
 
     /**
-     * Get wrap
+     * Get wrap.
      *
      * @access public
      * @param void
@@ -386,7 +386,7 @@ class Mail
     }
     
     /**
-     * Send mail
+     * Send mail.
      *
      * @access public
      * @param void
@@ -412,7 +412,7 @@ class Mail
     }
 
     /**
-     * Check attachments
+     * Check attachments.
      *
      * @access protected
      * @param void
@@ -424,7 +424,7 @@ class Mail
     }
 
     /**
-     * Assemble attachment headers
+     * Assemble attachment headers.
      *
      * @access protected
      * @param void
@@ -439,7 +439,7 @@ class Mail
     }
 
     /**
-     * Assemble attachment body
+     * Assemble attachment body.
      *
      * @access protected
      * @param void
@@ -463,7 +463,7 @@ class Mail
     }
 
     /**
-     * Get attachment mime template
+     * Get attachment mime template.
      *
      * @access protected
      * @param array $attachment
@@ -485,7 +485,7 @@ class Mail
     }
 
     /**
-     * Format header
+     * Format header.
      *
      * @access protected
      * @param string $email
@@ -503,7 +503,7 @@ class Mail
     }
 
     /**
-     * Encode Utf8
+     * Encode Utf8.
      *
      * @access protected
      * @param string $value
@@ -519,7 +519,7 @@ class Mail
     }
 
     /**
-     * Encode Utf8 Word
+     * Encode Utf8 Word.
      *
      * @access protected
      * @param string $value
@@ -531,7 +531,7 @@ class Mail
     }
 
     /**
-     * Encode Utf8 Words
+     * Encode Utf8 Words.
      *
      * @access protected
      * @param string $value
@@ -548,7 +548,7 @@ class Mail
     }
 
     /**
-     * Filter email
+     * Filter email.
      *
      * @access protected
      * @param string $email
@@ -571,7 +571,7 @@ class Mail
     }
 
     /**
-     * Filter name
+     * Filter name.
      *
      * @access protected
      * @param string $name
@@ -596,7 +596,7 @@ class Mail
     }
 
     /**
-     * Filter subject
+     * Filter subject.
      *
      * @access protected
      * @param string $subject
@@ -608,7 +608,7 @@ class Mail
     }
 
     /**
-     * Get headers for send
+     * Get headers for send.
      *
      * @access protected
      * @param void
@@ -623,7 +623,7 @@ class Mail
     }
 
     /**
-     * Get mail for send
+     * Get mail for send.
      *
      * @access protected
      * @param void
@@ -638,7 +638,7 @@ class Mail
     }
 
     /**
-     * Get wrap message
+     * Get wrap message.
      *
      * @access protected
      * @param void
