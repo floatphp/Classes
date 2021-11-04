@@ -81,6 +81,16 @@ final class Arrayify
 	{
 		return array_shift($array);
 	}
+	
+	/**
+	 * @access public
+	 * @param array $array
+	 * @return mixed
+	 */
+	public static function pop(array &$array)
+	{
+		return array_pop($array);
+	}
 
 	/**
 	 * @access public
