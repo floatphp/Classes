@@ -43,7 +43,7 @@ class Client
     }
 
     /**
-     * Make HTTP request
+     * Make HTTP request.
      *
      * @access public
      * @param string $method
@@ -71,7 +71,7 @@ class Client
     }
 
     /**
-     * Make HTTP POST request
+     * Make HTTP POST request.
      *
      * @access public
      * @param array $body
@@ -98,7 +98,7 @@ class Client
     }
 
     /**
-     * Make HTTP GET request
+     * Make HTTP GET request.
      *
      * @access public
      * @param array $body
@@ -125,7 +125,7 @@ class Client
     }
 
     /**
-     * Get response
+     * Get response.
      * 
      * @access public
      * @param void
@@ -141,7 +141,7 @@ class Client
     }
 
     /**
-     * Get response status
+     * Get response status.
      * 
      * @access public
      * @param void
@@ -153,7 +153,7 @@ class Client
     }
 
     /**
-     * Get response status code
+     * Get response status code.
      * 
      * @access public
      * @param void
@@ -168,7 +168,7 @@ class Client
     }
 
     /**
-     * Get response header
+     * Get response header.
      * 
      * @access public
      * @param void
@@ -180,7 +180,7 @@ class Client
     }
 
     /**
-     * Set request header
+     * Set request header.
      * 
      * @access public
      * @param array $header
@@ -192,7 +192,7 @@ class Client
     }
 
     /**
-     * Set request body
+     * Set request body.
      * 
      * @access public
      * @param array $body
@@ -204,7 +204,7 @@ class Client
     }
 
     /**
-     * Set request url
+     * Set request url.
      * 
      * @access public
      * @param string $url
@@ -218,7 +218,7 @@ class Client
     }
 
     /**
-     * Set request timout
+     * Set request timout.
      * 
      * @access public
      * @param int $timout
@@ -230,7 +230,7 @@ class Client
     }
     
     /**
-     * Get response body
+     * Get response body.
      * 
      * @access public
      * @param bool $json
@@ -245,42 +245,59 @@ class Client
     }
 
     /**
-     * Track url
+     * Track url.
      * 
      * @access public
      * @param string $url
      * @param bool $parse
      * @return string
      */
-    public function trackUrl($url = '', $parse = false)
+    public function trackUrl($url = '', $parse = true)
     {
+        // Set url
         if ( empty($url) ) {
             $url = $this->url;
         }
-        $handler  = curl_init();
-        curl_setopt($handler,CURLOPT_URL,$url);
-        curl_setopt($handler,CURLOPT_HEADER,true);
-        curl_setopt($handler,CURLOPT_FOLLOWLOCATION,true);
-        curl_setopt($handler,CURLOPT_RETURNTRANSFER,true);
-        if ( !Server::isHttps() ) {
-            curl_setopt($handler,CURLOPT_SSL_VERIFYHOST,false);
-            curl_setopt($handler,CURLOPT_SSL_VERIFYPEER,false);
+
+        // Init handler
+        $handler = curl_init();
+        curl_setopt_array($handler,[
+            CURLOPT_URL            => $url,
+            CURLOPT_HEADER         => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_MAXREDIRS      => 5,
+            CURLOPT_TIMEOUT        => 0,
+            CURLOPT_CUSTOMREQUEST  => 'GET',
+            CURLOPT_HTTPHEADER     => []
+        ]);
+
+        // Get response
+        $response = curl_exec($handler);
+        $track = curl_getinfo($handler,CURLINFO_EFFECTIVE_URL);
+        if ( $track == $url ) {
+            if ( preg_match("/^window.location.href='(.+)$/im",$response,$matches) ) {
+                $track = trim($matches[1]);
+            }
         }
-        curl_exec($handler);
-        $url = curl_getinfo($handler,CURLINFO_EFFECTIVE_URL);
         curl_close($handler);
+
+        // Parse url
         if ( $parse ) {
-            $parts = parse_url($url);
+            $parts = parse_url($track);
             if ( isset($parts['query']) ) {
                 unset($parts['query']);
             }
-            $url = "{$parts['scheme']}://{$parts['host']}{$parts['path']}";
+            $track = "{$parts['scheme']}://{$parts['host']}{$parts['path']}";
         }
-        return (string)$url;
+
+        return (string)$track;
     }
 
     /**
-     * Init client
+     * Init client.
      * 
      * @access private
      * @param void
@@ -300,7 +317,7 @@ class Client
     }
 
     /**
-     * Prepare request
+     * Prepare request.
      * 
      * @access private
      * @param void
@@ -342,7 +359,7 @@ class Client
     }
 
     /**
-     * Process incoming response header
+     * Process incoming response header.
      * 
      * @access private
      * @param object $handler
@@ -371,7 +388,7 @@ class Client
     }
 
     /**
-     * Process incoming response body
+     * Process incoming response body.
      *
      * @access private
      * @param object $handler
