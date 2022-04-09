@@ -27,7 +27,7 @@ final class Archive
 	 * @param string $archive
 	 * @return bool
 	 */
-	public static function compress($path = '', $to = '', $archive = '') : bool
+	public static function compress($path, $to = '', $archive = '') : bool
 	{
 		if ( !empty($path) ) {
 			if ( empty($archive) ) {
@@ -51,7 +51,7 @@ final class Archive
 					        $zip->addFile($p,basename($name));
 					    }
 					}
-				} elseif ( File::isFileType($path) ) {
+				} elseif ( File::isFile($path) ) {
 					$zip->addFile($path,basename($path));
 				}
 				$zip->close();
@@ -68,7 +68,7 @@ final class Archive
 	 * @param bool $clear
 	 * @return bool
 	 */
-	public static function uncompress($archive = '', $to = '', $clear = true) : bool
+	public static function uncompress($archive, $to = '', $clear = true) : bool
 	{
 		if ( File::exists($archive) ) {
 			$zip = new ZIP();
@@ -86,5 +86,42 @@ final class Archive
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * @access public
+	 * @param string $archive
+	 * @return bool
+	 */
+	public static function isGzip($archive) : bool
+	{
+		if ( File::isFile($archive) ) {
+			if ( File::getExtension($archive) == 'gz' ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * @access public
+	 * @param string $archive
+	 * @param int $buffer
+	 * @return bool
+	 */
+	public static function unGzip($archive, $buffer = 4096) : bool
+	{
+		$status = false;
+		if ( ($gz = gzopen($archive,'rb')) ) {
+			$filename = Stringify::replace('.gz','',$archive);
+			$to = fopen($filename,'wb');
+			while ( !gzeof($gz) ) {
+			    fwrite($to,gzread($gz,$buffer));
+			}
+			$status = true;
+			fclose($to);
+		}
+		gzclose($gz);
+		return $status;
 	}
 }

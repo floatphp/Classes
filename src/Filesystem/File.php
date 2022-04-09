@@ -17,360 +17,200 @@ namespace FloatPHP\Classes\Filesystem;
 class File
 {
 	/**
-	 * @access protected
-	 * @var string $path
-	 * @var string $name
-	 * @var int $size
-	 * @var string $extension
-	 * @var string $permissions
-	 * @var string $content
-	 * @var string $parentDir
-	 */
-	protected $path = null;
-	protected $name = null;
-	protected $size = null;
-	protected $extension = null;
-	protected $permissions = null;
-	protected $content = null;
-	protected $parentDir = null;
-
-	/**
-	 * @access private
-	 * @var stream $handler
-	 */
-	private $handler = null;
-
-	/**
-	 * @param string $path
-	 */
-	public function __construct($path = null)
-	{
-		if ( ($this->path = $path) ) {
-			$this->analyze();
-		}
-	}
-
-	/**
-	 * Set file
+	 * Analyse file.
 	 *
 	 * @access public
 	 * @param string $path
-	 * @return void
+	 * @return array
 	 */
-	public function set($path)
+	public static function analyse($path)
 	{
-		$this->path = $path;
-		$this->analyze();
+		return [
+			'parent'      => self::getParentDir($path),
+			'name'        => self::getName($path),
+			'filename'    => self::getFileName($path),
+			'extension'   => self::getExtension($path),
+			'accessed'    => self::getLastAccess($path),
+			'changed'     => self::getLastChange($path),
+			'size'        => self::getSize($path),
+			'permissions' => self::getPermissions($path)
+		];
 	}
 
 	/**
-	 * Analyze file
+	 * Get parent dir.
 	 *
-	 * @access protected
+	 * @access public
 	 * @param void
-	 * @return void
+	 * @return string
 	 */
-	protected function analyze()
+	public static function getParentDir($path)
 	{
-		$this->path = Stringify::formatPath($this->path);
-		$this->parentDir = dirname($this->path);
-		$this->extension = pathinfo($this->path, PATHINFO_EXTENSION);
-		$file = Stringify::replace(".{$this->extension}", '', $this->path);
-		$this->name = basename($file);
-		$this->extension = strtolower($this->extension);
-		$this->size = @filesize($this->path);
+		return dirname(Stringify::formatPath($path));
 	}
 
 	/**
-	 * Open file stream
+	 * Get file extension.
 	 *
-	 * @access protected
-	 * @param string $mode
-	 * @param bool $include
-	 * @return mixed
+	 * @access public
+	 * @param string $path
+	 * @param bool $format
+	 * @return string
 	 */
-	protected function open($mode = 'c+', $include = false)
+	public static function getExtension($path, $format = true)
 	{
-		clearstatcache();
-		$this->handler = @fopen($this->path,$mode,$include);
-		return $this->handler;
-	}
-
-	/**
-	 * Close file stream
-	 *
-	 * @access protected
-	 * @param void
-	 * @return void
-	 */
-	protected function close()
-	{
-		if ( $this->handler ) {
-			fclose($this->handler);
-			$this->handler = null;
+		$ext = pathinfo(
+			Stringify::formatPath($path),
+			PATHINFO_EXTENSION
+		);
+		if ( $format ) {
+			$ext = strtolower($ext);
 		}
-		clearstatcache();
+		return $ext;
 	}
 
 	/**
-	 * Get Parent Dir
+	 * Get file name.
 	 *
 	 * @access public
-	 * @param void
+	 * @param string $path
 	 * @return string
 	 */
-	public function getParentDir()
+	public static function getName($path)
 	{
-		return $this->parentDir;
+		$path = self::getFileName($path);
+		$ext = self::getExtension($path);
+		return Stringify::replace(".{$ext}",'',$path);
 	}
 
 	/**
-	 * Get File Extension
+	 * Get file full name.
 	 *
 	 * @access public
-	 * @param void
+	 * @param string $path
 	 * @return string
 	 */
-	public function getExtension()
+	public static function getFileName($path)
 	{
-        return $this->extension;
+		return basename(Stringify::formatPath($path));
 	}
 
 	/**
-	 * Get file name
+	 * Get file last access.
 	 *
 	 * @access public
-	 * @param void
-	 * @return string
-	 */
-	public function getName()
-	{
-        return $this->name;
-	}
-
-	/**
-	 * Get file full name
-	 *
-	 * @access public
-	 * @param void
-	 * @return string
-	 */
-	public function getFileName()
-	{
-        return "{$this->name}.{$this->extension}";
-	}
-	
-	/**
-	 * Get file path
-	 *
-	 * @access public
-	 * @param void
-	 * @return string
-	 */
-	public function getPath()
-	{
-        return $this->path;
-	}
-
-	/**
-	 * Get file content
-	 *
-	 * @access public
-	 * @param void
-	 * @return string
-	 */
-	public function getContent()
-	{
-		return $this->content;
-	}
-
-	/**
-	 * Get file stream
-	 *
-	 * @access public
-	 * @param void
-	 * @return stream
-	 */
-	public function getStream()
-	{
-		return $this->handler;
-	}
-
-	/**
-	 * Get file last access
-	 *
-	 * @access public
-	 * @param void
+	 * @param string $path
 	 * @return mixed
 	 */
-    public function getLastAccess()
+    public static function getLastAccess($path)
     {
-        if ( $this->isExists() ) {
-            if ( ($access = fileatime($this->path)) ) {
+    	$path = Stringify::formatPath($path);
+        if ( self::exists($path) ) {
+            if ( ($access = fileatime($path)) ) {
                 return $access;
-            } else {
-                return false;
             }
         }
+        return false;
     }
 
 	/**
-	 * Get file last change
+	 * Get file last change.
 	 *
 	 * @access public
-	 * @param void
+	 * @param string $path
 	 * @return mixed
 	 */
-    public function getLastChange()
+    public static function getLastChange($path)
     {
-        if ( $this->isExists() ) {
-            if ( ($change = filemtime($this->path)) ) {
+    	$path = Stringify::formatPath($path);
+        if ( self::exists($path) ) {
+            if ( ($change = filemtime($path)) ) {
                 return $change;
-            } else {
-                return false;
             }
         }
+        return false;
     }
 
 	/**
-	 * Get file Size value
+	 * Get file size value.
 	 *
 	 * @access public
-	 * @param void
+	 * @param string $path
 	 * @return int
 	 */
-	public function getFileSize()
+	public static function getFileSize($path)
 	{
-        return $this->size;
+        return (int)@filesize($path);
 	}
 
 	/**
-	 * Get file Size
+	 * Get file size.
 	 *
 	 * @access public
+	 * @param string $path
 	 * @param int $decimals
 	 * @return string
 	 */
-	public function getSize($decimals = 2)
+	public static function getSize($path, $decimals = 2)
 	{
-        $size = ['B','KB','MB','GB','TB'];
-        $factor = floor((strlen(strval($this->size)) - 1) / 3);
-        return sprintf("%.{$decimals}f", $this->size / pow(1024, $factor)) . @$size[$factor];
+        $format = ['B','KB','MB','GB','TB'];
+        $size = self::getFileSize($path);
+        $factor = floor((strlen(strval($size)) - 1) / 3);
+        return sprintf("%.{$decimals}f", $size / pow(1024, $factor)) . @$format[$factor];
 	}
 
 	/**
-	 * Get file permissions
+	 * Get file permissions.
 	 *
 	 * @access public
 	 * @param bool $convert
 	 * @return mixed
 	 */
-	public function getPermissions($convert = false)
+	public static function getPermissions($path, $convert = false)
 	{
-		$permissions = substr(sprintf('%o',@fileperms($this->path)),-4);
+		$permissions = substr(sprintf('%o',@fileperms($path)),-4);
 		return ($convert) ? intval($permissions) : $permissions;
 	}
 
 	/**
-	 * Get file lines
-	 *
-	 * @access public
-	 * @param int $length
-	 * @return mixed
-	 */
-	public function getLines($length = null)
-	{
-		return fgets($this->handler,$length);
-	}
-
-	/**
-	 * Read file & get content
-	 *
-	 * @access public
-	 * @param bool $return
-	 * @return mixed
-	 */
-	public function read($return = false)
-	{
-		$this->open();
-		if ( $this->handler && $this->isReadable() ) {
-			if ( $this->isEmpty() ) {
-				$this->content = '';
-			} else {
-				$this->content = @fread($this->handler, $this->size);
-			}
-			if ( $return ) {
-				$this->close();
-				return $this->content;
-			}
-		}
-		$this->close();
-	}
-
-	/**
-	 * Write file & create folder if not exists.
+	 * Add string to file.
 	 *
 	 * @access public
 	 * @param string $input
 	 * @return void
 	 */
-	public function write($input = '')
+	public static function addString($path, $input = '')
 	{
-		if ( !self::exists($this->parentDir) ) {
-			if ( !self::addDir($this->parentDir) ) {
-				return false;
-			}
-		}
-		if ( $this->open('w', true) ) {
-			fwrite($this->handler,$input);
-		}
-		$this->close();
+		$handle = fopen($path,'a');
+		fwrite($handle,$input);
+		fclose($handle);
 	}
 
 	/**
-	 * Add string to file
+	 * Add break to file.
 	 *
 	 * @access public
-	 * @param string $input
+	 * @param string $path
 	 * @return void
 	 */
-	public function addString($input = '')
+	public static function addBreak($path)
 	{
-		$this->open('a');
-		if ( $this->handler ) {
-			fwrite($this->handler,$input);
-		}
-		$this->close();
+		$handle = fopen($path,'a');
+		fwrite($handle,PHP_EOL);
+		fclose($handle);
 	}
 
 	/**
-	 * Add space to file
+	 * Remove file.
 	 *
 	 * @access public
-	 * @param void
-	 * @return void
-	 */
-	public function addBreak()
-	{
-		$this->open('a');
-		if ( $this->handler ) {
-			fwrite($this->handler, PHP_EOL);
-		}
-		$this->close();
-	}
-
-	/**
-	 * Remove file
-	 *
-	 * @access public
-	 * @param void
+	 * @param string $path
 	 * @return bool
 	 */
-	public function remove()
+	public static function remove($path)
 	{
-		$this->close();
-		if ( $this->isExists() ) {
-			if ( @unlink($this->path) ) {
+		if ( self::exists($path) ) {
+			if ( @unlink($path) ) {
 				return true;
 			}
 		}
@@ -378,17 +218,18 @@ class File
 	}
 
 	/**
-	 * Copy file
+	 * Copy file.
 	 *
 	 * @access public
 	 * @param string $path
+	 * @param string $to
 	 * @return bool
 	 */
-    public function copy($path)
+    public static function copy($path, $to)
     {
-    	$this->close();
-    	if ( $this->isExists() ) {
-	        if ( copy($this->path, $path) ) {
+    	$dir = dirname($to);
+    	if ( self::exists($path) && self::isDir($dir) ) {
+	        if ( copy($path,$to) ) {
 	            return true;
 	        }
     	}
@@ -396,17 +237,18 @@ class File
     }
 
 	/**
-	 * Move file
+	 * Move file.
 	 *
 	 * @access public
 	 * @param string $path
+	 * @param string $to
 	 * @return bool
 	 */
-    public function move($path)
+    public static function move($path, $to)
     {
-    	$this->close();
-    	if ( $this->isExists() ) {
-	        if ( rename($this->path, $path) ) {
+    	$dist = dirname($to);
+    	if ( self::exists($path) && self::isDir($dist) ) {
+	        if ( rename($path,$to) ) {
 	            return true;
 	        }
     	}
@@ -414,82 +256,62 @@ class File
     }
 
 	/**
-	 * Check file only exists
+	 * Check whether path is regular file.
 	 *
 	 * @access public
-	 * @param void
+	 * @param string $path
 	 * @return bool
 	 */
-	public function isExists()
+    public static function isFile($path)
+    {
+		if ( self::exists($path) ) {
+			return is_file($path);
+		}
+		return false;
+    }
+
+	/**
+	 * Check file empty.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return bool
+	 */
+	public static function isEmpty($path)
 	{
-		if ( self::exists($this->path) && is_file($this->path) ) {
-			return true;
+		if ( self::exists($path) ) {
+			clearstatcache();
+			return (self::getFileSize($path) == 0);
 		}
 		return false;
 	}
 
 	/**
-	 * Check whether path is regular file
+	 * Check file readable.
 	 *
 	 * @access public
-	 * @param void
-	 * @return mixed
+	 * @param string $path
+	 * @return bool
 	 */
-    public function isFile()
-    {
-    	if ( $this->isExists() ) {
-    		return is_file($this->path);
-    	}
-        return null;
-    }
-
-	/**
-	 * Check file empty
-	 *
-	 * @access public
-	 * @param void
-	 * @return mixed
-	 */
-	public function isEmpty()
+	public static function isReadable($path)
 	{
-		if ( $this->isExists() ) {
-			return ($this->size == 0);
-		}
-		return null;
+		return is_readable($path);
 	}
 
 	/**
-	 * Check file readable
+	 * Check file writable.
 	 *
 	 * @access public
-	 * @param void
-	 * @return mixed
+	 * @param string $path
+	 * @return bool
 	 */
-	public function isReadable()
+	public static function isWritable($path)
 	{
-		if ( $this->isExists() ) {
-			return ($this->open('r') !== false);
-		}
-		return null;
-	}
-
-	/**
-	 * Check file writable
-	 *
-	 * @access public
-	 * @param void
-	 * @return mixed
-	 */
-	public function isWritable()
-	{
-		if ( $this->isExists() ) {
-			return is_writable($this->path);
-		}
-		return null;
+		return is_writable($path);
 	}
 	
     /**
-     * Add directory
+     * Add directory.
 	 *
 	 * @access public
 	 * @param string $path
@@ -497,9 +319,9 @@ class File
 	 * @param bool $recursive
 	 * @return bool
 	 */
-    public static function addDir($path = null, $permissions = 0755, $recursive = true)
+    public static function addDir($path, $permissions = 0755, $recursive = true)
     {
-    	if ( !is_file($path) && !self::isDir($path) ) {
+    	if ( !self::isFile($path) && !self::isDir($path) ) {
     		if ( @mkdir($path,$permissions,$recursive) ) {
             	return true;
         	}
@@ -508,13 +330,13 @@ class File
     }
 
     /**
-     * Check directory
+     * Check directory.
 	 *
 	 * @access public
 	 * @param string $path
 	 * @return bool
 	 */
-    public static function isDir($path = null)
+    public static function isDir($path)
     {
     	if ( self::exists($path) && is_dir($path) ) {
     		return true;
@@ -523,11 +345,10 @@ class File
     }
 
     /**
-     * Remove directory,
-     * [silent].
+     * Remove directory.
 	 *
 	 * @access public
-	 * @param string $path
+	 * @param string $dir
 	 * @return bool
 	 */
     public static function removeDir($path)
@@ -541,25 +362,7 @@ class File
     }
 
     /**
-     * Remove file,
-     * [silent].
-	 *
-	 * @access public
-	 * @param string $path
-	 * @return bool
-	 */
-    public static function removeFile($path)
-    {
-    	if ( is_file($path) ) {
-    		if ( @unlink($path) ) {
-            	return true;
-        	}
-    	}
-        return false;
-    }
-
-    /**
-     * Clear directory from content
+     * Clear directory from content.
 	 *
 	 * @access public
 	 * @param string $path
@@ -622,7 +425,7 @@ class File
 	}
 
 	/**
-	 * Check file exists without stream
+	 * Check file exists without stream.
 	 *
 	 * @access public
 	 * @param string $path
@@ -637,22 +440,7 @@ class File
 	}
 
 	/**
-	 * Check file type
-	 *
-	 * @access public
-	 * @param string $path
-	 * @return bool
-	 */
-	public static function isFileType($path)
-	{
-		if ( file_exists($path) ) {
-			return is_file($path);
-		}
-		return false;
-	}
-
-	/**
-	 * Read file without stream
+	 * Read file without stream.
 	 *
 	 * @access public
 	 * @param string $path
@@ -664,7 +452,7 @@ class File
 	}
 
 	/**
-	 * Write file without stream
+	 * Write file.
 	 *
 	 * @access public
 	 * @param string $path
@@ -683,44 +471,42 @@ class File
 	}
 
 	/**
-	 * Copy file without stream
-	 *
-	 * @access public
-	 * @param string $path
-	 * @param string $copy
-	 * @return bool
-	 */
-    public static function cp($path = '', $copy = '')
-    {
-    	if ( self::exists($path) ) {
-	        if ( copy($path,$copy) ) {
-	            return true;
-	        }
-    	}
-        return false;
-    }
-
-	/**
-	 * Index path files
+	 * Scan path.
 	 *
 	 * @access public
 	 * @param string $path
 	 * @return array
 	 */
-	public static function index($path = '') : array
+	public static function scanDir($path = '.')
 	{
-		$files = glob($path);
-		return Arrayify::combine($files,Arrayify::map('filectime',$files));
+		return Arrayify::diff(
+			scandir($path),['.', '..']
+		);
 	}
 
 	/**
-	 * Get last created file path
+	 * Index path files.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return mixed
+	 */
+	public static function index($path)
+	{
+		$files = glob(Stringify::formatPath($path));
+		return Arrayify::combine(
+			$files,array_map('filectime',$files)
+		);
+	}
+
+	/**
+	 * Get last created file path.
 	 *
 	 * @access public
 	 * @param string $path
 	 * @return string
 	 */
-	public static function last($path = '') : string
+	public static function last($path)
 	{
 		$files = self::index($path);
 		arsort($files);
@@ -728,13 +514,13 @@ class File
 	}
 
 	/**
-	 * Get first created file path
+	 * Get first created file path.
 	 *
 	 * @access public
 	 * @param string $path
 	 * @return string
 	 */
-	public static function first($path = '') : string
+	public static function first($path)
 	{
 		$files = self::index($path);
 		asort($files);
@@ -742,20 +528,20 @@ class File
 	}
 
 	/**
-	 * Get files count
+	 * Get files count.
 	 *
 	 * @access public
 	 * @param string $path
-	 * @return int
+	 * @return mixed
 	 */
-	public static function count($path = '') : int
+	public static function count($path = '.')
 	{
 		$files = self::index($path);
 		return (int)count($files);
 	}
 
 	/**
-	 * Parse ini file
+	 * Parse ini file.
 	 *
 	 * @access public
 	 * @param string $path
@@ -765,7 +551,9 @@ class File
 	 */
 	public static function parseIni($path, $sections = false, $mode = INI_SCANNER_NORMAL)
 	{
-		return parse_ini_file($path,$sections,$mode);
+		return parse_ini_file(
+			Stringify::formatPath($path),$sections,$mode
+		);
 	}
 
 	/**
@@ -776,7 +564,7 @@ class File
 	 * @param string $path
 	 * @return bool
 	 */
-	public static function import($url,$path)
+	public static function import($url, $path)
 	{
 		$tmp = @fopen($path,'w');
 		$status = fwrite($tmp,self::r($url));
@@ -789,9 +577,9 @@ class File
 	 *
 	 * @access public
 	 * @param string $path
-	 * @return mixed
+	 * @return bool
 	 */
-	public static function download($path = '')
+	public static function download($path)
 	{
 		if ( self::exists($path) ) {
 			$file = self::r($path);
