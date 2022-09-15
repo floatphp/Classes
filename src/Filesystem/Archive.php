@@ -75,14 +75,15 @@ final class Archive
 			if ( empty($to) ) {
 				$to = dirname($archive);
 			}
-			$resource = $zip->open($archive);
-			if ( $resource === true ) {
-		  		$zip->extractTo($to);
-		  		$zip->close();
-		  		if ( $clear ) {
-		  			@unlink($archive);
-		  		}
-		  		return true;
+			if ( $zip->open($archive) === true ) {
+				if ( $zip->numFiles ) {
+			  		$zip->extractTo($to);
+			  		$zip->close();
+			  		if ( $clear ) {
+			  			@unlink($archive);
+			  		}
+			  		return true;
+				}
 			}
 		}
 		return false;
