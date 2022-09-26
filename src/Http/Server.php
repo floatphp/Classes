@@ -88,21 +88,34 @@ final class Server
 			$ip = gethostbyname($domain);
 			return self::isValidIP($ip);
 		}
-		if ( self::isSetted('http-x-real-ip') ) {
+
+		if ( self::isSetted('http-x-real-ip') 
+		&& !empty(self::get('http-x-real-ip')) ) {
 			$ip = self::get('http-x-real-ip');
 			return Stringify::slashStrip($ip);
 
-		} elseif ( self::isSetted('http-x-forwarded-for') ) {
+		} elseif ( self::isSetted('http-x-forwarded-for')
+		&& !empty(self::get('http-x-forwarded-for')) ) {
 			$ip = self::get('http-x-forwarded-for');
 			$ip = Stringify::slashStrip($ip);
 			$ip = Stringify::split($ip, ['regex' => '/,/']);
-			$ip = (string) trim(current($ip));
+			$ip = (string)trim(current($ip));
  			return self::isValidIP($ip);
 
-		} elseif ( self::isSetted('remote-addr') ) {
+		} elseif ( self::isSetted('http-cf-connecting-ip')
+		&& !empty(self::get('http-cf-connecting-ip')) ) {
+			$ip = self::get('http-cf-connecting-ip');
+			$ip = Stringify::slashStrip($ip);
+			$ip = Stringify::split($ip, ['regex' => '/,/']);
+			$ip = (string)trim(current($ip));
+ 			return self::isValidIP($ip);
+
+		} elseif ( self::isSetted('remote-addr')
+		&& !empty(self::get('remote-addr')) ) {
 			$ip = self::get('remote-addr');
 			return Stringify::slashStrip($ip);
 		}
+
 		return false;
 	}
 
@@ -299,7 +312,7 @@ final class Server
 	public static function isValidIP($ip)
 	{
 	    $pattern = '/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/';
-	    if ( Stringify::match($pattern,$ip) && self::isIPV6($ip) ) {
+	    if ( Stringify::match($pattern,$ip) || self::isIPV6($ip) ) {
 	        return $ip;
 	    }
 	    return false;
