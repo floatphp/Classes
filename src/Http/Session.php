@@ -25,7 +25,7 @@ final class Session
      */
     public function __construct()
     {
-        if ( !self::isSetted() ) {
+        if ( !self::isActive() ) {
             session_start();
         }
     }
