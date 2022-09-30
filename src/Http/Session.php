@@ -103,6 +103,18 @@ final class Session
     }
 
     /**
+     * Check session is active.
+     *
+     * @access public
+     * @param void
+     * @return bool
+     */
+    public static function isActive()
+    {
+        return (session_status() === PHP_SESSION_ACTIVE);
+    }
+
+    /**
      * Get current session id.
      *
      * @access public
@@ -147,7 +159,7 @@ final class Session
      */
     public static function end()
     {
-        if ( self::isSetted() ) {
+        if ( self::isActive() ) {
             return session_destroy();
         }
         return false;
