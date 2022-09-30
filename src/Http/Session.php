@@ -19,6 +19,8 @@ use FloatPHP\Classes\Server\Date;
 final class Session
 {
     /**
+     * Start session.
+     *
      * @param void
      */
     public function __construct()
@@ -29,7 +31,7 @@ final class Session
     }
     
     /**
-     * Register the session
+     * Register session.
      *
      * @access public
      * @param int $time
@@ -43,7 +45,7 @@ final class Session
     }
 
     /**
-     * Check if session is registered
+     * Check if session is registered.
      *
      * @access public
      * @param void
@@ -58,7 +60,7 @@ final class Session
     }
 
     /**
-     * Set key in session
+     * Set session value.
      *
      * @access public
      * @param mixed $key
@@ -71,7 +73,7 @@ final class Session
     }
 
     /**
-     * Retrieve value stored in session by key
+     * Retrieve session value.
      *
      * @access public
      * @param string $item
@@ -80,13 +82,13 @@ final class Session
     public static function get($item = null)
     {
         if ( $item ) {
-            return self::isSetted($item) ? $_SESSION[$item] : false;
+            return self::isSetted($item) ? $_SESSION[$item] : null;
         }
-        return $_SESSION;
+        return self::isSetted() ? $_SESSION : null;
     }
 
     /**
-     * Check key exists
+     * Check session key exists.
      *
      * @access public
      * @param string $key
@@ -101,19 +103,7 @@ final class Session
     }
 
     /**
-     * Retrieve global session variable
-     *
-     * @access public
-     * @param void
-     * @return array
-     */
-    public static function getSession()
-    {
-        return $_SESSION;
-    }
-
-    /**
-     * Get id for current session
+     * Get current session id.
      *
      * @access public
      * @param void
@@ -125,7 +115,7 @@ final class Session
     }
 
     /**
-     * Check if session is over
+     * Check if session is expired.
      *
      * @access public
      * @param void
@@ -133,14 +123,11 @@ final class Session
      */
     public static function isExpired() : bool
     {
-        if ( self::get('--session-start') < Date::timeNow() ) {
-            return true;
-        }
-        return false;
+        return (self::get('--session-start') < Date::timeNow());
     }
 
     /**
-     * Renew session when the given time is not up
+     * Renew session when the given time is not up.
      *
      * @access public
      * @param void
@@ -152,15 +139,17 @@ final class Session
     }
 
     /**
-     * Destroy session
+     * End session.
      *
      * @access public
      * @param void
-     * @return void
+     * @return bool
      */
     public static function end()
     {
-        session_destroy();
-        $_SESSION = [];
+        if ( self::isSetted() ) {
+            return session_destroy();
+        }
+        return false;
     }
 }
