@@ -88,6 +88,18 @@ final class Session
     }
 
     /**
+     * Retrieve session name.
+     *
+     * @access public
+     * @param void
+     * @return mixed
+     */
+    public static function getName()
+    {
+        return session_name();
+    }
+
+    /**
      * Check session key exists.
      *
      * @access public
@@ -100,18 +112,6 @@ final class Session
             return isset($_SESSION[$key]);
         }
         return isset($_SESSION) && !empty($_SESSION);
-    }
-
-    /**
-     * Check session is active.
-     *
-     * @access public
-     * @param void
-     * @return bool
-     */
-    public static function isActive()
-    {
-        return (session_status() === PHP_SESSION_ACTIVE);
     }
 
     /**
@@ -151,6 +151,30 @@ final class Session
     }
 
     /**
+     * Check session is active.
+     *
+     * @access public
+     * @param void
+     * @return bool
+     */
+    public static function isActive()
+    {
+        return (session_status() === PHP_SESSION_ACTIVE);
+    }
+    
+    /**
+     * Close session.
+     *
+     * @access public
+     * @param void
+     * @return bool
+     */
+    public static function close()
+    {
+        return session_write_close();
+    }
+
+    /**
      * End session.
      *
      * @access public
@@ -160,6 +184,7 @@ final class Session
     public static function end()
     {
         if ( self::isActive() ) {
+            $_SESSION = [];
             return session_destroy();
         }
         return false;

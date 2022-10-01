@@ -14,45 +14,67 @@
 
 namespace FloatPHP\Classes\Http;
 
+use FloatPHP\Classes\Server\System;
+
 final class Cookie
 {
 	/**
 	 * @access public
-	 * @param string $item
+	 * @param string $key
 	 * @return mixed
 	 */
-	public static function get($item = null)
+	public static function get($key = null)
 	{
-		if ( $item ) {
-			return self::isSetted($item) ? $_COOKIE[$item] : false;
-		} else {
-			return $_COOKIE;
-		}
+        if ( $key ) {
+            return self::isSetted($key) ? $_COOKIE[$key] : null;
+        }
+        return self::isSetted() ? $_COOKIE : null;
 	}
 
 	/**
 	 * @access public
-	 * @param string $item
+	 * @param string $key
 	 * @param mixed $value
 	 * @param array $options
 	 * @return bool
 	 */
-	public static function set($item, $value = null, $options = [])
+	public static function set($key, $value = null, $options = [])
 	{
-		return setcookie($item,$value,$options);
+		return setcookie($key,$value,$options);
 	}
 	
 	/**
 	 * @access public
-	 * @param string $item
+	 * @param string $key
 	 * @return bool
 	 */
-	public static function isSetted($item = null)
+	public static function isSetted($key = null)
 	{
-		if ( $item ) {
-			return isset($_COOKIE[$item]);
-		} else {
-			return isset($_COOKIE) && !empty($_COOKIE);
-		}
+        if ( $key ) {
+            return isset($_COOKIE[$key]);
+        }
+        return isset($_COOKIE) && !empty($_COOKIE);
+	}
+
+	/**
+	 * @access public
+	 * @param void
+	 * @return bool
+	 */
+	public static function clear()
+	{
+        if ( System::getIni('session.use_cookies') ) {
+            $params = session_get_cookie_params();
+            self::set(Session::getName(), '', [
+            	'expires'  => time() - 42000,
+            	'path'     => $params['path'],
+            	'domain'   => $params['domain'],
+            	'secure'   => $params['secure'],
+            	'httponly' => $params['httponly'],
+            	'samesite' => $params['samesite']
+            ]);
+            return true;
+        }
+        return false;
 	}
 }
