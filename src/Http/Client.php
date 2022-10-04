@@ -348,7 +348,7 @@ class Client
             curl_setopt($handler,CURLOPT_CUSTOMREQUEST,Stringify::uppercase($this->method));
         }
 
-        if ( !Server::isHttps() ) {
+        if ( !Server::isSSL() ) {
             curl_setopt($handler,CURLOPT_SSL_VERIFYHOST,false);
             curl_setopt($handler,CURLOPT_SSL_VERIFYPEER,false);
         }
