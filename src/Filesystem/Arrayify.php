@@ -5,17 +5,25 @@
  * @subpackage : Classes Filesystem Component
  * @version    : 1.0.0
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
- * @license    : MIT License
+ * @license    : MIT
  *
- * This file if a part of FloatPHP Framework
+ * This file if a part of FloatPHP Framework.
  */
+
+declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
 final class Arrayify
 {
+	/**
+	 * @access private
+	 * @var array|string $orderby
+	 */
+	private static $orderby;
+
 	/**
 	 * @access public
 	 * @param mixed $needle
@@ -62,12 +70,12 @@ final class Arrayify
 
 	/**
 	 * @access public
-	 * @param mixed $callback
+	 * @param callable $callback
 	 * @param array $array
 	 * @param array $arrays
 	 * @return array
 	 */
-	public static function map($callback = null, array $array, array ...$arrays) : array
+	public static function map($callback, array $array, array ...$arrays) : array
 	{
 		return array_map($callback,$array,...$arrays);
 	}
@@ -137,35 +145,6 @@ final class Arrayify
 	/**
 	 * @access public
 	 * @param array $array
-	 * @param int $flags
-	 * @return array
-	 */
-	public static function unique(array $array, int $flags = SORT_STRING) : array
-	{
-		return array_unique($array,$flags);
-	}
-
-	/**
-	 * @access public
-	 * @param array $array
-	 * @param string $key
-	 * @return array
-	 */
-	public static function uniqueMultiple(array $array, string $key = '') : array
-	{
-		$temp = [];
-		foreach ($array as &$val) {
-			if ( !isset($temp[$val[$key]]) ) {
-				$temp[$val[$key]] =& $val;
-			}
-		}
-       	$array = self::values($temp);
-       	return $array;
-	}
-
-	/**
-	 * @access public
-	 * @param array $array
 	 * @param int $num
 	 * @return mixed
 	 */
@@ -201,4 +180,103 @@ final class Arrayify
 		}
 		return array_filter($array);
 	}
+
+	/**
+	 * @access public
+	 * @param array $array
+	 * @param int $flags
+	 * @return array
+	 */
+	public static function unique(array $array, int $flags = SORT_STRING) : array
+	{
+		return array_unique($array,$flags);
+	}
+
+	/**
+	 * @access public
+	 * @param array $array
+	 * @param string $key
+	 * @return array
+	 */
+	public static function uniqueMultiple(array $array, string $key = '') : array
+	{
+		$temp = [];
+		foreach ($array as &$val) {
+			if ( !isset($temp[$val[$key]]) ) {
+				$temp[$val[$key]] =& $val;
+			}
+		}
+       	$array = self::values($temp);
+       	return $array;
+	}
+	
+    /**
+     * @access public
+     * @param array $array
+     * @param mixed $orderby
+     * @param string $order
+     * @param bool $preserve, Preserve keys
+     * @return array
+     */
+    public static function sort($array = [], $orderby = [], $order = 'ASC', $preserve = false)
+    {
+		if ( empty($orderby) ) {
+			return $array;
+		}
+
+		if ( TypeCheck::isString($orderby) ) {
+			$orderby = [$orderby => $order];
+		}
+
+		foreach ( $orderby as $field => $direction ) {
+			$orderby[$field] = ('DESC' === Stringify::uppercase($direction)) ? 'DESC' : 'ASC';
+		}
+
+		static::$orderby = $orderby;
+
+		if ( $preserve ) {
+			uasort($array,['\FloatPHP\Classes\Filesystem\Arrayify','sortCallback']);
+		} else {
+			usort($array,['\FloatPHP\Classes\Filesystem\Arrayify','sortCallback']);
+		}
+
+		return $array;
+    }
+
+    /**
+     * @access public
+     * @param mixed $a
+     * @param mixed $b
+     * @return mixed
+     */
+    public static function sortCallback($a, $b)
+    {
+		if ( !static::$orderby ) {
+			return 0;
+		}
+
+		$a = (array)$a;
+		$b = (array)$b;
+
+		foreach ( static::$orderby as $field => $direction ) {
+
+			if ( !isset($a[$field]) || !isset($b[$field]) ) {
+				continue;
+			}
+
+			if ( $a[$field] == $b[$field] ) {
+				continue;
+			}
+
+			$results = ('DESC' === $direction) ? [1,-1] : [-1,1];
+
+			if ( TypeCheck::isInt($a[$field],true) && TypeCheck::isInt($b[$field],true) ) {
+				return ($a[$field] < $b[$field]) ? $results[0] : $results[1];
+			}
+
+			return 0 > strcmp($a[$field],$b[$field]) ? $results[0] : $results[1];
+		}
+
+		return 0;
+    }
 }

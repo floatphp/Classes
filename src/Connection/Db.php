@@ -5,19 +5,21 @@
  * @subpackage : Classes Connection Component
  * @version    : 1.0.0
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
- * @license    : MIT License
+ * @license    : MIT
  *
- * This file if a part of FloatPHP Framework
+ * This file if a part of FloatPHP Framework.
  */
+
+declare(strict_types=1);
 
 namespace FloatPHP\Classes\Connection;
 
 use FloatPHP\Interfaces\Classes\LoggerInterface;
-use FloatPHP\Classes\Filesystem\TypeCheck;
-use FloatPHP\Classes\Filesystem\Stringify;
-use FloatPHP\Classes\Filesystem\Arrayify;
+use FloatPHP\Classes\Filesystem\{
+    TypeCheck, Stringify, Arrayify
+};
 use \PDOException;
 use \PDO;
 
@@ -99,7 +101,7 @@ class Db
     }
 
     /**
-     * Query
+     * Query.
      *
      * @access public
      * @param string $query
@@ -107,7 +109,7 @@ class Db
      * @param const $fetchmode
      * @return mixed
      */
-    public function query($query, $params = null, $fetchmode = PDO::FETCH_ASSOC)
+    public function query(string $query, $params = null, $fetchmode = PDO::FETCH_ASSOC)
     {
         $query = trim(Stringify::replace("\r",' ',$query));
         $this->Init($query,$params);

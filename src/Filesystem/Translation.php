@@ -5,12 +5,14 @@
  * @subpackage : Classes Filesystem Component
  * @version    : 1.0.0
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
- * @license    : MIT License
+ * @license    : MIT
  *
- * This file if a part of FloatPHP Framework
+ * This file if a part of FloatPHP Framework.
  */
+
+declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
@@ -319,15 +321,15 @@ class Translation
 	}
 
 	/**
-	 * Binary search for string
+	 * Binary search for string.
 	 *
 	 * @access protected
 	 * @param string $string
 	 * @param int $start
 	 * @param int $end
-	 * @return string
+	 * @return mixed
 	 */
-	protected function findString($string, $start = -1, $end = -1) : string
+	protected function findString($string, $start = -1, $end = -1)
 	{
 		if ( ($start == -1) || ($end == -1) ) {
 		  $start = 0;
@@ -337,18 +339,23 @@ class Translation
 			$txt = $this->getOriginalString($start);
 			if ( $string == $txt ) {
 				return $start;
+
 			} else {
 				return -1;
 			}
+
 		} elseif ($start > $end) {
 			return $this->findString($string,$end,$start);
+
 		} else {
 			$half = (int)(($start + $end) / 2);
 			$cmp = strcmp($string, $this->getOriginalString($half));
 			if ( $cmp == 0 ) {
 				return $half;
+
 			} elseif ( $cmp < 0 ) {
 				return $this->findString($string,$start,$half);
+				
 			} else {
 				return $this->findString($string,$half,$end);
 			}

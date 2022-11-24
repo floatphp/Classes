@@ -5,19 +5,21 @@
  * @subpackage : Classes Http Component
  * @version    : 1.0.0
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
- * @license    : MIT License
+ * @license    : MIT
  *
- * This file if a part of FloatPHP Framework
+ * This file if a part of FloatPHP Framework.
  */
+
+declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Interfaces\Classes\RouterInterface;
-use FloatPHP\Classes\Filesystem\Stringify;
-use FloatPHP\Classes\Filesystem\TypeCheck;
-use FloatPHP\Classes\Filesystem\Arrayify;
+use FloatPHP\Classes\Filesystem\{
+    TypeCheck, Stringify, Arrayify
+};
 use \RuntimeException;
 use \Traversable;
 
@@ -43,7 +45,7 @@ class Router implements RouterInterface
     ];
 
     /**
-     * Create router in one call from config
+     * Create router in one call from config.
      *
      * @param array $routes
      * @param string $basePath
@@ -57,8 +59,8 @@ class Router implements RouterInterface
     }
 
     /**
-     * Retrieves all routes
-     * Useful if you want to process or display routes
+     * Retrieves all routes,
+     * Useful if you want to process or display routes.
      *
      * @access public
      * @param void
@@ -70,8 +72,8 @@ class Router implements RouterInterface
     }
 
     /**
-     * Add multiple routes at once from array in the following format
-     * $routes = [[$method, $route, $target, $name]]
+     * Add multiple routes at once from array in the following format,
+     * $routes = [[$method, $route, $target, $name]].
      *
      * @access public
      * @param array $routes
@@ -88,7 +90,7 @@ class Router implements RouterInterface
     }
 
     /**
-     * Set the base path
+     * Set the base path.
      *
      * @access public
      * @param string $basePath
@@ -100,7 +102,7 @@ class Router implements RouterInterface
     }
 
     /**
-     * Add named match types
+     * Add named match types.
      *
      * @access public
      * @param array $matchTypes
@@ -112,22 +114,22 @@ class Router implements RouterInterface
     }
 
     /**
-     * Map route to target
-     * (GET|POST|PATCH|PUT|DELETE)
-     * Custom regex must start with an @
+     * Map route to target (controller),
+     * (GET|POST|PATCH|PUT|DELETE),
+     * Custom regex must start with an '@'.
      *
      * @access public
      * @param string $method
      * @param string $route
-     * @param mixed $target
+     * @param mixed $controller
      * @param string $name
      * @param string $permissions
      * @return void
      * @throws RuntimeException
      */
-    public function map($method, $route, $target, $name = null, $permissions = null)
+    public function map($method, $route, $controller, $name = null, $permissions = null)
     {
-        $this->routes[] = [$method,$route,$target,$name,$permissions];
+        $this->routes[] = [$method,$route,$controller,$name,$permissions];
         if ( $name ) {
             if ( isset($this->namedRoutes[$name]) ) {
                 throw new RuntimeException("Can not redeclare route '{$name}'");
@@ -138,8 +140,8 @@ class Router implements RouterInterface
     }
 
     /**
-     * Reversed routing
-     * Generate the URL for a named route
+     * Reversed routing,
+     * Generate the URL for a named route.
      *
      * @access public
      * @param string $routeName
@@ -179,12 +181,12 @@ class Router implements RouterInterface
     }
 
     /**
-     * Match a given Request Url against stored routes
+     * Match given request URL against stored routes.
      *
      * @access public
      * @param string $requestUrl
      * @param string $requestMethod
-     * @return array|boolean
+     * @return mixed
      */
     public function match($requestUrl = null, $requestMethod = null)
     {
@@ -249,7 +251,7 @@ class Router implements RouterInterface
     }
 
     /**
-     * Compile the regex for a given route (EXPENSIVE)
+     * Compile regex for given route (Expensive).
      *
      * @access protected
      * @param $route
@@ -279,7 +281,7 @@ class Router implements RouterInterface
                         . ')'
                         . $optional;
 
-                $route = Stringify::replace($block, $pattern, $route);
+                $route = Stringify::replace($block,$pattern,$route);
             }
         }
         return "`^$route$`u";

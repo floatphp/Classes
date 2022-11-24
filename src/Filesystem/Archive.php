@@ -5,12 +5,14 @@
  * @subpackage : Classes Filesystem Component
  * @version    : 1.0.0
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
- * @license    : MIT License
+ * @license    : MIT
  *
- * This file if a part of FloatPHP Framework
+ * This file if a part of FloatPHP Framework.
  */
+
+declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
@@ -124,5 +126,22 @@ final class Archive
 		}
 		gzclose($gz);
 		return $status;
+	}
+
+	/**
+	 * @access public
+	 * @param string $archive
+	 * @return bool
+	 */
+	public static function isValid($archive) : bool
+	{
+		$zip = new ZIP();
+		if ( $zip->open($archive) === true ) {
+			if ( $zip->numFiles ) {
+		  		$zip->close();
+		  		return true;
+			}
+		}
+		return false;
 	}
 }

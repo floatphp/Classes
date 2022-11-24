@@ -5,12 +5,14 @@
  * @subpackage : Classes Http Component
  * @version    : 1.0.0
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
- * @license    : MIT License
+ * @license    : MIT
  *
- * This file if a part of FloatPHP Framework
+ * This file if a part of FloatPHP Framework.
  */
+
+declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
@@ -128,7 +130,7 @@ final class Server
 	 */
 	public static function getProtocol()
 	{
-		return Server::isSSL() ? 'https://' : 'http://';
+		return Server::isHttps() ? 'https://' : 'http://';
 	}
 
 	/**
@@ -185,7 +187,7 @@ final class Server
 	public static function getBaseUrl()
 	{
 		$url = self::get('http-host');
-		if ( self::isSSL() ) {
+		if ( self::isHttps() ) {
 			return "https://{$url}";
 		} else {
 			return "http://{$url}";
@@ -286,26 +288,20 @@ final class Server
     }
 
 	/**
-	 * Check protocol is HTTPS (SSL).
+	 * Check protocol is HTTPS.
 	 *
 	 * @access public
 	 * @param void
 	 * @return bool
 	 */
-	public static function isSSL()
+	public static function isHttps()
 	{
-        if ( isset($_SERVER['HTTPS']) ) {
-            if ( strtolower($_SERVER['HTTPS']) === 'on' ) {
-                return true;
-            }
-            if ( $_SERVER['HTTPS'] == '1' ) {
-                return true;
-            }
-        } elseif ( isset($_SERVER['SERVER_PORT']) 
-            && ( $_SERVER['SERVER_PORT'] == '443' ) ) {
-            return true;
-        }
-        return false;
+		if ( self::isSetted('https') && !empty(self::get('https')) ) {
+			if ( self::get('https') !== 'off' ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

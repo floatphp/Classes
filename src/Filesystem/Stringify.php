@@ -5,12 +5,14 @@
  * @subpackage : Classes Filesystem Component
  * @version    : 1.0.0
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2021 JIHAD SINNAOUR <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
- * @license    : MIT License
+ * @license    : MIT
  *
- * This file if a part of FloatPHP Framework
+ * This file if a part of FloatPHP Framework.
  */
+
+declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
@@ -23,7 +25,7 @@ final class Stringify
 	 * @param string $subject
 	 * @return string
 	 */
-	public static function replace($search = [], $replace = [], $subject)
+	public static function replace($search, $replace, $subject)
 	{
 		return str_replace($search,$replace,$subject);
 	}
@@ -47,7 +49,7 @@ final class Stringify
 	 * @param array $replace
 	 * @return string
 	 */
-	public static function replaceArray($replace = [], $subject)
+	public static function replaceArray($replace, $subject)
 	{
 		if ( TypeCheck::isArray($replace) ) {
 			foreach ($replace as $key => $value) {
@@ -59,14 +61,16 @@ final class Stringify
 
 	/**
 	 * @access public
-	 * @param string|array $regex
-	 * @param string|array $replace
-	 * @param string|array $subject
+	 * @param mixed $regex
+	 * @param mixed $replace
+	 * @param mixed $subject
+	 * @param int $limit
+	 * @param int $count
 	 * @return mixed
 	 */
-	public static function replaceRegex($regex = '', $replace, $subject)
+	public static function replaceRegex($regex, $replace, $subject, $limit = -1, &$count = null)
 	{
-		return preg_replace($regex,$replace,$subject);
+		return preg_replace($regex,$replace,$subject,$limit,$count);
 	}
 
 	/**
@@ -135,7 +139,7 @@ final class Stringify
 	public static function slugify($string)
 	{
 	  	// Replace non letter or digits by -
-	  	$slug = self::replaceRegex('~[^\pL\d]+~u','-',$string);
+	  	$slug = self::replaceRegex('~[^\pL\d]+~u','-',(string)$string);
 	  	// Transliterate
 	  	$slug = strtr($slug,self::getSpecialChars());
 	  	$slug = self::encode($slug,'ASCII//TRANSLIT//IGNORE');
@@ -427,6 +431,7 @@ final class Stringify
 	 */
 	public static function tagStrip($string, $break = false)
 	{
+		$string = (string)$string;
 	    $string = self::replaceRegex('@<(script|style)[^>]*?>.*?</\\1>@si','',$string);
 	    $string = strip_tags($string);
 	    if ( $break ) {
@@ -556,7 +561,7 @@ final class Stringify
 	 */
 	public static function match($regex, $string, $index = 0, $flags = 0, $offset = 0)
 	{
-		preg_match($regex,$string,$matches,$flags,$offset);
+		preg_match($regex,(string)$string,$matches,$flags,$offset);
 		if ( $index === -1 ) {
 			return $matches;
 		}
@@ -574,7 +579,7 @@ final class Stringify
 	 */
 	public static function matchAll($regex, $string, $index = 0, $flags = 0, $offset = 0)
 	{
-		preg_match_all($regex,$string,$matches,$flags,$offset);
+		preg_match_all($regex,(string)$string,$matches,$flags,$offset);
 		if ( $index === -1 ) {
 			return $matches;
 		}
