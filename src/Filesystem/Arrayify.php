@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -28,12 +28,11 @@ final class Arrayify
 	 * @access public
 	 * @param mixed $needle
 	 * @param array $haystack
-	 * @param bool $strict
 	 * @return bool
 	 */
-	public static function inArray($needle, array $haystack, bool $strict = false) : bool
+	public static function inArray($needle, array $haystack) : bool
 	{
-		return in_array($needle,$haystack,$strict);
+		return in_array($needle, $haystack, true);
 	}
 
 	/**
@@ -65,7 +64,7 @@ final class Arrayify
 	 */
 	public static function combine(array $keys, array $values) : array
 	{
-		return array_combine($keys,$values);
+		return array_combine($keys, $values);
 	}
 
 	/**
@@ -77,7 +76,7 @@ final class Arrayify
 	 */
 	public static function map($callback, array $array, array ...$arrays) : array
 	{
-		return array_map($callback,$array,...$arrays);
+		return array_map($callback, $array, ...$arrays);
 	}
 
 	/**
@@ -108,7 +107,7 @@ final class Arrayify
 	 */
 	public static function diff(array $array, array ...$arrays)
 	{
-		return array_diff($array,...$arrays);
+		return array_diff($array, ...$arrays);
 	}
 
 	/**
@@ -119,7 +118,7 @@ final class Arrayify
 	 */
 	public static function hasKey($key, array $array) : bool
 	{
-		return array_key_exists($key,$array);
+		return array_key_exists($key, $array);
 	}
 
 	/**
@@ -148,9 +147,9 @@ final class Arrayify
 	 * @param int $num
 	 * @return mixed
 	 */
-	public static function rand(array $array, int $num = 1)
+	public static function rand(array $array, $num = 1)
 	{
-		return array_rand($array,$num);
+		return array_rand($array, $num);
 	}
 
 	/**
@@ -161,24 +160,47 @@ final class Arrayify
 	 * @param bool $preserve
 	 * @return array
 	 */
-	public static function slice(array $array, int $offset, $length = null, bool $preserve = false) : array
+	public static function slice(array $array, $offset, $length = null, $preserve = false) : array
 	{
-		return array_slice($array,$offset,$length,$preserve);
+		return array_slice($array, $offset, $length, $preserve);
 	}
 
 	/**
 	 * @access public
 	 * @param array $array
-	 * @param callable $callable
+	 * @param callable $callback
 	 * @param int $mode
 	 * @return array
 	 */
-	public static function filter(array $array, $callable = null, $mode = null) : array
+	public static function filter(array $array, $callback = null, $mode = 0) : array
 	{
-		if ( $callable ) {
-			return array_filter($array,$callable,$mode);
+		if ( !TypeCheck::isNull($callback) ) {
+			return array_filter($array, $callback, $mode);
 		}
 		return array_filter($array);
+	}
+
+	/**
+	 * @access public
+	 * @param array $array
+	 * @param int $case
+	 * @return array
+	 */
+	public static function formatKeyCase($array, $case = CASE_LOWER) : array
+	{
+		return array_change_key_case((array)$array, $case);
+	}
+
+	/**
+	 * @access public
+	 * @param array|object &$array
+	 * @param callable $callback
+	 * @param mixed $arg
+	 * @return bool
+	 */
+	public static function walkRecursive(&$array, $callback, $arg = null) : bool
+	{
+		return array_walk_recursive($array, $callback, $arg);
 	}
 
 	/**
@@ -187,9 +209,21 @@ final class Arrayify
 	 * @param int $flags
 	 * @return array
 	 */
-	public static function unique(array $array, int $flags = SORT_STRING) : array
+	public static function unique(array $array, $flags = SORT_STRING) : array
 	{
-		return array_unique($array,$flags);
+		return array_unique($array, $flags);
+	}
+
+	/**
+	 * @access public
+	 * @param array $array
+	 * @return array
+	 */
+	public static function uniqueMultiple(array $array) : array
+	{
+		return self::map('unserialize', self::unique(
+			self::map('serialize', $array)
+		));
 	}
 
 	/**
@@ -198,7 +232,7 @@ final class Arrayify
 	 * @param string $key
 	 * @return array
 	 */
-	public static function uniqueMultiple(array $array, string $key = '') : array
+	public static function uniqueMultipleByKey(array $array, $key = '') : array
 	{
 		$temp = [];
 		foreach ($array as &$val) {
@@ -235,9 +269,9 @@ final class Arrayify
 		static::$orderby = $orderby;
 
 		if ( $preserve ) {
-			uasort($array,['\FloatPHP\Classes\Filesystem\Arrayify','sortCallback']);
+			uasort($array, ['\FloatPHP\Classes\Filesystem\Arrayify', 'sortCallback']);
 		} else {
-			usort($array,['\FloatPHP\Classes\Filesystem\Arrayify','sortCallback']);
+			usort($array, ['\FloatPHP\Classes\Filesystem\Arrayify', 'sortCallback']);
 		}
 
 		return $array;

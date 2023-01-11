@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -51,15 +51,5 @@ final class Response extends Status
 		$protocol = Server::get('server-protocol');
 		header("Content-Type: {$type}");
 		header("{$protocol} {$code} {$status}");
-	}
-
-	/**
-	 * @param string $reponse
-	 * @param bool $isArray
-	 * @return mixed
-	 */
-	public static function get($reponse, $isArray = false)
-	{
-		return Json::decode($reponse,$isArray);
 	}
 }

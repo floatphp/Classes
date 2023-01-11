@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -16,8 +16,9 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
-use FloatPHP\Classes\Filesystem\Stringify;
-use FloatPHP\Classes\Filesystem\Json;
+use FloatPHP\Classes\Filesystem\{
+	Stringify, Json
+};
 use \stdClass;
 
 final class ResponseXML
@@ -29,39 +30,49 @@ final class ResponseXML
 	 */
 	public static function format($xml)
 	{
-		$xml = Stringify::replace('<?xml version="1.0" encoding="utf-8" ?>','',$xml);
+		$xml = Stringify::replace('<?xml version="1.0" encoding="utf-8" ?>','',(string)$xml);
 		$xml = Stringify::replace('</xml>','',$xml);
 		return $xml;
 	}
 	
 	/**
-	 * @access public 
-	 * @param string $xml
-	 * @param int $args
-	 * @return string
-	 *
+	 * Parse XML string.
+	 * 
 	 * LIBXML_NOCDATA: 16384
 	 * LIBXML_VERSION: 20908
-	 */
-	public static function parse($xml, $args = 16384|20908)
-	{
-		return simplexml_load_string($xml,'SimpleXMLElement',$args);
-	}
-
-	/**
+	 * 
 	 * @access public 
 	 * @param string $xml
-	 * @param bool $isArray
 	 * @param int $args
 	 * @return mixed
 	 */
-	public static function parseFile($xml, $isArray = false, $args = 16384|20908)
+	public static function parse($xml, $args = 16384|20908)
 	{
-		$object = @simplexml_load_file($xml,'SimpleXMLElement',$args);
-		if ( $isArray ) {
-			$object = ($object) ? $object : new stdClass;
-			$object = Json::decode(Json::encode($object),true);
-		}
-		return $object;
+		return @simplexml_load_string($xml,'SimpleXMLElement',$args);
+	}
+
+	/**
+	 * Parse XML file.
+	 * 
+	 * @access public 
+	 * @param string $xml
+	 * @param int $args
+	 * @return mixed
+	 */
+	public static function parseFile($xml, $args = 16384|20908)
+	{
+		return @simplexml_load_file($xml,'SimpleXMLElement',$args);
+	}
+
+	/**
+	 * Ignore XML errors.
+	 * 
+	 * @access public 
+	 * @param bool $user, User errors
+	 * @return mixed
+	 */
+	public static function ignoreErrors($user = true)
+	{
+		return libxml_use_internal_errors($user);
 	}
 }

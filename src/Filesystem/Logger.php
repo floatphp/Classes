@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -86,7 +86,7 @@ class Logger implements LoggerInterface
         if ( $isArray ) {
             $message = print_r($message,true);
         }
-        $this->write('debug',$message);
+        $this->write('debug', $message);
     }
 
     /**
@@ -96,7 +96,7 @@ class Logger implements LoggerInterface
      */
     public function error($message = '')
     {
-        $this->write('error',$message);
+        $this->write('error', $message);
     }
 
     /**
@@ -106,7 +106,7 @@ class Logger implements LoggerInterface
      */
     public function warning($message = '')
     {
-        $this->write('warning',$message);
+        $this->write('warning', $message);
     }
 
     /**
@@ -116,7 +116,7 @@ class Logger implements LoggerInterface
      */
     public function info($message = '')
     {
-        $this->write('info',$message);
+        $this->write('info', $message);
     }
 
     /**
@@ -127,7 +127,7 @@ class Logger implements LoggerInterface
      */
     public function custom($message = '', $type = 'custom')
     {
-        $this->write($type,$message);
+        $this->write($type, $message);
     }
 
     /**
@@ -142,7 +142,7 @@ class Logger implements LoggerInterface
      */
     public function log($message = '', $type = 0, $path = null, $headers = null)
     {
-        error_log($message,$type,$path,$headers);
+        error_log($message, $type, $path, $headers);
     }
 
     /**
@@ -157,6 +157,6 @@ class Logger implements LoggerInterface
         $log  = "{$this->path}/{$this->filename}-{$date}.{$this->extension}";
         $date = date('[d-m-Y H:i:s]');
         $msg  = "{$date} : [{$status}] - {$message}" . PHP_EOL;
-        File::w($log,$msg,true);
+        File::w($log, $msg, true);
     }
 }

@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -16,7 +16,9 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
-use FloatPHP\Classes\Filesystem\Stringify;
+use FloatPHP\Classes\Filesystem\{
+	Stringify, Arrayify, Validator
+};
 
 final class Server
 {
@@ -34,10 +36,9 @@ final class Server
 			if ( $format ) {
 				$item = self::formatArgs($item);
 			}
-			return self::isSetted($item) ? $_SERVER[$item] : false;
-		} else {
-			return $_SERVER;
+			return self::isSetted($item) ? $_SERVER[$item] : null;
 		}
+		return self::isSetted() ? $_SERVER : null;
 	}
 
 	/**
@@ -72,9 +73,8 @@ final class Server
 				$item = self::formatArgs($item);
 			}
 			return isset($_SERVER[$item]);
-		} else {
-			return isset($_SERVER) && !empty($_SERVER);
 		}
+		return isset($_SERVER) && !empty($_SERVER);
 	}
 	
 	/**
@@ -88,34 +88,30 @@ final class Server
 	{
 		if ( $domain ) {
 			$ip = gethostbyname($domain);
-			return self::isValidIP($ip);
+			return Validator::isValidIP($ip);
 		}
 
-		if ( self::isSetted('http-x-real-ip') 
-		&& !empty(self::get('http-x-real-ip')) ) {
+		if ( self::isSetted('http-x-real-ip') ) {
 			$ip = self::get('http-x-real-ip');
-			return Stringify::slashStrip($ip);
+			return Stringify::stripSlash($ip);
 
-		} elseif ( self::isSetted('http-x-forwarded-for')
-		&& !empty(self::get('http-x-forwarded-for')) ) {
+		} elseif ( self::isSetted('http-x-forwarded-for') ) {
 			$ip = self::get('http-x-forwarded-for');
-			$ip = Stringify::slashStrip($ip);
+			$ip = Stringify::stripSlash($ip);
 			$ip = Stringify::split($ip, ['regex' => '/,/']);
 			$ip = (string)trim(current($ip));
- 			return self::isValidIP($ip);
+ 			return Validator::isValidIP($ip);
 
-		} elseif ( self::isSetted('http-cf-connecting-ip')
-		&& !empty(self::get('http-cf-connecting-ip')) ) {
+		} elseif ( self::isSetted('http-cf-connecting-ip') ) {
 			$ip = self::get('http-cf-connecting-ip');
-			$ip = Stringify::slashStrip($ip);
+			$ip = Stringify::stripSlash($ip);
 			$ip = Stringify::split($ip, ['regex' => '/,/']);
 			$ip = (string)trim(current($ip));
- 			return self::isValidIP($ip);
+ 			return Validator::isValidIP($ip);
 
-		} elseif ( self::isSetted('remote-addr')
-		&& !empty(self::get('remote-addr')) ) {
+		} elseif ( self::isSetted('remote-addr') ) {
 			$ip = self::get('remote-addr');
-			return Stringify::slashStrip($ip);
+			return Stringify::stripSlash($ip);
 		}
 
 		return false;
@@ -130,7 +126,7 @@ final class Server
 	 */
 	public static function getProtocol()
 	{
-		return Server::isHttps() ? 'https://' : 'http://';
+		return self::isSSL() ? 'https://' : 'http://';
 	}
 
 	/**
@@ -152,7 +148,7 @@ final class Server
 			if ( self::isSetted($header) ) {
 				$code = self::get($header);
 				if ( !empty($code) ) {
-					$code = Stringify::slashStrip($code);
+					$code = Stringify::stripSlash($code);
 					return Stringify::uppercase($code);
 					break;
 				}
@@ -172,7 +168,7 @@ final class Server
 	 */
 	public static function redirect($url = '/', $code = 301, $message = 'Moved Permanently')
 	{
-		header("Status: {$code} {$message}",false,$code);
+		header("Status: {$code} {$message}", false, $code);
 		header("Location: {$url}");
 		exit();
 	}
@@ -187,7 +183,7 @@ final class Server
 	public static function getBaseUrl()
 	{
 		$url = self::get('http-host');
-		if ( self::isHttps() ) {
+		if ( self::isSSL() ) {
 			return "https://{$url}";
 		} else {
 			return "http://{$url}";
@@ -198,12 +194,43 @@ final class Server
 	 * Get current URL.
 	 *
 	 * @access public
-	 * @param void
+	 * @param bool $escape
 	 * @return string
 	 */
-	public static function getCurrentUrl()
+	public static function getCurrentUrl($escape = false)
 	{
-		return self::getBaseUrl() . self::get('request-uri');
+		$url = self::getBaseUrl() . self::get('request-uri');
+		if ( $escape ) {
+			$url = Stringify::parseUrl($url);
+			if ( isset($url['query']) ) {
+				unset($url['query']);
+			}
+			$url = rtrim("{$url['scheme']}://{$url['host']}{$url['path']}");
+		}
+		return $url;
+	}
+
+	/**
+	 * Parse base from URL.
+	 *
+	 * @access public
+	 * @param string $url
+	 * @return string
+	 */
+	public static function parseBaseUrl($url = '')
+	{
+		if ( !empty($url) && ($url = Stringify::parseUrl($url)) ) {
+			unset($url['path']);
+			$tmp = '';
+			if ( isset($url['scheme']) ) {
+				$tmp = "{$url['scheme']}://";
+			}
+			if ( isset($url['host']) ) {
+				$tmp = "{$tmp}{$url['host']}";
+			}
+			$url = $tmp;
+		}
+		return (string)$url;
 	}
 
 	/**
@@ -254,16 +281,17 @@ final class Server
 	 */
 	public static function getAuthorizationHeaders()
 	{
-        if ( self::isSetted('Authorization',false) ) {
-            return trim(self::get('Authorization',false));
+        if ( self::isSetted('Authorization', false) ) {
+            return trim(self::get('Authorization', false));
 
         } elseif ( self::isSetted('http-authorization') ) {
             return trim(self::get('http-authorization'));
 
         } elseif ( function_exists('apache_request_headers') ) {
             $requestHeaders = apache_request_headers();
-            $requestHeaders = array_combine(
-            	array_map('ucwords',array_keys($requestHeaders)),array_values($requestHeaders)
+            $requestHeaders = Arrayify::combine(
+            	Arrayify::map('ucwords', Arrayify::keys($requestHeaders)),
+            	Arrayify::values($requestHeaders)
             );
             if ( isset($requestHeaders['Authorization']) ) {
                 return trim($requestHeaders['Authorization']);
@@ -282,19 +310,19 @@ final class Server
     public static function getBearerToken()
     {
         if ( ($headers = self::getAuthorizationHeaders()) ) {
-            return Stringify::match('/Bearer\s(\S+)/',$headers,1);
+            return Stringify::match('/Bearer\s(\S+)/', $headers, 1);
         }
         return false;
     }
 
 	/**
-	 * Check protocol is HTTPS.
+	 * Check whether protocol is HTTPS (SSL).
 	 *
 	 * @access public
 	 * @param void
 	 * @return bool
 	 */
-	public static function isHttps()
+	public static function isSSL()
 	{
 		if ( self::isSetted('https') && !empty(self::get('https')) ) {
 			if ( self::get('https') !== 'off' ) {
@@ -305,129 +333,16 @@ final class Server
 	}
 
 	/**
-	 * Check IP address.
-	 *
-	 * @access public
-	 * @param string $ip
-	 * @return string|false
-	 */
-	public static function isValidIP($ip)
-	{
-	    $pattern = '/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/';
-	    if ( Stringify::match($pattern,$ip) || self::isIPV6($ip) ) {
-	        return $ip;
-	    }
-	    return false;
-	}
-
-	/**
-	 * Check IPv6 address.
-	 *
-	 * @access public
-	 * @param string $ip
-	 * @return bool
-	 */
-	public static function isIPV6($ip) : bool
-	{
-	    $ip = self::uncompressIPV6($ip);
-	    list($ipv6, $ipv4) = self::splitIPV6($ip);
-	    $ipv6 = explode(':',$ipv6);
-	    $ipv4 = explode('.',$ipv4);
-	    if ( count($ipv6) === 8 && count($ipv4) === 1 || count($ipv6) === 6 && count($ipv4) === 4 ) {
-	        foreach ($ipv6 as $part) {
-	            if ( $part === '' ) {
-	                return false;
-	            }
-	            if ( strlen($part) > 4 ) {
-	                return false;
-	            }
-	            $part = ltrim($part,'0');
-	            if ( $part === '' ) {
-	                $part = '0';
-	            }
-	            $value = hexdec($part);
-	            if ( dechex($value) !== strtolower($part) || $value < 0 || $value > 0xFFFF ) {
-	                return false;
-	            }
-	        }
-	        if ( count($ipv4) === 4 ) {
-	            foreach ($ipv4 as $part) {
-	                $value = (int) $part;
-	                if ( (string) $value !== $part || $value < 0 || $value > 0xFF ) {
-	                    return false;
-	                }
-	            }
-	        }
-	        return true;
-	    }
-	    return false;
-	}
-
-	/**
-	 * Uncompresses IPv6 address.
-	 *
-	 * @access public
-	 * @param void
-	 * @return string
-	 */
-	public static function uncompressIPV6($ip) : string
-	{
-	    if ( substr_count($ip, '::') !== 1 ) {
-	        return $ip;
-	    }
-	    list($ip1, $ip2) = explode('::', $ip);
-	    $c1 = ($ip1 === '') ? -1 : substr_count($ip1,':');
-	    $c2 = ($ip2 === '') ? -1 : substr_count($ip2,':');
-	 
-	    if ( strpos($ip2, '.') !== false ) {
-	        $c2++;
-	    }
-	    if ( $c1 === -1 && $c2 === -1 ) {
-	        $ip = '0:0:0:0:0:0:0:0';
-
-	    } elseif ( $c1 === -1 ) {
-	        $fill = Stringify::repeat('0:', 7 - $c2);
-	        $ip = Stringify::replace('::',$fill,$ip);
-
-	    } elseif ( $c2 === -1 ) {
-	        $fill = Stringify::repeat(':0', 7 - $c1);
-	        $ip = Stringify::replace('::',$fill,$ip);
-
-	    } else {
-	        $fill = ':' . Stringify::repeat('0:', 6 - $c2 - $c1);
-	        $ip = Stringify::replace('::',$fill,$ip);
-	    }
-	    return $ip;
-	}
-
-	/**
-	 * Splits IPv6 address into the IPv6 and IPv4 representation parts.
-	 *
-	 * @access public
-	 * @param string $ip
-	 * @return array
-	 */
-	public static function splitIPV6($ip) : array
-	{
-	    if ( strpos($ip,'.') !== false ) {
-	        $pos = strrpos($ip,':');
-	        $ipv6 = substr($ip,0,$pos);
-	        $ipv4 = substr($ip,$pos + 1);
-	        return [$ipv6,$ipv4];
-	    }
-	    return [$ip,''];
-	}
-
-	/**
 	 * Format args.
 	 *
 	 * @access private
 	 * @param string $arg
 	 * @return string
+	 * @internal
 	 */
 	private static function formatArgs($arg)
 	{
-	    $arg = Stringify::replace('-','_',$arg);
+	    $arg = Stringify::replace('-', '_', $arg);
 	    return Stringify::uppercase($arg);
 	}
 }

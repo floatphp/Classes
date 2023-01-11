@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -23,7 +23,8 @@ class Status
 	 * @param int $code
 	 * @return string
 	 */
-	public static function getMessage($code){
+	public static function getMessage($code = '')
+	{
 		$status = [
 			100 => 'Continue',
 			101 => 'Switching Protocols',
@@ -69,6 +70,6 @@ class Status
 			504 => 'Gateway Timeout',
 			505 => 'HTTP Version Not Supported'
 		];
-		return isset($status[$code]) ? $status[$code] : $status[500];
+		return $status[$code] ?? $status[500];
 	}
 }

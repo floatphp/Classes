@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Security Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -16,10 +16,10 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Security;
 
-use FloatPHP\Classes\Http\Server;
-use FloatPHP\Classes\Server\System;
-use FloatPHP\Classes\Filesystem\{
-    TypeCheck, Stringify, Arrayify
+use FloatPHP\Classes\{
+    Http\Server,
+    Server\System,
+    Filesystem\TypeCheck, Filesystem\Stringify, Filesystem\Arrayify
 };
 
 class License
@@ -59,7 +59,7 @@ class License
     }
 
     /**
-     * Init license settings
+     * Init license settings.
      *
      * @access public
      * @param array $settings
@@ -67,11 +67,11 @@ class License
      */
     public function init(array $settings = [])
     {
-        $this->settings = Arrayify::merge($this->getDefaultSettings(),$settings);
+        $this->settings = Arrayify::merge($this->getDefaultSettings(), $settings);
     }
 
     /**
-     * Set static key
+     * Set static key.
      *
      * @access public
      * @param string $key
@@ -83,7 +83,7 @@ class License
     }
 
     /**
-     * Set static id
+     * Set static id.
      *
      * @access public
      * @param string $id
@@ -95,7 +95,7 @@ class License
     }
 
     /**
-     * Set static strings
+     * Set static strings.
      *
      * @access public
      * @param array $strings
@@ -103,11 +103,11 @@ class License
      */
     public function setStrings(array $strings = [])
     {
-        $this->strings = Arrayify::merge($this->getDefaultStrings(),$strings);
+        $this->strings = Arrayify::merge($this->getDefaultStrings(), $strings);
     }
 
     /**
-     * Get license data
+     * Get license data.
      *
      * @access public
      * @param void
@@ -119,7 +119,7 @@ class License
     }
 
     /**
-     * Get license error
+     * Get license error.
      *
      * @access public
      * @param void
@@ -131,7 +131,7 @@ class License
     }
 
     /**
-     * Get license data var
+     * Get license data var.
      *
      * @access public
      * @param string $var
@@ -139,11 +139,11 @@ class License
      */
     public function getDataVar($var = '')
     {
-        return isset($this->data['args'][$var]) ? $this->data['args'][$var] : '';
+        return $this->data['args'][$var] ?? '';
     }
 
     /**
-     * Generate licence
+     * Generate licence.
      *
      * @access public
      * @param int $start
@@ -180,7 +180,7 @@ class License
         }
 
         // Include args
-        $args = Arrayify::merge($this->getDefaultArgs(),$args);
+        $args = Arrayify::merge($this->getDefaultArgs(), $args);
         $data['args'] = $args;
 
         // Encrypt the key
@@ -188,7 +188,7 @@ class License
     }
 
     /**
-     * Validate license secret
+     * Validate license secret.
      *
      * @access public
      * @param string $secret
@@ -212,7 +212,8 @@ class License
         }
 
         // Id validation
-        if ( $this->data['id'] !== md5($this->key) ) {
+        $id = $this->data['id'] ?? '';
+        if ( $id !== md5($this->key) ) {
             $this->error = 'Corrupted';
             return false;
         }
@@ -270,7 +271,7 @@ class License
     }
 
     /**
-     * Set server data
+     * Set server data.
      *
      * @access protected
      * @param void
@@ -285,7 +286,7 @@ class License
     }
 
     /**
-     * Server validation status
+     * Server validation status.
      *
      * @access protected
      * @param void
@@ -297,7 +298,7 @@ class License
     }
 
     /**
-     * Time validation status
+     * Time validation status.
      *
      * @access protected
      * @param void
@@ -309,7 +310,7 @@ class License
     }
 
     /**
-     * Localhost validation status
+     * Localhost validation status.
      *
      * @access protected
      * @param void
@@ -321,7 +322,7 @@ class License
     }
 
     /**
-     * Get default license key
+     * Get default license key.
      *
      * @access protected
      * @param void
@@ -336,7 +337,7 @@ class License
     }
 
     /**
-     * Get default license Id
+     * Get default license Id.
      *
      * @access protected
      * @param void
@@ -348,7 +349,7 @@ class License
     }
 
     /**
-     * Get default license strings
+     * Get default license strings.
      *
      * @access protected
      * @param void
@@ -364,7 +365,7 @@ class License
     }
 
     /**
-     * Get default license settings
+     * Get default license settings.
      *
      * @access protected
      * @param void
@@ -383,7 +384,7 @@ class License
     }
 
     /**
-     * Get default license data args
+     * Get default license data args.
      *
      * @access protected
      * @param void
@@ -398,7 +399,7 @@ class License
     }
 
     /**
-     * Inline license string
+     * Inline license string.
      *
      * @access protected
      * @param string $string
@@ -413,7 +414,7 @@ class License
             $str = "{$str}{$this->strings['separator']}";
         }
         if ( $spaces/2 != round($spaces/2) ) {
-            $string = substr($str,0,strlen($str) - 1) . $string;
+            $string = substr($str, 0, strlen($str) - 1) . $string;
         } else {
             $string = "{$str}{$string}";
         }
@@ -422,7 +423,7 @@ class License
     }
 
     /**
-     * Encrypt data
+     * Encrypt data.
      *
      * @access protected
      * @param array $data
@@ -442,19 +443,19 @@ class License
         // Regular encryption method
         $data = Stringify::serialize($data);
         for ($i = 1; $i <= strlen($data); $i++) {
-            $char = substr($data,$i - 1,1);
-            $keyChar = substr($key,($i % strlen($key)) - 1,1);
+            $char = substr($data, $i - 1, 1);
+            $keyChar = substr($key, ($i % strlen($key)) - 1, 1);
             $char = chr(ord($char) + ord($keyChar));
             $secret .= $char;
         }
 
         // Return license secret
-        $secret = Tokenizer::base64(trim($secret),2);
+        $secret = Tokenizer::base64(trim($secret), 2);
         return "{$random}{$secret}";
     }
 
     /**
-     * Decrypt license
+     * Decrypt license.
      *
      * @access public
      * @param string $license
@@ -462,8 +463,8 @@ class License
      */
     protected function decrypt(string $secret) : array
     {
-        $random = substr($secret,0,5);
-        $secret = Tokenizer::unbase64(substr($secret,5),2);
+        $random = substr($secret, 0, 5);
+        $secret = Tokenizer::unbase64(substr($secret, 5), 2);
 
         // Get key
         $key = "{$random}{$this->key}";
@@ -480,61 +481,61 @@ class License
         }
 
         // Return data
-        return Stringify::unserialize($data);
+        return (array)Stringify::unserialize($data);
     }
 
     /**
-     * Wrap license data
+     * Wrap license data.
      *
      * @access protected
      * @param array $data
      * @return string
      */
-    protected function wrap($data) : string
+    protected function wrap(array $data) : string
     {
         // Encrypt license data
         $secret = $this->encrypt($data);
         // Wrap secret
         $result  = $this->inlineString($this->strings['begin']) . PHP_EOL;
-        $result .= wordwrap($secret,$this->settings['wrap'],PHP_EOL,1);
+        $result .= wordwrap($secret, $this->settings['wrap'], PHP_EOL, true);
         $result .= PHP_EOL . $this->inlineString($this->strings['end']);
         return $result;
     }
 
     /**
-     * Unwrap license
+     * Unwrap license.
      *
      * @access public
      * @param string $secret
      * @return array
      */
-    protected function unwrap($secret) : array
+    protected function unwrap(string $secret) : array
     {
         // Sort variables
         $begin = $this->inlineString($this->strings['begin']);
         $end = $this->inlineString($this->strings['end']);
         // Format license secret
-        $secret = trim(Stringify::replace([$begin,$end,"\r","\n","\t"],'',$secret));
+        $secret = trim(Stringify::replace([$begin, $end, "\r", "\n", "\t"], '', $secret));
         // Decrypt license secret
         return $this->decrypt($secret);
     }
 
     /**
-     * Check localhost
+     * Check localhost.
      *
      * @access private
      * @param array $data
      * @return bool
      */
-    private function isLocalhost($data = []) : bool
+    private function isLocalhost(array $data = []) : bool
     {
         $local = ['127.0.0.1','::1'];
 		if ( isset($data['server']['ip']) ) {
-			if ( Stringify::contains($local,$data['server']['ip']) ) {
+			if ( Stringify::contains($local, $data['server']['ip']) ) {
 				return true;
 			}
 		} elseif ( isset($data['server']['host'] )) {
-			if ( Stringify::contains($local,$data['server']['host']) ) {
+			if ( Stringify::contains($local, $data['server']['host']) ) {
 				return true;
 			}
 		}

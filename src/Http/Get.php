@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -26,10 +26,9 @@ final class Get
 	public static function get($item = null)
 	{
 		if ( $item ) {
-			return self::isSetted($item) ? $_GET[$item] : false;
-		} else {
-			return $_GET;
+			return self::isSetted($item) ? $_GET[$item] : null;
 		}
+		return self::isSetted() ? $_GET : null;
 	}
 
 	/**
@@ -52,8 +51,7 @@ final class Get
 	{
 		if ( $item ) {
 			return isset($_GET[$item]);
-		} else {
-			return isset($_GET) && !empty($_GET);
 		}
+		return isset($_GET) && !empty($_GET);
 	}
 }

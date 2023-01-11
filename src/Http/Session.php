@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -158,6 +158,10 @@ final class Session
      * @access public
      * @param void
      * @return bool
+     * 
+     * PHP_SESSION_DISABLED 0
+     * PHP_SESSION_NONE 1
+     * PHP_SESSION_ACTIVE 2
      */
     public static function isActive()
     {
@@ -180,14 +184,17 @@ final class Session
      * End session.
      *
      * @access public
-     * @param void
+     * @param bool $destroy
      * @return bool
      */
-    public static function end()
+    public static function end($destroy = true)
     {
         if ( self::isActive() ) {
+            if ( $destroy ) {
+                return session_destroy();
+            }
             $_SESSION = [];
-            return session_destroy();
+            return true;
         }
         return false;
     }

@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -36,11 +36,11 @@ final class Cookie
 	/**
 	 * @access public
 	 * @param string $key
-	 * @param mixed $value
+	 * @param string $value
 	 * @param array $options
 	 * @return bool
 	 */
-	public static function set($key, $value = null, $options = [])
+	public static function set($key, $value = '', $options = [])
 	{
 		return setcookie($key,$value,$options);
 	}

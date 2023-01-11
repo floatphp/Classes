@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Html Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -23,6 +23,9 @@ use FloatPHP\Classes\Http\{
 	Request, Server
 };
 
+/**
+ * Form builder.
+ */
 class Form
 {
 	/**
@@ -676,7 +679,7 @@ class Form
 						break;
 					case 'label':
 					case 'title':
-						$attributes[$key] = Stringify::tagStrip($value);
+						$attributes[$key] = Stringify::stripTag($value);
 						break;
 				}
 			}

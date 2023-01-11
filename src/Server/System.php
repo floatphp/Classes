@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Server Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -134,6 +134,78 @@ final class System
     }
 
     /**
+     * Get schedule tasks.
+     *
+     * @access public
+     * @param bool $format
+     * @return array
+     */
+    public static function getSchedule($format = true) : array
+    {
+        $tasks = [];
+        if ( System::getOsName() == 'windows' ) {
+            if ( TypeCheck::isClass('COM') ) {
+                $schedule = new \COM('Schedule.Service');
+                $schedule->Connect();
+                $folder = $schedule->GetFolder('\\');
+                $collection = $folder->GetTasks(0);
+                if ( $collection->Count ) {
+                    foreach ($collection as $task) {
+                        $name = $task->Name;
+                        if ( $format ) {
+                            $name = Stringify::lowercase($name);
+                        }
+                        $tasks['win'][$name] = $task->Enabled;
+                    }
+                }
+            }
+
+        } else {
+            if ( ($return = System::execute('crontab -l')) ) {
+                $tasks['lin'] = explode("\n", $return);
+                if ( $format ) {
+                    foreach ($tasks['lin'] as $key => $value) {
+                        $tasks['lin'][$key] = Stringify::lowercase($value);
+                    }
+                }
+            }
+        }
+        return $tasks;
+    }
+
+    /**
+     * Check schedule task.
+     *
+     * @access public
+     * @param string $name
+     * @return bool
+     */
+    public static function hasScheduleTask($name) : bool
+    {
+        $status = false;
+        if ( ($tasks = self::getSchedule()) ) {
+            if ( isset($tasks['win']) ) {
+                foreach ($tasks['win'] as $key => $value) {
+                    if ( Stringify::contains($key, $name) && $value === true ) {
+                        $status = true;
+                        break;
+                    }
+                }
+            } else {
+                foreach ($tasks['lin'] as $line) {
+                    if ( Stringify::contains($line, $name) && substr($line, 0, 1) !== '#' ) {
+                        if ( !Stringify::contains($line, 'home=') ) {
+                            $status = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return $status;
+    }
+
+    /**
      * Set ini.
      *
      * @access public
@@ -213,7 +285,7 @@ final class System
      */
     public static function execute(string $command = '', &$output = null, &$result = null)
     {
-        return @exec($command,$output,$result);
+        return @exec($command, $output, $result);
     }
 
     /**
@@ -269,12 +341,12 @@ final class System
                 $query .= 'TotalVisibleMemorySize FROM Win32_OperatingSystem';
                 $memory = $system->ExecQuery($query);
                 $memory = $memory->ItemIndex(0);
-                $total = round($memory->TotalVisibleMemorySize / 1000000,2);
-                $available = round($memory->FreePhysicalMemory / 1000000,2);
+                $total = round($memory->TotalVisibleMemorySize / 1000000, 2);
+                $available = round($memory->FreePhysicalMemory / 1000000, 2);
                 $usage = [
                     'total'     => $total,
                     'available' => $available,
-                    'used'      => round($total - $available,2),
+                    'used'      => round($total - $available, 2),
                     'free'      => false,
                     'shared'    => false,
                     'cached'    => false,
@@ -292,15 +364,15 @@ final class System
             });
             // Reset array positions
             $memory = Arrayify::merge($memory);
-            $total = round($memory[1] / 1000000,2);
-            $available = round($memory[3] / 1000000,2);
+            $total = round($memory[1] / 1000000, 2);
+            $available = round($memory[3] / 1000000, 2);
             $usage = [
                 'total'     => $total,
                 'available' => $available,
-                'used'      => round($memory[2] / 1000000,2),
-                'free'      => round($memory[6] / 1000000,2),
-                'shared'    => round($memory[4] / 1000000,2),
-                'cached'    => round($memory[5] / 1000000,2),
+                'used'      => round($memory[2] / 1000000, 2),
+                'free'      => round($memory[6] / 1000000, 2),
+                'shared'    => round($memory[4] / 1000000, 2),
+                'cached'    => round($memory[5] / 1000000, 2),
                 'usage'     => round(($available / $total) * 100)
             ];
         }
@@ -426,56 +498,6 @@ final class System
     }
 
     /**
-     * Generate MAC address.
-     *
-     * @access public
-     * @param void
-     * @return string
-     */
-    public static function generateMac() : string
-    {
-        $vals = [
-            '0', '1', '2', '3', '4', '5', '6', '7',
-            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
-        ];
-        $address = '';
-        if ( count($vals) >= 1 ) {
-            $address = ['00'];
-            while (count($address) < 6) {
-                shuffle($vals);
-                $address[] = "{$vals[0]}{$vals[1]}";
-            }
-            $address = implode(':', $address);
-        }
-        return $address;
-    }
-
-    /**
-     * Validate MAC address.
-     *
-     * @access public
-     * @param string $address
-     * @return bool
-     */
-    public static function isValidMac($address = '') : bool
-    {
-        return (bool)preg_match("/^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$/i", $address);
-    }
-
-    /**
-     * Get system current MAC address.
-     *
-     * @access public
-     * @param void
-     * @return string
-     */
-    public static function getMac() : string
-    {
-        $mac = self::execute('getmac');
-        return (string)strtok($mac, ' ');
-    }
-
-    /**
      * Get system file size.
      *
      * @access public
@@ -496,14 +518,27 @@ final class System
                 }
             }
         } else {
-            $path = popen("/usr/bin/du -sk {$directory}",'r');
-            $size = fgets($path,4096);
-            $size = substr($size,0,strpos($size,"\t"));
+            $path = popen("/usr/bin/du -sk {$directory}", 'r');
+            $size = fgets($path, 4096);
+            $size = substr($size, 0, strpos($size, "\t"));
             pclose ($path);
         }
         if ( $format ) {
-            $size = round($size / 1000000,2);
+            $size = round($size / 1000000, 2);
         }
         return $size;
+    }
+
+    /**
+     * Get system current MAC address.
+     *
+     * @access public
+     * @param void
+     * @return string
+     */
+    public static function getMAC() : string
+    {
+        $mac = self::execute('getmac');
+        return (string)strtok($mac, ' ');
     }
 }

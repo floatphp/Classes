@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -26,10 +26,9 @@ final class Post
 	public static function get($item = null)
 	{
 		if ( $item ) {
-			return self::isSetted($item) ? $_POST[$item] : false;
-		} else {
-			return $_POST;
+			return self::isSetted($item) ? $_POST[$item] : null;
 		}
+		return self::isSetted() ? $_POST : null;
 	}
 
 	/**
@@ -52,8 +51,7 @@ final class Post
 	{
 		if ( $item ) {
 			return isset($_POST[$item]);
-		} else {
-			return isset($_POST) && !empty($_POST);
 		}
+		return isset($_POST) && !empty($_POST);
 	}
 }

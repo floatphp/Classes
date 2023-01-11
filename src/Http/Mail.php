@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -14,9 +14,12 @@
 
 declare(strict_types=1);
 
-namespace FloatPHP\Classes\Server;
+namespace FloatPHP\Classes\Http;
 
-use FloatPHP\Classes\Security\Tokenizer;
+use FloatPHP\Classes\{
+    Filesystem\Stringify,
+    Security\Tokenizer
+};
 use \InvalidArgumentException;
 use \RuntimeException;
 
@@ -38,7 +41,7 @@ class Mail
     protected $subject;
     protected $message;
     protected $headers = [];
-    protected $params;
+    protected $params = '';
     protected $attachments = [];
     protected $uid;
 
@@ -47,7 +50,7 @@ class Mail
      */
     public function __construct()
     {
-        $this->reset();
+        $this->uid = Tokenizer::getUniqueId();
     }
 
     /**
@@ -63,26 +66,6 @@ class Mail
     }
 
     /**
-     * Resets all properties to initial state.
-     *
-     * @access public
-     * @param void
-     * @return object
-     */
-    public function reset()
-    {
-        $this->to = [];
-        $this->headers = [];
-        $this->subject = null;
-        $this->message = null;
-        $this->wrap = 78;
-        $this->params = null;
-        $this->attachments = [];
-        $this->uid = Tokenizer::getUniqueId();
-        return $this;
-    }
-
-    /**
      * Set To.
      *
      * @access public
@@ -92,7 +75,7 @@ class Mail
      */
     public function setTo($email, $name = null) : object
     {
-        $this->to[] = $this->formatHeader((string)$email,(string)$name);
+        $this->to[] = $this->formatHeader((string)$email, (string)$name);
         return $this;
     }
 
@@ -116,9 +99,9 @@ class Mail
      * @param string $name
      * @return object
      */
-    public function setFrom($email, $name = null) : object
+    public function setFrom(string $email, string $name = '') : object
     {
-        $this->addMailHeader('From',(string)$email,(string)$name);
+        $this->addMailHeader('From', $email, $name);
         return $this;
     }
 
@@ -131,7 +114,7 @@ class Mail
      */
     public function setCc(array $pairs) : object
     {
-        return $this->addMailHeaders('Cc',$pairs);
+        return $this->addMailHeaders('Cc', $pairs);
     }
 
     /**
@@ -143,7 +126,7 @@ class Mail
      */
     public function setBcc(array $pairs) : object
     {
-        return $this->addMailHeaders('Bcc',$pairs);
+        return $this->addMailHeaders('Bcc', $pairs);
     }
 
     /**
@@ -154,9 +137,9 @@ class Mail
      * @param string $name
      * @return object
      */
-    public function setReplyTo($email, $name = null) : object
+    public function setReplyTo($email, $name = '') : object
     {
-        return $this->addMailHeader('Reply-To',$email,$name);
+        return $this->addMailHeader('Reply-To', $email, $name);
     }
 
     /**
@@ -169,7 +152,7 @@ class Mail
     public function setHtml() : object
     {
         return $this->addGenericHeader(
-            'Content-Type','text/html; charset="utf-8"'
+            'Content-Type', 'text/html; charset="utf-8"'
         );
     }
 
@@ -180,10 +163,10 @@ class Mail
      * @param string $subject
      * @return object
      */
-    public function setSubject($subject) : object
+    public function setSubject(string $subject) : object
     {
         $this->subject = $this->encodeUtf8(
-            $this->filterSubject((string)$subject)
+            $this->filterSubject($subject)
         );
         return $this;
     }
@@ -207,9 +190,9 @@ class Mail
      * @param string $message
      * @return object
      */
-    public function setMessage($message) : object
+    public function setMessage(string $message) : object
     {
-        $this->message = str_replace("\n.","\n..",(string)$message);
+        $this->message = Stringify::replace("\n.", "\n..", $message);
         return $this;
     }
 
@@ -241,7 +224,7 @@ class Mail
         $this->attachments[] = [
             'path' => $path,
             'file' => $filename,
-            'data' => chunk_split(base64_encode($data))
+            'data' => chunk_split(Tokenizer::base64($data))
         ];
         return $this;
     }
@@ -256,7 +239,7 @@ class Mail
     public function getAttachmentData($path) : string
     {
         $filesize = filesize($path);
-        $handle = fopen($path, "r");
+        $handle = fopen($path, 'r');
         $attachment = fread($handle, $filesize);
         fclose($handle);
         return (string)$attachment;
@@ -271,10 +254,10 @@ class Mail
      * @param string $name
      * @return object
      */
-    public function addMailHeader($header, $email, $name = null) : object
+    public function addMailHeader(string $header, string $email, string $name = '') : object
     {
-        $address = $this->formatHeader((string)$email,(string)$name);
-        $this->headers[] = sprintf('%s: %s',(string)$header,$address);
+        $address = $this->formatHeader($email, $name);
+        $this->headers[] = sprintf('%s: %s', $header, $address);
         return $this;
     }
 
@@ -401,7 +384,7 @@ class Mail
         $headers = $this->getHeadersForSend();
         if ( empty($to) ) {
             throw new RuntimeException(
-                'Unable to send, no To address has been set.'
+                'Unable to send email, Missing receiving address'
             );
         }
         if ( $this->hasAttachments() ) {
@@ -410,7 +393,7 @@ class Mail
         } else {
             $message = $this->getWrapMessage();
         }
-        return mail($to,$this->subject,$message,$headers,$this->params);
+        return @mail($to, $this->subject, $message, $headers, $this->params);
     }
 
     /**
@@ -461,7 +444,7 @@ class Mail
         foreach ($this->attachments as $attachment) {
             $body[] = $this->getAttachmentMimeTemplate($attachment);
         }
-        return implode(PHP_EOL,$body) . '--';
+        return implode(PHP_EOL, $body) . '--';
     }
 
     /**
@@ -483,7 +466,7 @@ class Mail
         $head[] = $data;
         $head[] = "";
         $head[] = "--{$this->uid}";
-        return implode(PHP_EOL,$head);
+        return implode(PHP_EOL, $head);
     }
 
     /**
@@ -494,14 +477,14 @@ class Mail
      * @param string $name
      * @return string
      */
-    protected function formatHeader($email, $name = null) : string
+    protected function formatHeader(string $email, string $name = '') : string
     {
-        $email = $this->filterEmail((string)$email);
+        $email = $this->filterEmail($email);
         if ( empty($name) ) {
             return $email;
         }
-        $name = $this->encodeUtf8($this->filterName((string) $name));
-        return sprintf('"%s" <%s>',$name,$email);
+        $name = $this->encodeUtf8($this->filterName($name));
+        return sprintf('"%s" <%s>', $name, $email);
     }
 
     /**
@@ -514,7 +497,7 @@ class Mail
     protected function encodeUtf8($value) : string
     {
         $value = trim($value);
-        if ( preg_match('/(\s)/',$value) ) {
+        if ( preg_match('/(\s)/', $value) ) {
             return $this->encodeUtf8Words($value);
         }
         return $this->encodeUtf8Word($value);
@@ -529,7 +512,7 @@ class Mail
      */
     protected function encodeUtf8Word($value) : string
     {
-        return sprintf('=?UTF-8?B?%s?=',base64_encode($value));
+        return sprintf('=?UTF-8?B?%s?=', Tokenizer::base64($value));
     }
 
     /**
@@ -541,12 +524,12 @@ class Mail
      */
     protected function encodeUtf8Words($value) : string
     {
-        $words = explode(' ',$value);
+        $words = explode(' ', $value);
         $encoded = [];
         foreach ($words as $word) {
             $encoded[] = $this->encodeUtf8Word($word);
         }
-        return join($this->encodeUtf8Word(' '),$encoded);
+        return join($this->encodeUtf8Word(' '), $encoded);
     }
 
     /**
@@ -556,7 +539,7 @@ class Mail
      * @param string $email
      * @return string
      */
-    protected function filterEmail($email) : string
+    protected function filterEmail(string $email) : string
     {
         $rule = [
             "\r" => '',
@@ -567,9 +550,8 @@ class Mail
             '<'  => '',
             '>'  => ''
         ];
-        $email = strtr($email,$rule);
-        $email = filter_var($email,FILTER_SANITIZE_EMAIL);
-        return (string)$email;
+        $email = trim(strtr($email, $rule));
+        return Stringify::filter($email, 'email');
     }
 
     /**
@@ -589,12 +571,8 @@ class Mail
             '<'  => '[',
             '>'  => ']',
         ];
-        $filtered = filter_var(
-            $name,
-            FILTER_SANITIZE_STRING,
-            FILTER_FLAG_NO_ENCODE_QUOTES
-        );
-        return trim(strtr($filtered,$rule));
+        $name = trim(strtr($name, $rule));
+        return Stringify::filter($name, 'name');
     }
 
     /**
@@ -606,7 +584,7 @@ class Mail
      */
     protected function filterSubject($subject) : string
     {
-        return filter_var($subject,FILTER_UNSAFE_RAW,FILTER_FLAG_STRIP_LOW);
+        return Stringify::filter($subject, 'subject');
     }
 
     /**
@@ -621,7 +599,7 @@ class Mail
         if ( empty($this->headers) ) {
             return '';
         }
-        return join(PHP_EOL,$this->headers);
+        return join(PHP_EOL, $this->headers);
     }
 
     /**
@@ -636,7 +614,7 @@ class Mail
         if ( empty($this->to) ) {
             return '';
         }
-        return join(', ',$this->to);
+        return join(', ', $this->to);
     }
 
     /**
@@ -648,6 +626,6 @@ class Mail
      */
     protected function getWrapMessage() : string
     {
-        return wordwrap($this->message,$this->wrap);
+        return wordwrap($this->message, $this->wrap);
     }
 }

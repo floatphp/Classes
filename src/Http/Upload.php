@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -26,10 +26,9 @@ final class Upload
 	public static function get($item = null)
 	{
 		if ( $item ) {
-			return self::isSetted($item) ? $_FILES[$item] : false;
-		} else {
-			return $_FILES;
+			return self::isSetted($item) ? $_FILES[$item] : null;
 		}
+		return self::isSetted() ? $_FILES : null;
 	}
 
 	/**
@@ -52,9 +51,8 @@ final class Upload
 	{
 		if ( $item ) {
 			return isset($_FILES[$item]);
-		} else {
-			return isset($_FILES) && !empty($_FILES);
 		}
+		return isset($_FILES) && !empty($_FILES);
 	}
 
 	/**
@@ -63,7 +61,7 @@ final class Upload
 	 * @param string $file
 	 * @return mixed
 	 */
-	public static function doUpload($upload, $file = null)
+	public static function do($upload, $file = null)
 	{
 		if ( self::isSetted() ) {
 			if ( !$_FILES['file']['error'] ) {
@@ -77,13 +75,16 @@ final class Upload
 	}
 
 	/**
+	 * Move uploaded file.
+	 * 
 	 * @access public
 	 * @param string $tmp
 	 * @param string $file
 	 * @return bool
+	 * @todo getAllowedMimes
 	 */
 	public static function moveUploadedFile($tmp, $file)
 	{
-		return move_uploaded_file($tmp,$file);
+		return move_uploaded_file($tmp, $file);
 	}
 }

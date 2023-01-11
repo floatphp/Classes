@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Server Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -16,7 +16,9 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Server;
 
-use FloatPHP\Classes\Filesystem\TypeCheck;
+use FloatPHP\Classes\Filesystem\{
+    TypeCheck, Stringify
+};
 use \DateTime;
 use \DateInterval;
 
@@ -173,21 +175,21 @@ final class Date extends DateTime
     {
         $date = new self($date);
         $now = mktime(
-            $date->format('H'),
-            $date->format('i'),
-            $date->format('s'),
-            $date->format('m'),
-            $date->format('d'),
-            $date->format('Y')
+            (int)$date->format('H'),
+            (int)$date->format('i'),
+            (int)$date->format('s'),
+            (int)$date->format('m'),
+            (int)$date->format('d'),
+            (int)$date->format('Y')
         );
         $expire = $date->add(new DateInterval($duration));
         $limit = mktime(
-            $expire->format('H'),
-            $expire->format('i'),
-            $expire->format('s'),
-            $expire->format('m'),
-            $expire->format('d'),
-            $expire->format('Y')
+            (int)$expire->format('H'),
+            (int)$expire->format('i'),
+            (int)$expire->format('s'),
+            (int)$expire->format('m'),
+            (int)$expire->format('d'),
+            (int)$expire->format('Y')
         );
         return (int)$limit - $now;
     }

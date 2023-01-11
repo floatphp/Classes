@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Connection Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -44,7 +44,7 @@ class Db
     protected $query;
 
     /**
-     * Connect to database
+     * Connect to database.
      *
      * @param array $config
      * @param object LoggerInterface $logger
@@ -57,7 +57,7 @@ class Db
     }
     
     /**
-     * Close connection
+     * Close connection.
      *
      * @access public
      * @param void
@@ -69,7 +69,7 @@ class Db
     }
 
     /**
-     * Bind params
+     * Bind parameters.
      *
      * @access public
      * @param array $bind
@@ -82,7 +82,7 @@ class Db
     }
 
     /**
-     * Bind more params
+     * Bind more parameters.
      *
      * @access public
      * @param array $bind
@@ -111,9 +111,9 @@ class Db
      */
     public function query(string $query, $params = null, $fetchmode = PDO::FETCH_ASSOC)
     {
-        $query = trim(Stringify::replace("\r",' ',$query));
-        $this->Init($query,$params);
-        $rawStatement = explode(' ',Stringify::replaceRegex("/\s+|\t+|\n+/",' ',$query));
+        $query = trim(Stringify::replace("\r", ' ', $query));
+        $this->Init($query, $params);
+        $rawStatement = explode(' ',Stringify::replaceRegex("/\s+|\t+|\n+/", ' ', $query));
         // Which SQL statement is used
         $statement = strtolower($rawStatement[0]);
         if ( $statement === 'select' || $statement === 'show' ) {
@@ -125,11 +125,11 @@ class Db
     }
 
     /**
-     * Get last insert Id
+     * Get last insert Id.
      *
      * @access public
      * @param void
-     * @return bool
+     * @return mixed
      */
     public function lastInsertId()
     {
@@ -137,7 +137,7 @@ class Db
     }
     
     /**
-     * Starts the transaction
+     * Starts the transaction.
      *
      * @access public
      * @param void
@@ -149,7 +149,7 @@ class Db
     }
     
     /**
-     * Execute Transaction
+     * Execute Transaction.
      *
      * @access public
      * @param void
@@ -161,7 +161,7 @@ class Db
     }
     
     /**
-     * Rollback of Transaction
+     * Rollback of Transaction.
      *
      * @access public
      * @param void
@@ -173,7 +173,7 @@ class Db
     }
     
     /**
-     * Returns an array which represents a column from the result set 
+     * Returns an array which represents a column from the result set.
      *
      * @access public
      * @param string $query
@@ -182,7 +182,7 @@ class Db
      */
     public function column($query, $params = null)
     {
-        $this->Init($query,$params);
+        $this->Init($query, $params);
         $columns = $this->query->fetchAll(PDO::FETCH_NUM);
         $column = null;
         foreach ($columns as $cells) {
@@ -192,7 +192,7 @@ class Db
     }
 
     /**
-     * Returns an array which represents a row from the result set 
+     * Returns an array which represents a row from the result set.
      *
      * @access public
      * @param string $query
@@ -202,14 +202,14 @@ class Db
      */
     public function row($query, $params = null, $fetchmode = PDO::FETCH_ASSOC)
     {
-        $this->Init($query,$params);
+        $this->Init($query, $params);
         $result = $this->query->fetch($fetchmode);
         $this->query->closeCursor(); 
         return $result;
     }
 
     /**
-     *  Returns the value of one single field/column
+     *  Returns the value of one single field/column.
      *
      * @access public
      * @param string $query
@@ -218,14 +218,14 @@ class Db
      */
     public function single($query, $params = null)
     {
-        $this->Init($query,$params);
+        $this->Init($query, $params);
         $result = $this->query->fetchColumn();
         $this->query->closeCursor(); 
         return $result;
     }
 
     /**
-     * Connect to database
+     * Connect to database.
      *
      * @access private
      * @param array $config
@@ -235,23 +235,27 @@ class Db
     {
         try {
             // Read settings & set PDO params
-            $db = isset($config['db']) ? (string) $config['db'] : '';
-            $host = isset($config['host']) ? (string) $config['host'] : 'localhost';
-            $port = isset($config['port']) ? (int) $config['port'] : 3306;
-            $user = isset($config['user']) ? (string) $config['user'] : 'root';
-            $pswd = isset($config['pswd']) ? (string) $config['pswd'] : '';
-            $charset = isset($config['charset']) ? (string) $config['charset'] : 'utf8';
+            $db      = $config['db']      ?? '';
+            $host    = $config['host']    ?? 'localhost';
+            $port    = $config['port']    ?? 3306;
+            $user    = $config['user']    ?? 'root';
+            $pswd    = $config['pswd']    ?? '';
+            $charset = $config['charset'] ?? 'utf8';
 
             $dsn = "mysql:dbname={$db};host={$host};port={$port}";
             $this->pdo = new PDO($dsn,$user,$pswd,[
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset}"
             ]);
+
             // log any exceptions on Fatal error
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
             // Disable emulation of prepared statements
-            $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES,false);
+            $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+
             // Connection succeeded
             $this->isConnected = true;
+
         } catch (PDOException $e) {
             // Write into logs
             echo $this->log($e->getMessage());
@@ -260,7 +264,7 @@ class Db
     }
 
     /**
-     * Every method which needs to execute a SQL query uses this method
+     * Every method which needs to execute a SQL query uses this method.
      *
      * @access public
      * @param string $query
@@ -292,14 +296,14 @@ class Db
                         $type = PDO::PARAM_STR;
                     }
                     // Add type when binding the values to the column
-                    $this->query->bindValue($value[0],$value[1],$type);
+                    $this->query->bindValue($value[0], $value[1], $type);
                 }
             }
             // Execute SQL 
             $this->query->execute();
         } catch (PDOException $e) {
             // Write into log and display Exception
-            echo $this->log($e->getMessage(),$query);
+            echo $this->log($e->getMessage(), $query);
             die();
         }
         // Reset bind parameters
@@ -307,7 +311,7 @@ class Db
     }
 
     /** 
-     * Writes the log and returns the exception
+     * Writes the log and returns the exception.
      *
      * @access private
      * @param string $message

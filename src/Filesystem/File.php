@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -72,7 +72,7 @@ class File
 	}
 
 	/**
-	 * Get file name.
+	 * Get file name without extension.
 	 *
 	 * @access public
 	 * @param string $path
@@ -80,9 +80,7 @@ class File
 	 */
 	public static function getName($path)
 	{
-		$path = self::getFileName($path);
-		$ext = self::getExtension($path);
-		return Stringify::replace(".{$ext}",'',$path);
+		return Stringify::replaceRegex('/\.[^.]+$/', '', basename($path));
 	}
 
 	/**
@@ -155,7 +153,7 @@ class File
 	 */
 	public static function getSize($path, $decimals = 2)
 	{
-        $format = ['B','KB','MB','GB','TB'];
+        $format = ['B', 'KB', 'MB', 'GB', 'TB'];
         $size = self::getFileSize($path);
         $factor = floor((strlen(strval($size)) - 1) / 3);
         return sprintf("%.{$decimals}f", $size / pow(1024, $factor)) . @$format[$factor];
@@ -183,8 +181,8 @@ class File
 	 */
 	public static function addString($path, $input = '')
 	{
-		$handle = fopen($path,'a');
-		fwrite($handle,$input);
+		$handle = @fopen($path,'a');
+		@fwrite($handle, (string)$input);
 		fclose($handle);
 	}
 
@@ -197,8 +195,8 @@ class File
 	 */
 	public static function addBreak($path)
 	{
-		$handle = fopen($path,'a');
-		fwrite($handle,PHP_EOL);
+		$handle = @fopen($path, 'a');
+		@fwrite($handle, PHP_EOL);
 		fclose($handle);
 	}
 
@@ -211,10 +209,8 @@ class File
 	 */
 	public static function remove($path)
 	{
-		if ( self::exists($path) ) {
-			if ( @unlink($path) ) {
-				return true;
-			}
+		if ( self::isFile($path) ) {
+			return @unlink($path);
 		}
 		return false;
 	}
@@ -225,15 +221,14 @@ class File
 	 * @access public
 	 * @param string $path
 	 * @param string $to
+	 * @param resource $context
 	 * @return bool
 	 */
-    public static function copy($path, $to)
+    public static function copy($path, $to, $context = null)
     {
     	$dir = dirname($to);
     	if ( self::exists($path) && self::isDir($dir) ) {
-	        if ( copy($path,$to) ) {
-	            return true;
-	        }
+	        return copy($path, $to, $context);
     	}
         return false;
     }
@@ -244,15 +239,14 @@ class File
 	 * @access public
 	 * @param string $path
 	 * @param string $to
+	 * @param resource $context
 	 * @return bool
 	 */
-    public static function move($path, $to)
+    public static function move($path, $to, $context = null)
     {
-    	$dist = dirname($to);
-    	if ( self::exists($path) && self::isDir($dist) ) {
-	        if ( rename($path,$to) ) {
-	            return true;
-	        }
+    	$dir = dirname($to);
+    	if ( self::exists($path) && self::isDir($dir) ) {
+	        return rename($path, $to, $context);
     	}
         return false;
     }
@@ -267,7 +261,7 @@ class File
     public static function isFile($path)
     {
 		if ( self::exists($path) ) {
-			return is_file($path);
+			return @is_file($path);
 		}
 		return false;
     }
@@ -277,15 +271,14 @@ class File
 	 *
 	 * @access public
 	 * @param string $path
-	 * @return bool
+	 * @return mixed
 	 */
 	public static function isEmpty($path)
 	{
 		if ( self::exists($path) ) {
-			clearstatcache();
 			return (self::getFileSize($path) == 0);
 		}
-		return false;
+		return null;
 	}
 
 	/**
@@ -317,16 +310,18 @@ class File
 	 *
 	 * @access public
 	 * @param string $path
-	 * @param int $permissions
-	 * @param bool $recursive
+	 * @param int $p permissions
+	 * @param bool $r recursive
+	 * @param resource $context
 	 * @return bool
 	 */
-    public static function addDir($path, $permissions = 0755, $recursive = true)
+    public static function addDir($path, $p = 0755, $r = true, $context = null)
     {
     	if ( !self::isFile($path) && !self::isDir($path) ) {
-    		if ( @mkdir($path,$permissions,$recursive) ) {
-            	return true;
-        	}
+    		if ( TypeCheck::isResource($context) ) {
+    			return @mkdir($path, $p, $r, $context);
+    		}
+    		return @mkdir($path, $p, $r);
     	}
         return false;
     }
@@ -356,9 +351,7 @@ class File
     public static function removeDir($path)
     {
     	if ( self::isDir($path) ) {
-    		if ( @rmdir($path) ) {
-            	return true;
-        	}
+    		return @rmdir($path);
     	}
         return false;
     }
@@ -374,28 +367,28 @@ class File
     {
 		$handler = false;
 		if ( self::isDir($path) ) {
-			$handler = opendir($path);
+			$handler = @opendir($path);
 		}
-		if ( !$handler ) {
+		if ( !TypeCheck::isResource($handler) ) {
 			return false;
 		}
 	   	while( $file = readdir($handler) ) {
 			if ( $file !== '.' && $file !== '..' ) {
 			    if ( !self::isDir("{$path}/{$file}") ) {
-			    	@unlink("{$path}/{$file}");
+			    	self::remove("{$path}/{$file}");
 			    } else {
 			    	$dir = "{$path}/{$file}";
-				    foreach( scandir($dir) as $file ) {
+				    foreach( @scandir($dir) as $file ) {
 				        if ( '.' === $file || '..' === $file ) {
 				        	continue;
 				        }
 				        if ( self::isDir("{$dir}/{$file}") ) {
 				        	self::recursiveRemove("{$dir}/{$file}");
 				        } else {
-				        	@unlink("{$dir}/{$file}");
+				        	self::remove("{$dir}/{$file}");
 				        }
 				    }
-				    @rmdir($dir);
+				    self::removeDir($dir);
 			    }
 			}
 	   }
@@ -411,23 +404,23 @@ class File
 	private static function recursiveRemove($path)
 	{
 		if ( self::isDir($path) ) {
-			$objects = scandir($path);
+			$objects = @scandir($path);
 			foreach ($objects as $object) {
 				if ( $object !== '.' && $object !== '..' ) {
-					if ( filetype("{$path}/{$object}") == 'dir' ) {
+					if ( self::isDir("{$path}/{$object}") ) {
 						self::recursiveRemove("{$path}/{$object}");
 					} else {
-						@unlink("{$path}/{$object}");
+						self::remove("{$path}/{$object}");
 					}
 				}
 			}
 			reset($objects);
-			@rmdir($path);
+			self::removeDir($path);
 		}
 	}
 
 	/**
-	 * Check file exists without stream.
+	 * Check path exists (file|directory).
 	 *
 	 * @access public
 	 * @param string $path
@@ -435,22 +428,28 @@ class File
 	 */
 	public static function exists($path)
 	{
-		if ( file_exists($path) ) {
-			return true;
-		}
-		return false;
+		clearstatcache();
+		return file_exists($path);
 	}
 
 	/**
-	 * Read file without stream.
+	 * Read entire file into a string.
 	 *
 	 * @access public
 	 * @param string $path
-	 * @return mixed
+	 * @param bool $inc (Use include path)
+	 * @param resource|array $context
+	 * @param int $offset
+	 * @return string|false
 	 */
-	public static function r($path)
+	public static function r($path, $inc = false, $context = null, $offset = 0)
 	{
-		return @file_get_contents($path);
+		if ( TypeCheck::isStream($path) ) {
+			if ( TypeCheck::isArray($context) ) {
+				$context = stream_context_create($context);
+			}
+		}
+		return @file_get_contents($path, $inc, $context, $offset);
 	}
 
 	/**
@@ -458,9 +457,9 @@ class File
 	 *
 	 * @access public
 	 * @param string $path
-	 * @param string $input
+	 * @param mixed $input
 	 * @param string $append
-	 * @return mixed
+	 * @return bool
 	 */
 	public static function w($path, $input = '', $append = false)
 	{
@@ -469,21 +468,26 @@ class File
 			$flag = FILE_APPEND;
 			$input .= PHP_EOL;
 		}
-		return @file_put_contents($path,$input,$flag);
+		return (bool)@file_put_contents($path, $input, $flag);
 	}
 
 	/**
 	 * Scan path.
+	 * 
+	 * SCANDIR_SORT_ASCENDING : 0
+	 * SCANDIR_SORT_DESCENDING : 1
+	 * SCANDIR_SORT_NONE : 2
 	 *
 	 * @access public
 	 * @param string $path
+	 * @param int $sort
+	 * @param array $except
 	 * @return array
 	 */
-	public static function scanDir($path = '.')
+	public static function scanDir($path = '.', $sort = 0, $except = [])
 	{
-		return Arrayify::diff(
-			scandir($path),['.', '..']
-		);
+		$except = Arrayify::merge(['.', '..'], $except);
+		return Arrayify::diff(@scandir($path, $sort), $except);
 	}
 
 	/**
@@ -495,10 +499,13 @@ class File
 	 */
 	public static function index($path)
 	{
-		$files = glob(Stringify::formatPath($path));
-		return Arrayify::combine(
-			$files,array_map('filectime',$files)
-		);
+		if ( self::isDir($path) ) {
+			$files = glob(Stringify::formatPath("{$path}/*.*"));
+			return Arrayify::combine(
+				$files, Arrayify::map('filectime', $files)
+			);
+		}
+		return false;
 	}
 
 	/**
@@ -510,9 +517,12 @@ class File
 	 */
 	public static function last($path)
 	{
-		$files = self::index($path);
-		arsort($files);
-		return (string)key($files);
+		if ( self::isDir($path) ) {
+			$files = self::index($path);
+			arsort($files);
+			return (string)key($files);
+		}
+		return false;
 	}
 
 	/**
@@ -524,9 +534,12 @@ class File
 	 */
 	public static function first($path)
 	{
-		$files = self::index($path);
-		asort($files);
-		return (string)key($files);
+		if ( self::isDir($path) ) {
+			$files = self::index($path);
+			asort($files);
+			return (string)key($files);
+		}
+		return false;
 	}
 
 	/**
@@ -538,8 +551,11 @@ class File
 	 */
 	public static function count($path = '.')
 	{
-		$files = self::index($path);
-		return (int)count($files);
+		if ( self::isDir($path) ) {
+			$files = self::index($path);
+			return (int)count($files);
+		}
+		return false;
 	}
 
 	/**
@@ -554,12 +570,12 @@ class File
 	public static function parseIni($path, $sections = false, $mode = INI_SCANNER_NORMAL)
 	{
 		return parse_ini_file(
-			Stringify::formatPath($path),$sections,$mode
+			Stringify::formatPath($path), $sections, $mode
 		);
 	}
 
 	/**
-	 * Import file from url.
+	 * Import file from URL.
 	 * 
 	 * @access public
 	 * @param string $url
@@ -568,8 +584,8 @@ class File
 	 */
 	public static function import($url, $path)
 	{
-		$tmp = @fopen($path,'w');
-		$status = fwrite($tmp,self::r($url));
+		$tmp = @fopen($path, 'w');
+		$status = @fwrite($tmp, (string)self::r($url));
 		fclose($tmp);
 		return (bool)$status;
 	}
@@ -585,7 +601,7 @@ class File
 	{
 		if ( self::exists($path) ) {
 			$file = self::r($path);
-			$filename = Stringify::replace(' ','-',basename($path));
+			$filename = Stringify::replace(' ', '-', basename($path));
 			header('Content-type: application/force-download');
 			header("Content-Disposition: attachment; filename={$filename};");
 			echo $file;

@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -26,10 +26,9 @@ final class Request
 	public static function get($item = null)
 	{
 		if ( $item ) {
-			return self::isSetted($item) ? $_REQUEST[$item] : false;
-		} else {
-			return $_REQUEST;
+			return self::isSetted($item) ? $_REQUEST[$item] : null;
 		}
+		return self::isSetted() ? $_REQUEST : null;
 	}
 
 	/**
@@ -52,8 +51,7 @@ final class Request
 	{
 		if ( $item ) {
 			return isset($_REQUEST[$item]);
-		} else {
-			return isset($_REQUEST) && !empty($_REQUEST);
 		}
+		return isset($_REQUEST) && !empty($_REQUEST);
 	}
 }

@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -278,9 +278,9 @@ class Client
 
         // Get response
         $response = curl_exec($handler);
-        $track = curl_getinfo($handler,CURLINFO_EFFECTIVE_URL);
+        $track = curl_getinfo($handler, CURLINFO_EFFECTIVE_URL);
         if ( $track == $url ) {
-            if ( preg_match("/^window.location.href='(.+)$/im",$response,$matches) ) {
+            if ( preg_match("/^window.location.href='(.+)$/im", $response, $matches) ) {
                 $track = trim($matches[1]);
             }
         }
@@ -350,7 +350,7 @@ class Client
             curl_setopt($handler,CURLOPT_CUSTOMREQUEST,Stringify::uppercase($this->method));
         }
 
-        if ( !Server::isHttps() ) {
+        if ( !Server::isSSL() ) {
             curl_setopt($handler,CURLOPT_SSL_VERIFYHOST,false);
             curl_setopt($handler,CURLOPT_SSL_VERIFYPEER,false);
         }

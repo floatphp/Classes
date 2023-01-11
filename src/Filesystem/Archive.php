@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -20,9 +20,11 @@ use \ZipArchive as ZIP;
 use \RecursiveIteratorIterator;
 use \RecursiveDirectoryIterator;
 
-final class Archive
+final class Archive extends File
 {
 	/**
+	 * Compress archive.
+	 * 
 	 * @access public
 	 * @param string $path
 	 * @param string $to
@@ -31,18 +33,21 @@ final class Archive
 	 */
 	public static function compress($path, $to = '', $archive = '') : bool
 	{
-		if ( !empty($path) ) {
+		if ( TypeCheck::isClass('ZipArchive') && !empty($path) ) {
+
 			if ( empty($archive) ) {
 				$archive = basename($path);
 			}
+
 			if ( empty($to) ) {
 				$to = dirname($path);
 			}
-			$to = Stringify::formatPath($to,true);
+			
+			$to = Stringify::formatPath($to, true);
 			$to = "{$to}/{$archive}.zip";
 			$zip = new ZIP();
 			if ( $zip->open($to, ZIP::CREATE | ZIP::OVERWRITE) ) {
-				if ( File::isDir($path) ) {
+				if ( self::isDir($path) ) {
 					$files = new RecursiveIteratorIterator(
 					    new RecursiveDirectoryIterator($path),
 					    RecursiveIteratorIterator::LEAVES_ONLY
@@ -50,11 +55,11 @@ final class Archive
 					foreach ($files as $name => $file) {
 					    if ( !$file->isDir() ){
 					        $p = $file->getRealPath();
-					        $zip->addFile($p,basename($name));
+					        $zip->addFile($p, basename($name));
 					    }
 					}
-				} elseif ( File::isFile($path) ) {
-					$zip->addFile($path,basename($path));
+				} elseif ( self::isFile($path) ) {
+					$zip->addFile($path, basename($path));
 				}
 				$zip->close();
 				return true;
@@ -64,71 +69,96 @@ final class Archive
 	}
 
 	/**
+	 * Uncompress archive.
+	 * 
 	 * @access public
 	 * @param string $archive
 	 * @param string $to
-	 * @param bool $clear
+	 * @param bool $remove
 	 * @return bool
 	 */
-	public static function uncompress($archive, $to = '', $clear = true) : bool
+	public static function uncompress($archive, $to = '', $remove = false) : bool
 	{
-		if ( File::exists($archive) ) {
-			$zip = new ZIP();
+		if ( self::exists($archive) ) {
+
+			$status = false;
+
 			if ( empty($to) ) {
 				$to = dirname($archive);
 			}
-			if ( $zip->open($archive) === true ) {
-				if ( $zip->numFiles ) {
+
+			if ( TypeCheck::isClass('ZipArchive') ) {
+				$zip = new ZIP();
+				$resource = $zip->open($archive);
+				if ( $resource === true ) {
 			  		$zip->extractTo($to);
 			  		$zip->close();
-			  		if ( $clear ) {
-			  			@unlink($archive);
-			  		}
-			  		return true;
+			  		$status = true;
 				}
+
+			} elseif ( self::isGzip($archive) ) {
+				$status = self::unGzip($archive);
 			}
+
+			if ( $remove ) {
+				self::remove($archive);
+			}
+			
+			return $status;
 		}
 		return false;
 	}
 
 	/**
+	 * Check for valid gzip archive.
+	 * 
 	 * @access public
 	 * @param string $archive
+	 * @param int $length
 	 * @return bool
 	 */
-	public static function isGzip($archive) : bool
+	public static function isGzip($archive, $length = 4096) : bool
 	{
-		if ( File::isFile($archive) ) {
-			if ( File::getExtension($archive) == 'gz' ) {
-				return true;
+		if ( self::isFile($archive) ) {
+			$status = false;
+			if ( ($gz = gzopen($archive, 'r')) ) {
+				$status = (bool)gzread($gz, $length);
 			}
+			gzclose($gz);
+			return $status;
 		}
 		return false;
 	}
 
 	/**
+	 * Uncompress gzip archive.
+	 * 
 	 * @access public
 	 * @param string $archive
-	 * @param int $buffer
+	 * @param int $length
+	 * @param bool $remove
 	 * @return bool
 	 */
-	public static function unGzip($archive, $buffer = 4096) : bool
+	public static function unGzip($archive, $length = 4096, $remove = false) : bool
 	{
 		$status = false;
-		if ( ($gz = gzopen($archive,'rb')) ) {
-			$filename = Stringify::replace('.gz','',$archive);
-			$to = fopen($filename,'wb');
+		if ( ($gz = gzopen($archive, 'rb')) ) {
+			$filename = Stringify::replace('.gz', '', $archive);
+			$to = fopen($filename, 'wb');
 			while ( !gzeof($gz) ) {
-			    fwrite($to,gzread($gz,$buffer));
+			    fwrite($to, gzread($gz, $length));
 			}
 			$status = true;
 			fclose($to);
 		}
 		gzclose($gz);
+		if ($remove) self::remove($archive);
 		return $status;
 	}
 
 	/**
+	 * Validate ZIP archive.
+	 * 
 	 * @access public
 	 * @param string $archive
 	 * @return bool

@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Security Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -21,6 +21,19 @@ use FloatPHP\Classes\Filesystem\Stringify;
 final class Password extends Tokenizer
 {
     /**
+     * Generate random password.
+     *
+     * @access public
+     * @param int $length
+     * @param bool $special
+     * @return string
+     */
+    public static function generate($length = 12, $special = true) : string
+    {
+        return parent::generate($length, $special);
+    }
+
+    /**
      * @access public
      * @param string $password
      * @param string $hash
@@ -28,7 +41,7 @@ final class Password extends Tokenizer
      */
     public static function isValid(string $password, string $hash) : bool
     {
-        return password_verify($password,$hash);
+        return password_verify($password, $hash);
     }
 
     /**
@@ -40,22 +53,34 @@ final class Password extends Tokenizer
      */
     public static function hash(string $password, string $algo = PASSWORD_BCRYPT, array $options = [])
     {
-        return password_hash($password,$algo,$options);
+        return password_hash($password, $algo, $options);
     }
 
     /**
+     * Check password is strong.
+     * 
      * @access public
      * @param string $password
+     * @param int $length
      * @return bool
      */
-    public static function isStrong(string $password) : bool
+    public static function isStrong($password = '', int $length = 8) : bool
     {
-        $uppercase = Stringify::match('@[A-Z]@',$password);
-        $lowercase = Stringify::match('@[a-z]@',$password);
-        $number    = Stringify::match('@[0-9]@',$password);
-        $special   = Stringify::match('@[^\w]@',$password);
+        if ( $length < 8 ) {
+            $length = 8;
+        }
+        
+        $uppercase = Stringify::match('@[A-Z]@', $password);
+        $lowercase = Stringify::match('@[a-z]@', $password);
+        $number    = Stringify::match('@[0-9]@', $password);
+        $special   = Stringify::match('@[^\w]@', $password);
 
-        if ( !$uppercase || !$lowercase || !$number || !$special || strlen($password) < 8 ) {
+        if ( !$uppercase 
+          || !$lowercase 
+          || !$number 
+          || !$special 
+          || strlen($password) < $length 
+        ) {
             return false;
         }
         return true;

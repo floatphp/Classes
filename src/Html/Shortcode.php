@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Html Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -18,6 +18,10 @@ namespace FloatPHP\Classes\Html;
 
 use FloatPHP\Classes\Filesystem\TypeCheck;
 
+/**
+ * Built-in Shortcode for FloatPHP,
+ * @see Heavily inspired by WordPress kernel https://make.wordpress.org
+ */
 final class Shortcode extends Hook
 {
 	/**

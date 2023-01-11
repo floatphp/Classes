@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -57,7 +57,7 @@ class Translation
 	}
 
 	/**
-	 * Translates a string
+	 * Translates a string.
 	 *
 	 * @access public
 	 * @param string $string
@@ -74,7 +74,7 @@ class Translation
 	}
 
 	/**
-	 * Translates a string
+	 * Translates a string.
 	 *
 	 * @access public
 	 * @param string $string
@@ -95,7 +95,7 @@ class Translation
 	}
 
   	/**
-  	 * Plural version of gettext
+  	 * Plural version of gettext.
   	 *
   	 * @access public
   	 * @param string single
@@ -121,7 +121,7 @@ class Translation
   	}
 
 	/**
-	 * Plural version of gettext
+	 * Plural version of gettext.
 	 *
 	 * @access public
 	 * @param string context
@@ -143,7 +143,7 @@ class Translation
 	}
 
 	/**
-	 * Plural version of gettext
+	 * Plural version of gettext.
 	 *
 	 * @access public
 	 * @param string context
@@ -167,7 +167,7 @@ class Translation
 	}
 
 	/**
-	 * Init 32 bit integer from stream
+	 * Init 32 bit integer from stream.
 	 *
 	 * @access protected
 	 * @param void
@@ -184,7 +184,7 @@ class Translation
 	}
 
 	/**
-	 * Load mo file with given local
+	 * Load mo file with given local.
 	 *
 	 * @access protected
 	 * @param string $locale
@@ -201,7 +201,7 @@ class Translation
 	}
 
 	/**
-	 * Read 32 bit integer from stream
+	 * Read 32 bit integer from stream.
 	 *
 	 * @access protected
 	 * @param void
@@ -221,7 +221,7 @@ class Translation
 	}
 
 	/**
-	 * Read bytes
+	 * Read bytes.
 	 *
 	 * @access protected
 	 * @param int $bytes
@@ -243,7 +243,7 @@ class Translation
 	}
 
 	/**
-	 * Read array of integers from stream
+	 * Read array of integers from stream.
 	 *
 	 * @access protected
 	 * @param int $count
@@ -261,7 +261,7 @@ class Translation
 	}
 
 	/**
-	 * Load the translations tables from the Mo file
+	 * Load the translations tables from the Mo file.
 	 *
 	 * @access protected
 	 * @param void
@@ -269,7 +269,8 @@ class Translation
 	 */
 	protected function loadTables()
 	{
-		if ( TypeCheck::isArray($this->tableOriginals) && TypeCheck::isArray($this->tableTranslations) ) {
+		if ( TypeCheck::isArray($this->tableOriginals) 
+		  && TypeCheck::isArray($this->tableTranslations) ) {
 			return;
 		}
 	  	if ( !TypeCheck::isArray($this->tableOriginals) ) {
@@ -283,7 +284,7 @@ class Translation
 	}
 
 	/**
-	 * Return string from originals table
+	 * Return string from originals table.
 	 *
 	 * @access protected
 	 * @param int $num
@@ -302,7 +303,7 @@ class Translation
 	}
 
 	/**
-	 * Return string from translations table
+	 * Return string from translations table.
 	 *
 	 * @access protected
 	 * @param int $num
@@ -363,7 +364,7 @@ class Translation
 	}
 
 	/**
-	 * Sanitize plural form expression for use in PHP eval call
+	 * Sanitize plural form expression for use in PHP eval call.
 	 *
 	 * @access protected
 	 * @param string $exp
@@ -371,7 +372,11 @@ class Translation
 	 */
 	protected function sanitizePluralExpression($exp) : string
 	{
-		$exp = Stringify::replaceRegex('@[^a-zA-Z0-9_:;\(\)\?\|\&=!<>+*/\%-]@','',$exp) . ';';
+		$exp = Stringify::replaceRegex(
+			'@[^a-zA-Z0-9_:;\(\)\?\|\&=!<>+*/\%-]@',
+			'',
+			$exp
+		) . ';';
 		$res = '';
 		$p = 0;
 		for ($i = 0; $i < strlen($exp); $i++) {
@@ -396,7 +401,7 @@ class Translation
 	}
 
 	/**
-	 * Parse full PO header and extract only plural forms line
+	 * Parse full PO header and extract only plural forms line.
 	 *
 	 * @access protected
 	 * @param string $header
@@ -413,7 +418,7 @@ class Translation
 	}
 
 	/**
-	 * Get possible plural forms from Mo header
+	 * Get possible plural forms from Mo header.
 	 *
 	 * @access protected
 	 * @param void
@@ -431,7 +436,7 @@ class Translation
 	}
 
 	/**
-	 * Detect which plural form to take
+	 * Detect which plural form to take.
 	 *
 	 * @access protected
 	 * @param int $n
@@ -440,9 +445,9 @@ class Translation
 	protected function selectString($n)
 	{
 		$string = $this->getPluralForms();
-		$string = Stringify::replace('nplurals',"\$total",$string);
-		$string = Stringify::replace("n",(int)$n,$string);
-		$string = Stringify::replace('plural',"\$plural",$string);
+		$string = Stringify::replace('nplurals', "\$total", $string);
+		$string = Stringify::replace("n", (int)$n, $string);
+		$string = Stringify::replace('plural', "\$plural", $string);
 		$total = 0;
 		$plural = 0;
 		eval("$string");
@@ -453,7 +458,7 @@ class Translation
 	}
 
   	/**
-  	 * Set position
+  	 * Set position.
   	 *
   	 * @access protected
   	 * @param int $position
@@ -461,7 +466,7 @@ class Translation
   	 */
 	protected function setPosition($position)
 	{
-		fseek($this->mo,$position);
+		fseek($this->mo, $position);
 		$this->position = ftell($this->mo);
 	}
 }

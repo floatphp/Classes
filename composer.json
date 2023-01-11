@@ -1,8 +1,8 @@
 {
   "name": "floatphp/classes",
-  "version" : "1.0.0",
+  "version" : "1.0.1",
   "type": "library",
-  "description": "Classes libs for floatPHP",
+  "description": "FloatPHP Classes Components",
   "keywords": ["floatphp","micro-framework","framework","PSR","ORM","jakiboy"],
   "homepage": "https://www.floatphp.com/",
   "license": "MIT",
@@ -20,7 +20,7 @@
   ],
   "require": {
     "php": ">=7.4",
-    "floatphp/interfaces": "1.0.0"
+    "floatphp/interfaces": "^1.0.1"
   },
   "autoload": {
     "psr-4" : {

@@ -3,9 +3,9 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.0
+ * @version    : 1.0.1
  * @category   : PHP framework
- * @copyright  : (c) 2017 - 2022 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
  * @license    : MIT
  *
@@ -20,100 +20,105 @@ final class TypeCheck
 {
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
 	 * @return bool
 	 */
-	public static function isString($data) : bool
+	public static function isString($value) : bool
 	{
-		return is_string($data);
+		return is_string($value);
 	}
 
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
+	 * @param string $class
+	 * @param bool $string, Allow string
 	 * @return bool
 	 */
-	public static function isObject($data) : bool
+	public static function isObject($value, $class = null, bool $string = false) : bool
 	{
-		return is_object($data);
+		if ( $class ) {
+			return is_a($value, $class, $string);
+		}
+		return is_object($value);
 	}
 	
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
 	 * @return bool
 	 */
-	public static function isArray($data) : bool
+	public static function isArray($value) : bool
 	{
-		return is_array($data);
+		return is_array($value);
 	}
 
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
 	 * @param bool $string
 	 * @return bool
 	 */
-	public static function isInt($data, $string = false) : bool
+	public static function isInt($value, bool $string = false) : bool
 	{
 		if ( $string ) {
-			return is_numeric($data);
+			return is_numeric($value);
 		}
-		return is_int($data);
+		return is_int($value);
 	}
 
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
 	 * @param bool $string
 	 * @return bool
 	 */
-	public static function isFloat($data, $string = false) : bool
+	public static function isFloat($value, bool $string = false) : bool
 	{
 		if ( $string ) {
-			$data = (float)$data;
+			$value = (float)$value;
 		}
-		return is_float($data);
+		return is_float($value);
 	}
 
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
 	 * @return bool
 	 */
-	public static function isBool($data) : bool
+	public static function isBool($value) : bool
 	{
-		return is_bool($data);
+		return is_bool($value);
 	}
 
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
 	 * @return bool
 	 */
-	public static function isNull($data) : bool
+	public static function isNull($value) : bool
 	{
-		return is_null($data);
+		return is_null($value);
 	}
 
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
 	 * @return bool
 	 */
-	public static function isNan($data) : bool
+	public static function isNan($value) : bool
 	{
-		return is_nan($data);
+		return is_nan($value);
 	}
 
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
 	 * @return bool
 	 */
-	public static function isCallable($data) : bool
+	public static function isCallable($value) : bool
 	{
-		return is_callable($data);
+		return is_callable($value);
 	}
 
 	/**
@@ -121,7 +126,7 @@ final class TypeCheck
 	 * @param string $function
 	 * @return bool
 	 */
-	public static function isFunction($function) : bool
+	public static function isFunction(string $function) : bool
 	{
 		return function_exists($function);
 	}
@@ -131,7 +136,7 @@ final class TypeCheck
 	 * @param string $class
 	 * @return bool
 	 */
-	public static function isClass($class) : bool
+	public static function isClass(string $class) : bool
 	{
 		return class_exists($class);
 	}
@@ -142,9 +147,9 @@ final class TypeCheck
 	 * @param string $class
 	 * @return bool
 	 */
-	public static function isSubClassOf($sub, $class) : bool
+	public static function isSubClassOf(string $sub, string $class) : bool
 	{
-		return is_subclass_of($sub,$class);
+		return is_subclass_of($sub, $class);
 	}
 
 	/**
@@ -153,10 +158,10 @@ final class TypeCheck
 	 * @param string $interface
 	 * @return bool
 	 */
-	public static function hasInterface($class, $interface) : bool
+	public static function hasInterface(string $class, string $interface) : bool
 	{
 		$interfaces = class_implements($class);
-		return Stringify::contains($interfaces,$interface);
+		return Stringify::contains($interfaces, $interface);
 	}
 
 	/**
@@ -165,39 +170,39 @@ final class TypeCheck
 	 * @param string $method
 	 * @return bool
 	 */
-	public static function hasMethod($object, $method) : bool
+	public static function hasMethod(object $object, string $method) : bool
 	{
-		return method_exists($object,$method);
+		return method_exists($object, $method);
 	}
 
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
 	 * @return bool
 	 */
-	public static function isCountable($data) : bool
+	public static function isCountable($value) : bool
 	{
-		return is_countable($data);
+		return is_countable($value);
 	}
 
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
 	 * @return bool
 	 */
-	public static function isResource($data) : bool
+	public static function isResource($value) : bool
 	{
-		return is_resource($data);
+		return is_resource($value);
 	}
 
 	/**
 	 * @access public
-	 * @param mixed $data
+	 * @param mixed $value
 	 * @return bool
 	 */
-	public static function isScalar($data) : bool
+	public static function isScalar($value) : bool
 	{
-		return is_scalar($data);
+		return is_scalar($value);
 	}
 
 	/**
@@ -205,13 +210,13 @@ final class TypeCheck
 	 * @param string $path
 	 * @return bool
 	 */
-	public static function isStream($path) : bool
+	public static function isStream(string $path) : bool
 	{
-	    $scheme = strpos($path,'://');
+	    $scheme = strpos($path, '://');
 	    if ( false === $scheme ) {
 	        return false;
 	    }
-	    $stream = substr($path,0,$scheme);
-	    return Arrayify::inArray($stream,stream_get_wrappers(),true);
+	    $stream = substr($path, 0, $scheme);
+	    return Arrayify::inArray($stream, stream_get_wrappers(), true);
 	}
 }
