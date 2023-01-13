@@ -23,14 +23,25 @@ final class Converter
 	 * 
 	 * @access public
 	 * @param array $array
-	 * @return object
+	 * @param bool $stric, Convert all sub-items
+	 * @return mixed
 	 */
-	public static function toObject($array)
+	public static function toObject($array, $stric = false)
 	{
-	    return (object)Json::decode(
-	    	Json::encode($array),
-	    	false
-	    );
+	    if ( !TypeCheck::isArray($array) ) {
+	    	return $array;
+	    }
+		if ( $stric ) {
+		    return (object)Json::decode(
+		    	Json::encode($array),
+		    	false
+		    );
+		}
+	    $obj = new \stdClass;
+	    foreach ( $array as $item => $val ) {
+	        $obj->{$item} = $val;
+	    }
+	    return (object)$obj;
 	}
 
 	/**
