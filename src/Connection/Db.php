@@ -78,7 +78,7 @@ class Db
      */
     public function bind($bind, $value)
     {
-        $this->parameters[sizeof($this->parameters)] = [":{$bind}",$value];
+        $this->parameters[sizeof($this->parameters)] = [":{$bind}", $value];
     }
 
     /**
@@ -94,7 +94,7 @@ class Db
             if ( TypeCheck::isArray($bind) ) {
                 $columns = Arrayify::keys($bind);
                 foreach ($columns as $i => &$column) {
-                    $this->bind($column,$bind[$column]);
+                    $this->bind($column, $bind[$column]);
                 }
             }
         }

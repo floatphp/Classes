@@ -461,7 +461,7 @@ class File
 	 * @param string $append
 	 * @return bool
 	 */
-	public static function w($path, $input = '', $append = false)
+	public static function w($path, $input = '', $append = false) : bool
 	{
 		$flag = 0;
 		if ( $append ) {
