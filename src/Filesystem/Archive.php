@@ -119,7 +119,8 @@ final class Archive extends File
 	 */
 	public static function isGzip($archive, $length = 4096) : bool
 	{
-		if ( self::isFile($archive) ) {
+		if ( self::isFile($archive) 
+		  && self::getExtension($archive) == 'gz' ) {
 			$status = false;
 			if ( ($gz = gzopen($archive, 'r')) ) {
 				$status = (bool)gzread($gz, $length);
