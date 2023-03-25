@@ -3,7 +3,7 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Security Component
- * @version    : 1.0.1
+ * @version    : 1.0.2
  * @category   : PHP framework
  * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
@@ -19,7 +19,9 @@ namespace FloatPHP\Classes\Security;
 use FloatPHP\Classes\{
     Http\Server,
     Server\System,
-    Filesystem\TypeCheck, Filesystem\Stringify, Filesystem\Arrayify
+    Filesystem\TypeCheck,
+    Filesystem\Stringify,
+    Filesystem\Arrayify
 };
 
 class License

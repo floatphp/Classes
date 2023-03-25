@@ -3,7 +3,7 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Server Component
- * @version    : 1.0.1
+ * @version    : 1.0.2
  * @category   : PHP framework
  * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com

@@ -3,7 +3,7 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.1
+ * @version    : 1.0.2
  * @category   : PHP framework
  * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
@@ -58,9 +58,9 @@ final class Json extends File
 	/**
 	 * Format JSON.
 	 * 
-	 * JSON_UNESCAPED_UNICODE : 256
-	 * JSON_PRETTY_PRINT : 128
 	 * JSON_UNESCAPED_SLASHES : 64
+	 * JSON_PRETTY_PRINT : 128
+	 * JSON_UNESCAPED_UNICODE : 256
 	 * 
 	 * @access public
 	 * @param mixed $value

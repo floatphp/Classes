@@ -3,7 +3,7 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.1
+ * @version    : 1.0.2
  * @category   : PHP framework
  * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
@@ -163,6 +163,7 @@ class File
 	 * Get file permissions.
 	 *
 	 * @access public
+	 * @param string $path
 	 * @param bool $convert
 	 * @return mixed
 	 */
@@ -170,6 +171,35 @@ class File
 	{
 		$permissions = substr(sprintf('%o',@fileperms($path)),-4);
 		return ($convert) ? intval($permissions) : $permissions;
+	}
+
+	/**
+	 * Get file lines.
+	 * 
+	 * FILE_IGNORE_NEW_LINES: 2
+	 * FILE_SKIP_EMPTY_LINES: 4
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param array $exclude
+	 * @param int $flags
+	 * @return array
+	 */
+	public static function getLines($path, $exclude = [], $flags = 2|4)
+	{
+		$lines = [];
+		if ( ($lines = @file($path, $flags)) ) {
+			if ( $exclude ) {
+				foreach ($lines as $key => $value) {
+					foreach ($exclude as $search) {
+						if ( Stringify::contains($value, $search) ) {
+							unset($lines[$key]);
+						}
+					}
+				}
+			}
+		}
+		return $lines;
 	}
 
 	/**

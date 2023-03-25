@@ -3,7 +3,7 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.1
+ * @version    : 1.0.2
  * @category   : PHP framework
  * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
@@ -16,10 +16,7 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
-use FloatPHP\Classes\Filesystem\{
-	Stringify, Json
-};
-use \stdClass;
+use FloatPHP\Classes\Filesystem\Stringify;
 
 final class ResponseXML
 {
@@ -30,8 +27,8 @@ final class ResponseXML
 	 */
 	public static function format($xml)
 	{
-		$xml = Stringify::replace('<?xml version="1.0" encoding="utf-8" ?>','',(string)$xml);
-		$xml = Stringify::replace('</xml>','',$xml);
+		$xml = Stringify::replace('<?xml version="1.0" encoding="utf-8" ?>', '', (string)$xml);
+		$xml = Stringify::replace('</xml>', '', $xml);
 		return $xml;
 	}
 	
@@ -48,7 +45,7 @@ final class ResponseXML
 	 */
 	public static function parse($xml, $args = 16384|20908)
 	{
-		return @simplexml_load_string($xml,'SimpleXMLElement',$args);
+		return @simplexml_load_string($xml, 'SimpleXMLElement', $args);
 	}
 
 	/**
@@ -61,7 +58,7 @@ final class ResponseXML
 	 */
 	public static function parseFile($xml, $args = 16384|20908)
 	{
-		return @simplexml_load_file($xml,'SimpleXMLElement',$args);
+		return @simplexml_load_file($xml, 'SimpleXMLElement', $args);
 	}
 
 	/**

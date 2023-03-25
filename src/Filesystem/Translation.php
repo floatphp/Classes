@@ -3,7 +3,7 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.1
+ * @version    : 1.0.2
  * @category   : PHP framework
  * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
@@ -16,6 +16,10 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
+/**
+ * Built-in Translation Class for FloatPHP,
+ * @see https://develdocs.phpmyadmin.net/motranslator/PhpMyAdmin/MoTranslator.html
+ */
 class Translation
 {
 	/**
@@ -87,6 +91,7 @@ class Translation
 			$num = $this->findString($string);
 			if ( $num == -1 ) {
 				return $string;
+
 			} else {
 				return $this->getTranslationString($num);
 			}
@@ -111,6 +116,7 @@ class Translation
 			$num = $this->findString($key);
 			if ( $num == -1 ) {
 				return ($number !== 1) ? $plural : $single;
+
 			} else {
 				$result = $this->getTranslationString($num);
 				$list = explode(chr(0),$result);
@@ -135,6 +141,7 @@ class Translation
 			$ret = $this->translate($key);
 			if ( strpos($ret,"\004") !== false ) {
 				return $msgid;
+
 			} else {
 				return $ret;
 			}
@@ -157,8 +164,9 @@ class Translation
 		if ( $this->canTranslate ) {
 			$key = $context . chr(4) . $singular;
 			$ret = $this->ngettext($key,$plural,$number);
-			if ( strpos($ret,"\004") !== false ) {
+			if ( strpos($ret, "\004") !== false ) {
 				return $singular;
+
 			} else {
 				return $ret;
 			}
@@ -177,6 +185,7 @@ class Translation
 	{
 		// Revision
 		$this->readInt(); 
+
 		// Init
 		$this->count['total'] = $this->readInt();
 		$this->count['original'] = $this->readInt();
@@ -194,7 +203,7 @@ class Translation
 	protected function load($locale, $path) : bool
 	{
 	    if ( File::exists(($file = "{$path}/{$locale}.mo")) ) {
-			$this->mo = fopen($file,'rb');
+			$this->mo = fopen($file, 'rb');
 			return $this->canTranslate = true;
 		}
 		return false;
@@ -211,11 +220,12 @@ class Translation
 	{
 	    if ( $this->byteOrder == 0 ) {
 			// Low endian
-			$input = unpack('V',$this->read(4));
+			$input = unpack('V', $this->read(4));
 			return Arrayify::shift($input);
+
 	    } else {
 			// Big endian
-			$input = unpack('N',$this->read(4));
+			$input = unpack('N', $this->read(4));
 			return Arrayify::shift($input);
 	    }
 	}
@@ -233,7 +243,7 @@ class Translation
 	    if ( $bytes ) {
 			fseek($this->mo,$this->position);
 			while ($bytes > 0) {
-				$chunk = fread($this->mo,$bytes);
+				$chunk = fread($this->mo, $bytes);
 				$data .= $chunk;
 				$bytes -= strlen($chunk);
 			}
@@ -253,10 +263,11 @@ class Translation
 	{
 		if ( $this->byteOrder == 0 ) {
 			// low endian
-			return unpack("V{$count}",$this->read(4 * $count));
+			return unpack("V{$count}", $this->read(4 * $count));
+
 	    } else {
 			// big endian
-			return unpack("N{$count}",$this->read(4 * $count));
+			return unpack("N{$count}", $this->read(4 * $count));
 	    }
 	}
 
@@ -346,7 +357,7 @@ class Translation
 			}
 
 		} elseif ($start > $end) {
-			return $this->findString($string,$end,$start);
+			return $this->findString($string, $end, $start);
 
 		} else {
 			$half = (int)(($start + $end) / 2);
@@ -355,10 +366,10 @@ class Translation
 				return $half;
 
 			} elseif ( $cmp < 0 ) {
-				return $this->findString($string,$start,$half);
+				return $this->findString($string, $start, $half);
 				
 			} else {
-				return $this->findString($string,$half,$end);
+				return $this->findString($string, $half, $end);
 			}
 		}
 	}

@@ -3,7 +3,7 @@
  * @author     : JIHAD SINNAOUR
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.1
+ * @version    : 1.0.2
  * @category   : PHP framework
  * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://www.floatphp.com
@@ -51,6 +51,16 @@ final class TypeCheck
 	public static function isArray($value) : bool
 	{
 		return is_array($value);
+	}
+	
+	/**
+	 * @access public
+	 * @param mixed $value
+	 * @return bool
+	 */
+	public static function isIterator($value) : bool
+	{
+		return is_iterable($value);
 	}
 
 	/**
@@ -154,14 +164,20 @@ final class TypeCheck
 
 	/**
 	 * @access public
-	 * @param string $class
+	 * @param mixed $class
 	 * @param string $interface
+	 * @param bool $short
 	 * @return bool
 	 */
-	public static function hasInterface(string $class, string $interface) : bool
+	public static function hasInterface($class, string $interface, $short = true) : bool
 	{
-		$interfaces = class_implements($class);
-		return Stringify::contains($interfaces, $interface);
+		$implements = class_implements($class);
+		if ( $short ) {
+			foreach ($implements as $key => $value) {
+				$implements[$key] = basename($value);
+			}
+		}
+		return Arrayify::inArray($interface, $implements);
 	}
 
 	/**
