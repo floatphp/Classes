@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -25,11 +24,11 @@ final class Stringify
 	 * @param mixed $search
 	 * @param mixed $replace
 	 * @param string $subject
-	 * @return string
+	 * @return mixed
 	 */
-	public static function replace($search, $replace, $subject)
+	public static function replace($search, $replace, string $subject)
 	{
-		return str_replace($search, $replace, (string)$subject);
+		return str_replace($search, $replace, $subject);
 	}
 
 	/**
@@ -52,10 +51,10 @@ final class Stringify
 	 * 
 	 * @access public
 	 * @param array $search
-	 * @param array $replace
+	 * @param string $subject
 	 * @return string
 	 */
-	public static function replaceArray($replace, $subject)
+	public static function replaceArray(array $replace, string $subject) : string
 	{
 		if ( TypeCheck::isArray($replace) ) {
 			foreach ($replace as $key => $value) {
@@ -82,6 +81,19 @@ final class Stringify
 	}
 
 	/**
+	 * Remove string from other string.
+	 * 
+	 * @access public
+	 * @param string $search
+	 * @param string $subject
+	 * @return string
+	 */
+	public static function remove(string $search, string $subject) : string
+	{
+		return (string)self::replace($search, '', $subject);
+	}
+
+	/**
 	 * Repeat string.
 	 * 
 	 * @access public
@@ -89,9 +101,9 @@ final class Stringify
 	 * @param int $times
 	 * @return string
 	 */
-	public static function repeat($string, $times = 0)
+	public static function repeat(string $string, int $times = 0) : string
 	{
-		return str_repeat((string)$string, $times);
+		return str_repeat($string, $times);
 	}
 
 	/**
@@ -101,9 +113,9 @@ final class Stringify
 	 * @param string $string
 	 * @return string
 	 */
-	public static function lowercase($string)
+	public static function lowercase(string $string) : string
 	{
-		return strtolower((string)$string);
+		return strtolower($string);
 	}
 
 	/**
@@ -113,9 +125,9 @@ final class Stringify
 	 * @param string $string
 	 * @return string
 	 */
-	public static function uppercase($string)
+	public static function uppercase(string $string) : string
 	{
-		return strtoupper((string)$string);
+		return strtoupper($string);
 	}
 
 	/**
@@ -125,7 +137,7 @@ final class Stringify
 	 * @param string $string
 	 * @return string
 	 */
-	public static function capitalize($string)
+	public static function capitalize(string $string) : string
 	{
 		return ucfirst(self::lowercase($string));
 	}
@@ -137,7 +149,7 @@ final class Stringify
 	 * @param string $string
 	 * @return string
 	 */
-	public static function slugify($string)
+	public static function slugify(string $string) : string
 	{
 	  	// Replace non letter or digits by -
 	  	$slug = self::replaceRegex('~[^\pL\d]+~u','-', (string)$string);
@@ -163,7 +175,6 @@ final class Stringify
 	 * Get special chars.
 	 * 
 	 * @access public
-	 * @param void
 	 * @return array
 	 */
 	public static function getSpecialChars() : array
@@ -175,14 +186,14 @@ final class Stringify
 	}
 
 	/**
-	 * Search string
+	 * Search string.
 	 *
 	 * @access public
 	 * @param mixed $string
 	 * @param string $search
 	 * @return bool
 	 */
-	public static function contains($string, $search)
+	public static function contains($string, string $search) : bool
 	{
 		if ( TypeCheck::isArray($string) ) {
 			return Arrayify::inArray($search, $string);
@@ -198,18 +209,18 @@ final class Stringify
 	 *
 	 * @access public
 	 * @param string $string
-	 * @param array $args, [regex,limit,flags,length]
+	 * @param array $args, [regex, limit, flags, length]
 	 * @return mixed
 	 */
-	public static function split($string, $args = [])
+	public static function split(string $string, array $args = [])
 	{
 		if ( isset($args['regex']) ) {
 			$limit = $args['limit'] ?? -1;
 			$flags = $args['flags'] ?? 0;
-			return preg_split($args['regex'], (string)$string, $limit, $flags);
+			return preg_split($args['regex'], $string, $limit, $flags);
 		}
 		$length = $args['length'] ?? 1;
-		return str_split((string)$string, $length);
+		return str_split($string, $length);
 	}
 
 	/**
@@ -221,7 +232,7 @@ final class Stringify
 	 * @param string $from
 	 * @return string
 	 */
-	public static function encode($string, $from = 'ISO-8859-1', $to = 'UTF-8')
+	public static function encode($string, $from = 'ISO-8859-1', $to = 'UTF-8') : string
 	{
 		if ( self::getEncoding($string, $to, true) !== self::uppercase($to) ) {
 			if ( ($encoded = @iconv($to, $from, $string)) ) {
@@ -239,7 +250,7 @@ final class Stringify
 	 * @param mixed $encodings
 	 * @return mixed
 	 */
-	public static function getEncoding($string, $encodings = null)
+	public static function getEncoding(string $string, $encodings = null)
 	{
 		if ( TypeCheck::isFunction('mb_detect_encoding') ) {
 			return mb_detect_encoding($string, $encodings, true);
@@ -254,7 +265,7 @@ final class Stringify
 	 * @param string $string
 	 * @return bool
 	 */
-	public static function isUTF8($string)
+	public static function isUtf8($string) : bool
 	{
 		$length = strlen($string);
 		for ( $i = 0; $i < $length; $i++ ) {
@@ -291,18 +302,18 @@ final class Stringify
 	 * @param bool $untrailing
 	 * @return string
 	 */
-	public static function formatPath(string $path, $untrailing = false)
+	public static function formatPath(string $path, bool $untrailing = false) : string
 	{
-	    $wrapper = '';
+	    $prefix = '';
 
 	    // Stream format
 	    if ( TypeCheck::isStream($path) ) {
-	        list($wrapper,$path) = explode('://', $path, 2);
-	        $wrapper .= '://';
+	        list($prefix, $path) = explode('://', $path, 2);
+	        $prefix .= '://';
 	    }
 
 	    // Paths format
-	    $path = self::replace('\\','/',$path);
+	    $path = self::replace('\\', '/', $path);
 
 	    // Multiple slashes format
 	    $path = self::replaceRegex('|(?<=.)/+|', '/', $path);
@@ -314,10 +325,10 @@ final class Stringify
 
 	    // Untrailing slash
 	    if ( $untrailing ) {
-	    	return self::untrailingSlash("{$wrapper}{$path}");
+	    	return self::untrailingSlash("{$prefix}{$path}");
 	    }
 
-	    return "{$wrapper}{$path}";
+	    return "{$prefix}{$path}";
 	}
 
 	/**
@@ -328,7 +339,7 @@ final class Stringify
 	 * @param string $string
 	 * @return string
 	 */
-	public static function formatSpace($string)
+	public static function formatSpace(string $string) : string
 	{
 		$string = trim($string);
 		$string = self::replace("\r", "\n", $string);
@@ -343,10 +354,10 @@ final class Stringify
 	 * @param string $key
 	 * @return string
 	 */
-	public static function formatKey($key)
+	public static function formatKey(string $key) : string
 	{
     	$key = self::lowercase($key);
-    	return self::replaceRegex('/[^a-z0-9_\-]/', '', $key);
+    	return (string)self::replaceRegex('/[^a-z0-9_\-]/', '', $key);
 	}
 
 	/**
@@ -356,7 +367,7 @@ final class Stringify
 	 * @param string $string
 	 * @return string
 	 */
-	public static function unSlash($string)
+	public static function unSlash(string $string) : string
 	{
 	    return ltrim($string, '/\\');
 	}
@@ -368,7 +379,7 @@ final class Stringify
 	 * @param string $string
 	 * @return string
 	 */
-	public static function slash($string)
+	public static function slash(string $string) : string
 	{
 	    return '/' . self::unSlash($string);
 	}
@@ -380,7 +391,7 @@ final class Stringify
 	 * @param string $string
 	 * @return string
 	 */
-	public static function untrailingSlash($string)
+	public static function untrailingSlash(string $string) : string
 	{
 	    return rtrim($string, '/\\');
 	}
@@ -392,20 +403,20 @@ final class Stringify
 	 * @param string $string
 	 * @return string
 	 */
-	public static function trailingSlash($string)
+	public static function trailingSlash(string $string) : string
 	{
 	    return self::untrailingSlash($string) . '/';
 	}
 
 	/**
 	 * Strip slashes from quotes,
-	 * (array,object,scalar).
+	 * (array, object, scalar).
 	 * 
 	 * @access public
 	 * @param string $string
 	 * @return string
 	 */
-	public static function stripSlash($string)
+	public static function stripSlash($string) : string
 	{
 		return self::deepMap($string, function($string) {
 			return TypeCheck::isString($string) 
@@ -414,19 +425,19 @@ final class Stringify
 	}
 
 	/**
-	 * Strip HTML tags from string.
+	 * Strip HTML tags from string,
+	 * Including script and style.
 	 * 
 	 * @access public
 	 * @param string $string
-	 * @param bool $break
+	 * @param bool $unbreak
 	 * @return string
 	 */
-	public static function stripTag($string, $break = false)
+	public static function stripTag(string $string, bool $unbreak = false) : string
 	{
-		$string = (string)$string;
 	    $string = self::replaceRegex('@<(script|style)[^>]*?>.*?</\\1>@si', '', $string);
 	    $string = strip_tags($string);
-	    if ( $break ) {
+	    if ( $unbreak ) {
 	        $string = self::replaceRegex('/[\r\n\t ]+/', ' ', $string);
 	    }
 	    return trim($string);
@@ -441,9 +452,9 @@ final class Stringify
 	 * @param string $replace
 	 * @return string
 	 */
-	public static function stripNumber($string, $replace = '')
+	public static function stripNumber(string $string, string $replace = '') : string
 	{
-		return self::replaceRegex('/[0-9]+/', $replace, (string)$string);
+		return (string)self::replaceRegex('/[0-9]+/', $replace, $string);
 	}
 
 	/**
@@ -455,9 +466,9 @@ final class Stringify
 	 * @param string $replace
 	 * @return string
 	 */
-	public static function stripChar($string, $replace = '')
+	public static function stripChar(string $string, string $replace = '') : string
 	{
-		return self::replaceRegex('/[^a-zA-Z0-9\s]/', $replace, (string)$string);
+		return (string)self::replaceRegex('/[^a-zA-Z0-9\s]/', $replace, $string);
 	}
 
 	/**
@@ -469,9 +480,9 @@ final class Stringify
 	 * @param string $replace
 	 * @return string
 	 */
-	public static function stripSpace($string, $replace = '')
+	public static function stripSpace(string $string, string $replace = '') : string
 	{
-		return self::replaceRegex('/\s+/', $replace, trim((string)$string));
+		return (string)self::replaceRegex('/\s+/', $replace, trim($string));
 	}
 
 	/**
@@ -483,27 +494,29 @@ final class Stringify
 	 * @param string $replace
 	 * @return string
 	 */
-	public static function stripBreak($string, $replace = '')
+	public static function stripBreak(string $string, string $replace = '') : string
 	{
-		return self::replaceRegex('/\r|\n/', $replace, (string)$string);
+		return (string)self::replaceRegex('/\r|\n/', $replace, $string);
 	}
 
 	/**
-	 * Unserialize value only if it was serialized.
+	 * Unserialize value if serialized.
 	 *
 	 * @access public
-	 * @param string $string
+	 * @param string $value
 	 * @return mixed
 	 */
-	public static function unserialize($string)
+	public static function unserialize(string $value)
 	{
-		if ( self::isSerialized($string) ) {
-			return @unserialize(trim($string));
+		if ( self::isSerialized($value) ) {
+			return @unserialize(trim($value));
 		}
-		return $string;
+		return $value;
 	}
 
 	/**
+	 * Serialize value if not serialized.
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return mixed
@@ -513,6 +526,9 @@ final class Stringify
 	    if ( TypeCheck::isArray($value) || TypeCheck::isObject($value) ) {
 	        return serialize($value);
 	    }
+	    if ( TypeCheck::isInt($value) || TypeCheck::isFloat($value) ) {
+	        return serialize((string)$value);
+	    }
 	    if ( self::isSerialized($value, false) ) {
 	        return serialize($value);
 	    }
@@ -520,12 +536,14 @@ final class Stringify
 	}
 
 	/**
+	 * Check whether value is serialized.
+	 * 
 	 * @access public
-	 * @param string $value
+	 * @param mixed $value
 	 * @param bool $strict
 	 * @return bool
 	 */
-	public static function isSerialized($value, $strict = true)
+	public static function isSerialized($value, bool $strict = true) : bool
 	{
 	    if ( !TypeCheck::isString($value) ) {
 	        return false;
@@ -581,6 +599,8 @@ final class Stringify
 	}
 
 	/**
+	 * Match string using regex.
+	 * 
 	 * @access public
 	 * @param string $regex
 	 * @param string $string
@@ -589,9 +609,9 @@ final class Stringify
 	 * @param int $offset
 	 * @return mixed
 	 */
-	public static function match($regex, $string, $index = 0, $flags = 0, $offset = 0)
+	public static function match(string $regex, string $string, int $index = 0, int $flags = 0, int $offset = 0)
 	{
-		preg_match($regex,(string)$string, $matches, $flags, $offset);
+		preg_match($regex, $string, $matches, $flags, $offset);
 		if ( $index === -1 ) {
 			return $matches;
 		}
@@ -599,6 +619,8 @@ final class Stringify
 	}
 
 	/**
+	 * Match all strings using regex.
+	 * 
 	 * @access public
 	 * @param string $regex
 	 * @param string $string
@@ -607,9 +629,9 @@ final class Stringify
 	 * @param int $offset
 	 * @return mixed
 	 */
-	public static function matchAll($regex, $string, $index = 0, $flags = 0, $offset = 0)
+	public static function matchAll(string $regex, string $string, int $index = 0, int $flags = 0, int $offset = 0)
 	{
-		preg_match_all($regex,(string)$string, $matches, $flags, $offset);
+		preg_match_all($regex, $string, $matches, $flags, $offset);
 		if ( $index === -1 ) {
 			return $matches;
 		}
@@ -620,11 +642,11 @@ final class Stringify
 	 * Get random string.
 	 * 
 	 * @access public
-	 * @param int|null $length
+	 * @param int $length
 	 * @param string $char
 	 * @return string
 	 */
-	public static function randomize($length, $char = '') : string
+	public static function randomize(?int $length = null, ?string $char = null) : string
 	{
 		if ( !$char ) {
 			$char  = implode(range('a', 'f'));
@@ -641,44 +663,64 @@ final class Stringify
 	 * @param string $string
 	 * @return string
 	 */
-	public static function shuffle($string) : string
+	public static function shuffle(string $string) : string
 	{
 		return str_shuffle($string);
 	}
 
 	/**
+	 * Limit string (Without breaking words).
+	 * 
 	 * @access public
 	 * @param string $string
 	 * @param int $length
-	 * @param bool $more
+	 * @param int $offset
 	 * @return string
 	 */
-	public static function limit(string $string, $length = 100, $more = true) : string
+	public static function limit(string $string, int $length = 128, int $offset = 0) : string
 	{
-		if ( strlen($string) > $length ) {
-			$string = substr($string, 0, 80);
-			if ( $more ) {
-				$string = "{$string} [...]";
+		$limit = $string;
+
+        $words = self::split($string, [
+			'regex' => '/([\s\n\r]+)/u',
+			'limit' => 0,
+			'flags' => PREG_SPLIT_DELIM_CAPTURE
+		]);
+
+        if ( ($count = count($words)) ) {
+			$strlen = 0;
+			$last = $offset;
+			for (; $last < $count; ++$last) {
+				$strlen += strlen($words[$last]);
+				if ( $strlen > $length ) {
+					break;
+				}
 			}
+			$limit = implode(Arrayify::slice($words, $offset, $last));
 		}
-		return $string;
+
+		if ( empty($limit) ) {
+			$limit = substr($string, $offset, $length);
+		}
+
+		return trim($limit);
 	}
 
 	/**
-	 * Filter string.
+	 * Filter string (Validation toolkit).
 	 * 
-	 * FILTER_DEFAULT: 516
+	 * [DEFAULT: 516]
 	 * 
 	 * @access public
 	 * @param mixed $value
-	 * @param mixed $type
+	 * @param string $type
 	 * @param int $filter
-	 * @param array|int $options
+	 * @param mixed $options
 	 * @return mixed
 	 */
-	public static function filter($value, $type = '', $filter = 516, $options = 0)
+	public static function filter($value, ?string $type = 'name', int $filter = 516, $options = 0)
 	{
-		switch (self::lowercase($type)) {
+		switch (self::lowercase((string)$type)) {
 			case 'email':
 				return filter_var($value, FILTER_SANITIZE_EMAIL);
 				break;
@@ -696,6 +738,7 @@ final class Stringify
 				return filter_var($value, FILTER_SANITIZE_URL);
 				break;
 		}
+
 		return filter_var($value, $filter, $options);
 	}
 
@@ -707,7 +750,7 @@ final class Stringify
 	 * @param array $result
 	 * @return mixed
 	 */
-	public static function parse($string, &$result = null)
+	public static function parse(string $string, &$result = [])
 	{
 		parse_str($string, $result);
 		return $result;
@@ -716,35 +759,34 @@ final class Stringify
 	/**
 	 * Parse URL (URL toolkit).
 	 * 
-	 * PHP_URL_SCHEME : 0
-	 * PHP_URL_HOST : 1
-	 * PHP_URL_PATH : 5
-	 * PHP_URL_QUERY : 6ss
+	 * [SCHEME : 0]
+	 * [HOST   : 1]
+	 * [PATH   : 5]
+	 * [QUERY  : 6]
 	 * 
 	 * @access public
 	 * @param string $url
 	 * @param int $component
 	 * @return mixed
-	 * 
 	 */
-	public static function parseUrl($url, $component = -1)
+	public static function parseUrl(string $url, int $component = -1)
 	{
-		return parse_url((string)$url, $component);
+		return parse_url($url, $component);
 	}
 
 	/**
 	 * Build query args from string (URL toolkit).
 	 * 
-	 * PHP_QUERY_RFC1738 : 1
+	 * [PHP_QUERY_RFC1738 : 1]
 	 * 
 	 * @access public
 	 * @param mixed $args
 	 * @param string $prefix, Numeric index for args (array)
 	 * @param string $sep, Args separator
-	 * @param string $enc, Encoding type
+	 * @param int $enc, Encoding type
 	 * @return string
 	 */
-	public static function buildQuery($args, $prefix = '', $sep = '', $enc = 1)
+	public static function buildQuery($args, string $prefix = '', ?string $sep, int $enc = 1) : string
 	{
 		return http_build_query($args, $prefix, $sep, $enc);
 	}
@@ -753,10 +795,9 @@ final class Stringify
      * Generate MAC address.
      *
      * @access public
-     * @param void
      * @return string
      */
-    public static function generateMAC() : string
+    public static function generateMac() : string
     {
         $vals = [
             '0', '1', '2', '3', '4', '5', '6', '7',
@@ -775,25 +816,30 @@ final class Stringify
     }
     
 	/**
-	 * @access private
+	 * String map.
+	 * 
+	 * @access public
 	 * @param mixed $value
 	 * @param callable $callback
 	 * @return mixed
 	 */
-	private static function deepMap($value, $callback)
+	public static function deepMap($value, $callback)
 	{
 	    if ( TypeCheck::isArray($value) ) {
 	        foreach ( $value as $index => $item ) {
 	            $value[$index] = self::deepMap($item, $callback);
 	        }
+
 	    } elseif ( TypeCheck::isObject($value) ) {
 	        $vars = get_object_vars($value);
 	        foreach ($vars as $name => $content) {
-	            $value->$name = self::deepMap($content, $callback);
+	            $value->{$name} = self::deepMap($content, $callback);
 	        }
+
 	    } else {
 	        $value = call_user_func($callback, $value);
 	    }
+
 	    return $value;
 	}
 }

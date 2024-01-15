@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Server Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -17,25 +16,24 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Server;
 
 use FloatPHP\Classes\Filesystem\{
-    TypeCheck, Stringify, Arrayify
+    TypeCheck, Stringify, Arrayify, File
 };
 
 final class System
 {
-	/**
-	 * PHP CLI mode.
-	 *
-	 * @access public
-	 * @param void
-	 * @return bool
-	 */
-	public static function isCLI() : bool
-	{
-		if ( php_sapi_name() == 'cli' ) {
+    /**
+     * PHP CLI mode.
+     *
+     * @access public
+     * @return bool
+     */
+    public static function isCli() : bool
+    {
+    	if ( php_sapi_name() == 'cli' ) {
             return true;
         }
         return false;
-	}
+    }
 
     /**
      * PHP Memory exceeded.
@@ -44,64 +42,63 @@ final class System
      * @param float $percent
      * @return bool
      */
-    public static function isMemoryOut($percent = 0.9) : bool
+    public static function isMemoryOut(float $percent = 0.9) : bool
     {
         $limit = self::getMemoryLimit() * $percent;
-        $current = self::getMemoryUsage(1,1);
+        $current = self::getMemoryUsage(true, true);
         if ( $current >= $limit ) {
             return true;
         }
         return false;
     }
 
-	/**
-	 * Get memory limit.
-	 *
-	 * @access public
-	 * @param void
-	 * @return int
-	 */
-	public static function getMemoryLimit() : int
-	{
-		if ( TypeCheck::isFunction('ini_get') ) {
-			$limit = self::getIni('memory_limit');
-			if ( Stringify::contains(Stringify::lowercase($limit), 'g') ) {
-				$limit = intval($limit) * 1024;
-				$limit = "{$limit}M";
-			}
-		} else {
-			// Default
-			$limit = '128M';
-		}
-		if ( !$limit || $limit === -1 ) {
-			// Unlimited
-			$limit = '32000M';
-		}
-		return intval($limit) * 1024 * 1024;
-	}
+    /**
+     * Get memory limit.
+     *
+     * @access public
+     * @return int
+     */
+    public static function getMemoryLimit() : int
+    {
+    	if ( TypeCheck::isFunction('ini_get') ) {
+    		$limit = self::getIni('memory_limit');
+    		if ( Stringify::contains(Stringify::lowercase($limit), 'g') ) {
+    			$limit = intval($limit) * 1024;
+    			$limit = "{$limit}M";
+    		}
 
-	/**
-	 * Get PHP memory usage.
-	 *
-	 * @access public
-	 * @param bool $real
+    	} else {
+    		// Default
+    		$limit = '128M';
+    	}
+    	if ( !$limit || $limit === -1 ) {
+    		// Unlimited
+    		$limit = '32000M';
+    	}
+    	return intval($limit) * 1024 * 1024;
+    }
+
+    /**
+     * Get PHP memory usage.
+     *
+     * @access public
+     * @param bool $real
      * @param bool $format
-	 * @return int
-	 */
-	public static function getMemoryUsage($real = true, $format = true) : int
-	{
+     * @return int
+     */
+    public static function getMemoryUsage(bool $real = true, bool $format = true) : int
+    {
         $usage = memory_get_usage($real);
         if ( $format ) {
-            $usage = round($usage / 1000000,2);
+            $usage = round($usage / 1000000, 2);
         }
-		return $usage;
-	}
+    	return $usage;
+    }
 
     /**
      * Get PHP version.
      *
      * @access public
-     * @param void
      * @return string
      */
     public static function getPhpVersion() : string
@@ -113,7 +110,6 @@ final class System
      * Get OS.
      *
      * @access public
-     * @param void
      * @return string
      */
     public static function getOs() : string
@@ -125,7 +121,6 @@ final class System
      * Get OS name.
      *
      * @access public
-     * @param void
      * @return string
      */
     public static function getOsName() : string
@@ -140,7 +135,7 @@ final class System
      * @param bool $format
      * @return array
      */
-    public static function getSchedule($format = true) : array
+    public static function getSchedule(bool $format = true) : array
     {
         $tasks = [];
         if ( System::getOsName() == 'windows' ) {
@@ -180,7 +175,7 @@ final class System
      * @param string $name
      * @return bool
      */
-    public static function hasScheduleTask($name) : bool
+    public static function hasScheduleTask(string $name) : bool
     {
         $status = false;
         if ( ($tasks = self::getSchedule()) ) {
@@ -206,23 +201,23 @@ final class System
     }
 
     /**
-     * Set ini.
+     * Set ini option.
      *
      * @access public
      * @param mixed $option
-     * @param string $value
+     * @param mixed $value
      * @return mixed
      */
-    public static function setIni($option, $value)
+    public static function setIni($option, $value = null)
     {
         if ( TypeCheck::isArray($option) ) {
             $temp = [];
             foreach ($option as $key => $value) {
-                $temp = ini_set($key,(string)$value);
+                $temp = ini_set($key, $value);
             }
             return $temp;
         }
-        return ini_set($option,(string)$value);
+        return ini_set($option, $value);
     }
 
     /**
@@ -234,6 +229,7 @@ final class System
      */
     public static function getIni(string $option)
     {
+        $option = Stringify::replace('-', '_', $option);
         return ini_get($option);
     }
 
@@ -245,21 +241,21 @@ final class System
      * @param string $value
      * @return bool
      */
-    public static function setTimeLimit($seconds = 30) : bool
+    public static function setTimeLimit(int $seconds = 30) : bool
     {
-        return set_time_limit((int)$seconds);
+        return set_time_limit($seconds);
     }
 
     /**
-     * Set memory limit
+     * Set memory limit.
      *
      * @access public
-     * @param int|string $value
+     * @param mixed $value
      * @return mixed
      */
     public static function setMemoryLimit($value = '128M')
     {
-        return self::setIni('memory_limit',$value);
+        return self::setIni('memory_limit', $value);
     }
 
     /**
@@ -267,9 +263,9 @@ final class System
      *
      * @access public
      * @param string $command
-     * @return string
+     * @return mixed
      */
-    public static function runCommand(string $command = '')
+    public static function runCommand(string $command)
     {
         return @shell_exec($command);
     }
@@ -279,11 +275,11 @@ final class System
      *
      * @access public
      * @param string $command
-     * @param string $output
+     * @param array $output
      * @param int $result
      * @return mixed
      */
-    public static function execute(string $command = '', &$output = null, &$result = null)
+    public static function execute(string $command, ?array &$output = null, ?int &$result = null)
     {
         return @exec($command, $output, $result);
     }
@@ -292,7 +288,6 @@ final class System
      * Get CPU usage.
      *
      * @access public
-     * @param void
      * @return array
      */
     public static function getCpuUsage() : array
@@ -313,6 +308,7 @@ final class System
                     'count' => $count
                 ];
             }
+
         } else {
             $load = self::getLoadAvg();
             $usage = [
@@ -324,16 +320,47 @@ final class System
     }
 
     /**
-     * Get memory usage.
+     * Get CPU cores count.
      *
      * @access public
      * @param void
+     * @return int
+     */
+    public static function getCpuCores()
+    {
+        $count = 1; // Init with min
+        if ( !TypeCheck::isFunction('ini_get') ) {
+            return $count;
+        }
+        if ( self::getIni('open_basedir') ) {
+            return $count;
+        }
+
+        if ( self::getOs() == 'winnt' ) {
+            $count = (int)getenv('NUMBER_OF_PROCESSORS');
+
+        } else {
+            if ( !($info = File::r('/proc/cpuinfo')) ) {
+                return $count;
+            }
+            if ( ($match = Stringify::matchAll('/^processor/m',$info)) ) {
+                $count = count($match);
+            }
+        }
+        return $count;
+    }
+    
+    /**
+     * Get memory usage.
+     *
+     * @access public
      * @return array
      */
     public static function getSystemMemoryUsage() : array
     {
         $usage = [];
         if ( self::getOsName() == 'windows' ) {
+
             if ( TypeCheck::isClass('COM') ) {
                 $system = new \COM('WinMgmts:\\\\.');
                 $query  = 'SELECT FreePhysicalMemory,FreeVirtualMemory,';
@@ -353,17 +380,20 @@ final class System
                     'usage'     => round(($available / $total) * 100)
                 ];
             }
+
         } else {
             $free = self::runCommand('free');
             $free = (string)trim($free);
             $args = explode("\n",$free);
             $memory = explode(' ',$args[1]);
+
             // Format array
             $memory = Arrayify::filter($memory, function($value) {
                 return ($value !== null && $value !== false && $value !== '');
             });
+
             // Reset array positions
-            $memory = Arrayify::merge($memory);
+            $memory = Arrayify::merge($memory, $memory);
             $total = round($memory[1] / 1000000, 2);
             $available = round($memory[3] / 1000000, 2);
             $usage = [
@@ -383,7 +413,6 @@ final class System
      * Get network usage.
      *
      * @access public
-     * @param void
      * @return array
      */
     public static function getNetworkUsage() : array
@@ -398,6 +427,7 @@ final class System
                 'usage'       => $total,
                 'connections' => $connections
             ];
+
         } else {
             $command  = 'netstat -ntu | grep :80 | grep ESTABLISHED | grep -v LISTEN | ';
             $command .= "awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -rn | ";
@@ -419,7 +449,6 @@ final class System
      * Get disk usage.
      *
      * @access public
-     * @param void
      * @return array
      */
     public static function getUsage() : array
@@ -436,7 +465,6 @@ final class System
      * Get disk usage.
      *
      * @access public
-     * @param void
      * @return array
      */
     public static function getDiskUsage() : array
@@ -455,41 +483,40 @@ final class System
      * Get disk free space.
      *
      * @access public
-     * @param string $directory
+     * @param string $dir
      * @param bool $format
-     * @return mixed
+     * @return float
      */
-    public static function getDiskFreeSpace($directory = '.', $format = true)
+    public static function getDiskFreeSpace(string $dir = '.', bool $format = true) : float
     {
-        $space = disk_free_space($directory);
+        $space = disk_free_space($dir);
         if ( $format ) {
             round($space / 1000000000);
         }
-        return $space;
+        return (float)$space;
     }
 
     /**
      * Get disk total space.
      *
      * @access public
-     * @param string $directory
+     * @param string $dir
      * @param bool $format
-     * @return mixed
+     * @return float
      */
-    public static function getDiskTotalSpace($directory = '.', $format = true)
+    public static function getDiskTotalSpace(string $dir = '.', bool $format = true) : float
     {
-        $space = disk_total_space($directory);
+        $space = disk_total_space($dir);
         if ( $format ) {
             round($space / 1000000000);
         }
-        return $space;
+        return (float)$space;
     }
 
     /**
      * Get load avg.
      *
      * @access public
-     * @param void
      * @return mixed
      */
     public static function getLoadAvg()
@@ -501,24 +528,25 @@ final class System
      * Get system file size.
      *
      * @access public
-     * @param string $directory
+     * @param string $dir
      * @param bool $format
      * @return mixed
      */
-    public static function getSize($directory = '.', $format = true)
+    public static function getSize(string $dir = '.', bool $format = true)
     {
         $size = false;
         if ( self::getOsName() == 'windows' ) {
             if ( TypeCheck::isClass('COM') ) {
                 $system = new \COM('scripting.filesystemobject');
                 if ( TypeCheck::isObject($system) ) {
-                    $path = $system->getfolder($directory);
+                    $path = $system->getfolder($dir);
                     $size = $path->size;
                     unset($system);
                 }
             }
+
         } else {
-            $path = popen("/usr/bin/du -sk {$directory}", 'r');
+            $path = popen("/usr/bin/du -sk {$dir}", 'r');
             $size = fgets($path, 4096);
             $size = substr($size, 0, strpos($size, "\t"));
             pclose ($path);
@@ -533,12 +561,34 @@ final class System
      * Get system current MAC address.
      *
      * @access public
-     * @param void
      * @return string
      */
-    public static function getMAC() : string
+    public static function getMac() : string
     {
         $mac = self::execute('getmac');
         return (string)strtok($mac, ' ');
     }
+	/**
+	 * Get GLOBALS item value.
+	 * 
+	 * @access public
+	 * @param string $key
+	 * @return mixed
+	 */
+	public static function getGlobal(string $key = null)
+	{
+		return self::hasGlobal($key) ? $GLOBALS[$key] : null;
+	}
+
+	/**
+	 * Check GLOBALS item value.
+	 * 
+	 * @access public
+	 * @param string $key
+	 * @return bool
+	 */
+	public static function hasGlobal(string $key) : bool
+	{
+		return isset($GLOBALS[$key]);
+	}
 }

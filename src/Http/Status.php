@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -23,7 +22,7 @@ class Status
 	 * @param int $code
 	 * @return string
 	 */
-	public static function getMessage($code = '')
+	public static function getMessage(int $code = 500)
 	{
 		$status = [
 			100 => 'Continue',

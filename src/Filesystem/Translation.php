@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -17,8 +16,8 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Filesystem;
 
 /**
- * Built-in Translation Class for FloatPHP,
- * @see https://develdocs.phpmyadmin.net/motranslator/PhpMyAdmin/MoTranslator.html
+ * Built-in Translation class,
+ * @uses Inspired by MoTranslator https://github.com/phpmyadmin/motranslator
  */
 class Translation
 {
@@ -43,12 +42,14 @@ class Translation
 	protected $canTranslate = false;
 
 	/**
+	 * Init translation.
+	 * 
 	 * @param string $locale
 	 * @param string $path
 	 */
-	public function __construct($locale = '', $path = '')
+	public function __construct(?string $locale = null, string $path = '/')
 	{
-		if ( $this->load($locale,$path) ) {
+		if ( $this->load($locale, $path) ) {
 			$magic = $this->read(4);
 			if ( $magic == "\x95\x04\x12\xde" ) {
 				$this->byteOrder = 1;
@@ -61,30 +62,30 @@ class Translation
 	}
 
 	/**
-	 * Translates a string.
+	 * Translate string.
 	 *
 	 * @access public
 	 * @param string $string
 	 * @return string
 	 */
-	public function translate($string = '') : string
+	public function translate(string $string) : string
 	{
 		if ( $this->canTranslate ) {
 			if ( !empty($string) ) {
 				return $this->gettext($string);
 			}
 		}
-		return (string)$string;
+		return $string;
 	}
 
 	/**
-	 * Translates a string.
+	 * Translate string.
 	 *
 	 * @access public
 	 * @param string $string
-	 * @return string|false
+	 * @return mixed
 	 */
-	public function gettext($string = '')
+	public function gettext(string $string)
 	{
 		if ( $this->canTranslate ) {
 			$this->loadTables();
@@ -105,10 +106,10 @@ class Translation
   	 * @access public
   	 * @param string single
   	 * @param string plural
-  	 * @param string number
-  	 * @return string|false
+  	 * @param int number
+  	 * @return mixed
   	 */
-  	public function ngettext($single, $plural, $number)
+  	public function ngettext(string $single, string $plural, int $number)
   	{
   		if ( $this->canTranslate ) {
 	    	$select = $this->selectString($number);
@@ -119,7 +120,7 @@ class Translation
 
 			} else {
 				$result = $this->getTranslationString($num);
-				$list = explode(chr(0),$result);
+				$list = explode(chr(0), $result);
 				return $list[$select];
 			}
 		}
@@ -132,14 +133,14 @@ class Translation
 	 * @access public
 	 * @param string context
 	 * @param string msgid
-	 * @return string|false
+	 * @return mixed
 	 */
-	public function pgettext($context, $msgid)
+	public function pgettext(string $context, string $msgid)
 	{
 		if ( $this->canTranslate ) {
 			$key = $context . chr(4) . $msgid;
 			$ret = $this->translate($key);
-			if ( strpos($ret,"\004") !== false ) {
+			if ( strpos($ret, "\004") !== false ) {
 				return $msgid;
 
 			} else {
@@ -157,13 +158,13 @@ class Translation
 	 * @param string singular
 	 * @param string plural
 	 * @param int number
-	 * @return string|false
+	 * @return mixed
 	 */
-	public function npgettext($context, $singular, $plural, $number)
+	public function npgettext(string $context, string $singular, string $plural, int $number)
 	{
 		if ( $this->canTranslate ) {
 			$key = $context . chr(4) . $singular;
-			$ret = $this->ngettext($key,$plural,$number);
+			$ret = $this->ngettext($key, $plural, $number);
 			if ( strpos($ret, "\004") !== false ) {
 				return $singular;
 
@@ -173,12 +174,29 @@ class Translation
 		}
 		return false;
 	}
+	
+	/**
+	 * Load mo file with given local.
+	 *
+	 * @access protected
+	 * @param string $locale
+	 * @param string $path
+	 * @return bool
+	 */
+	protected function load(?string $locale = null, string $path = '/') : bool
+	{
+		$file = Stringify::formatPath("{$path}/{$locale}.mo");
+	    if ( File::exists($file) ) {
+			$this->mo = fopen($file, 'rb');
+			return $this->canTranslate = true;
+		}
+		return false;
+	}
 
 	/**
 	 * Init 32 bit integer from stream.
 	 *
 	 * @access protected
-	 * @param void
 	 * @return void
 	 */
 	protected function initCount()
@@ -193,27 +211,9 @@ class Translation
 	}
 
 	/**
-	 * Load mo file with given local.
-	 *
-	 * @access protected
-	 * @param string $locale
-	 * @param string $path
-	 * @return bool
-	 */
-	protected function load($locale, $path) : bool
-	{
-	    if ( File::exists(($file = "{$path}/{$locale}.mo")) ) {
-			$this->mo = fopen($file, 'rb');
-			return $this->canTranslate = true;
-		}
-		return false;
-	}
-
-	/**
 	 * Read 32 bit integer from stream.
 	 *
 	 * @access protected
-	 * @param void
 	 * @return int
 	 */
 	protected function readInt() : int
@@ -237,11 +237,11 @@ class Translation
 	 * @param int $bytes
 	 * @return string
 	 */
-	protected function read($bytes) : string
+	protected function read(int $bytes) : string
 	{
 		$data = '';
 	    if ( $bytes ) {
-			fseek($this->mo,$this->position);
+			fseek($this->mo, $this->position);
 			while ($bytes > 0) {
 				$chunk = fread($this->mo, $bytes);
 				$data .= $chunk;
@@ -249,7 +249,7 @@ class Translation
 			}
 			$this->position = ftell($this->mo);
 	    }
-	    return $data;
+	    return (string)$data;
 	}
 
 	/**
@@ -275,7 +275,6 @@ class Translation
 	 * Load the translations tables from the Mo file.
 	 *
 	 * @access protected
-	 * @param void
 	 * @return void
 	 */
 	protected function loadTables()
@@ -309,8 +308,7 @@ class Translation
 			return '';
 		}
 		$this->setPosition($offset);
-		$data = $this->read($length);
-		return (string)$data;
+		return $this->read($length);
 	}
 
 	/**
@@ -320,7 +318,7 @@ class Translation
 	 * @param int $num
 	 * @return string
 	 */
-	protected function getTranslationString($num) : string
+	protected function getTranslationString(int $num) : string
 	{
 		$length = $this->tableTranslations[$num * 2 + 1];
 		$offset = $this->tableTranslations[$num * 2 + 2];
@@ -328,8 +326,7 @@ class Translation
 			return '';
 		}
 		$this->setPosition($offset);
-		$data = $this->read($length);
-		return (string)$data;
+		return $this->read($length);
 	}
 
 	/**
@@ -341,12 +338,13 @@ class Translation
 	 * @param int $end
 	 * @return mixed
 	 */
-	protected function findString($string, $start = -1, $end = -1)
+	protected function findString(string $string, int $start = -1, int $end = -1)
 	{
 		if ( ($start == -1) || ($end == -1) ) {
 		  $start = 0;
 		  $end = $this->count['total'];
 		}
+
 		if ( abs($start - $end) <= 1 ) {
 			$txt = $this->getOriginalString($start);
 			if ( $string == $txt ) {
@@ -381,13 +379,10 @@ class Translation
 	 * @param string $exp
 	 * @return string
 	 */
-	protected function sanitizePluralExpression($exp) : string
+	protected function sanitizePluralExpression(string $exp) : string
 	{
-		$exp = Stringify::replaceRegex(
-			'@[^a-zA-Z0-9_:;\(\)\?\|\&=!<>+*/\%-]@',
-			'',
-			$exp
-		) . ';';
+		$reg = '@[^a-zA-Z0-9_:;\(\)\?\|\&=!<>+*/\%-]@';
+		$exp = Stringify::replaceRegex($reg, '', $exp) . ';';
 		$res = '';
 		$p = 0;
 		for ($i = 0; $i < strlen($exp); $i++) {
@@ -401,7 +396,7 @@ class Translation
 					$res .= ') : (';
 					break;
 				case ';':
-					$res .= str_repeat(')',$p) . ';';
+					$res .= Stringify::repeat(')', $p) . ';';
 					$p = 0;
 					break;
 				default:
@@ -418,10 +413,11 @@ class Translation
 	 * @param string $header
 	 * @return string
 	 */
-	protected function extractPluralForms($header) : string
+	protected function extractPluralForms(string $header) : string
 	{
-		if ( ($regs = Stringify::match("/(^|\n)plural-forms: ([^\n]*)\n/i",$header,-1)) ) {
+		if ( ($regs = Stringify::match("/(^|\n)plural-forms: ([^\n]*)\n/i", $header, -1)) ) {
 			$exp = $regs[2];
+
 		} else {
 			$exp = "nplurals=2; plural=n == 1 ? 0 : 1;";
 		}
@@ -432,7 +428,6 @@ class Translation
 	 * Get possible plural forms from Mo header.
 	 *
 	 * @access protected
-	 * @param void
 	 * @return string
 	 */
 	protected function getPluralForms() : string
@@ -453,7 +448,7 @@ class Translation
 	 * @param int $n
 	 * @return int|array
 	 */
-	protected function selectString($n)
+	protected function selectString(int $n)
 	{
 		$string = $this->getPluralForms();
 		$string = Stringify::replace('nplurals', "\$total", $string);
@@ -461,7 +456,7 @@ class Translation
 		$string = Stringify::replace('plural', "\$plural", $string);
 		$total = 0;
 		$plural = 0;
-		eval("$string");
+		eval("{$string}");
 		if ( $plural >= $total ) {
 			$plural = $total - 1;
 		}
@@ -475,7 +470,7 @@ class Translation
   	 * @param int $position
   	 * @return void
   	 */
-	protected function setPosition($position)
+	protected function setPosition(int $position)
 	{
 		fseek($this->mo, $position);
 		$this->position = ftell($this->mo);

@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -31,9 +30,9 @@ final class Archive extends File
 	 * @param string $archive
 	 * @return bool
 	 */
-	public static function compress($path, $to = '', $archive = '') : bool
+	public static function compress(string $path, string $to = '', string $archive = '') : bool
 	{
-		if ( TypeCheck::isClass('ZipArchive') && !empty($path) ) {
+		if ( TypeCheck::isClass('ZipArchive') && self::exists($path) ) {
 
 			if ( empty($archive) ) {
 				$archive = basename($path);
@@ -53,7 +52,7 @@ final class Archive extends File
 					    RecursiveIteratorIterator::LEAVES_ONLY
 					);
 					foreach ($files as $name => $file) {
-					    if ( !$file->isDir() ){
+					    if ( !$file->isDir() ) {
 					        $p = $file->getRealPath();
 					        $zip->addFile($p, basename($name));
 					    }
@@ -77,9 +76,9 @@ final class Archive extends File
 	 * @param bool $remove
 	 * @return bool
 	 */
-	public static function uncompress($archive, $to = '', $remove = false) : bool
+	public static function uncompress(string $archive, string $to = '', bool $remove = false) : bool
 	{
-		if ( self::exists($archive) ) {
+		if ( self::isFile($archive) ) {
 
 			$status = false;
 
@@ -103,9 +102,10 @@ final class Archive extends File
 			if ( $remove ) {
 				self::remove($archive);
 			}
-			
+
 			return $status;
 		}
+
 		return false;
 	}
 
@@ -117,7 +117,7 @@ final class Archive extends File
 	 * @param int $length
 	 * @return bool
 	 */
-	public static function isGzip($archive, $length = 4096) : bool
+	public static function isGzip(string $archive, int $length = 4096) : bool
 	{
 		if ( self::isFile($archive) 
 		  && self::getExtension($archive) == 'gz' ) {
@@ -140,20 +140,24 @@ final class Archive extends File
 	 * @param bool $remove
 	 * @return bool
 	 */
-	public static function unGzip($archive, $length = 4096, $remove = false) : bool
+	public static function unGzip(string $archive, int $length = 4096, bool $remove = false) : bool
 	{
 		$status = false;
-		if ( ($gz = gzopen($archive, 'rb')) ) {
-			$filename = Stringify::replace('.gz', '', $archive);
-			$to = fopen($filename, 'wb');
-			while ( !gzeof($gz) ) {
-			    fwrite($to, gzread($gz, $length));
+		if ( self::isFile($archive) ) {
+			if ( ($gz = gzopen($archive, 'rb')) ) {
+				$filename = Stringify::replace('.gz', '', $archive);
+				$to = fopen($filename, 'wb');
+				while ( !gzeof($gz) ) {
+				    fwrite($to, gzread($gz, $length));
+				}
+				$status = true;
+				fclose($to);
 			}
-			$status = true;
-			fclose($to);
+			gzclose($gz);
+			if ($remove) {
+				self::remove($archive);
+			}
 		}
-		gzclose($gz);
-		if ($remove) self::remove($archive);
 		return $status;
 	}
 
@@ -164,13 +168,15 @@ final class Archive extends File
 	 * @param string $archive
 	 * @return bool
 	 */
-	public static function isValid($archive) : bool
+	public static function isValid(string $archive) : bool
 	{
-		$zip = new ZIP();
-		if ( $zip->open($archive) === true ) {
-			if ( $zip->numFiles ) {
-		  		$zip->close();
-		  		return true;
+		if ( TypeCheck::isClass('ZipArchive') && self::isFile($archive) ) {
+			$zip = new ZIP();
+			if ( $zip->open($archive) === true ) {
+				if ( $zip->numFiles ) {
+					$zip->close();
+					return true;
+				}
 			}
 		}
 		return false;

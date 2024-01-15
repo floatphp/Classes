@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -23,60 +22,77 @@ use FloatPHP\Classes\Filesystem\{
 final class Server
 {
 	/**
-	 * Get global server variable.
-	 *
+	 * Get _SERVER value.
+	 * 
 	 * @access public
-	 * @param string $item
+	 * @param string $key
 	 * @param bool $format
 	 * @return mixed
 	 */
-	public static function get($item = null, $format = true)
+	public static function get(?string $key = null, $format = true)
 	{
-		if ( $item ) {
+		if ( $key ) {
 			if ( $format ) {
-				$item = self::formatArgs($item);
+				$key = self::formatArgs($key);
 			}
-			return self::isSetted($item) ? $_SERVER[$item] : null;
+			return self::isSetted($key) ? $_SERVER[$key] : null;
 		}
 		return self::isSetted() ? $_SERVER : null;
 	}
 
 	/**
-	 * Set global server variable.
-	 *
+	 * Set _SERVER value.
+	 * 
 	 * @access public
-	 * @param string $item
+	 * @param string $key
 	 * @param mixed $value
 	 * @param bool $format
 	 * @return void
 	 */
-	public static function set($item, $value = null, $format = true)
+	public static function set(string $key, $value = null, $format = true)
 	{
 		if ( $format ) {
 			$value = self::formatArgs($value);
 		}
-		$_SERVER[$item] = $value;
+		$_SERVER[$key] = $value;
 	}
 
 	/**
-	 * Check is global server variable setted.
-	 *
+	 * Check _SERVER value.
+	 * 
 	 * @access public
-	 * @param string $item
+	 * @param string $key
 	 * @param bool $format
 	 * @return bool
 	 */
-	public static function isSetted($item = null, $format = true)
+	public static function isSetted(?string $key = null, $format = true)
 	{
-		if ( $item ) {
+		if ( $key ) {
 			if ( $format ) {
-				$item = self::formatArgs($item);
+				$key = self::formatArgs($key);
 			}
-			return isset($_SERVER[$item]);
+			return isset($_SERVER[$key]);
 		}
 		return isset($_SERVER) && !empty($_SERVER);
 	}
-	
+
+	/**
+	 * Unset _SERVER value.
+	 * 
+	 * @access public
+	 * @param string $key
+	 * @return void
+	 */
+	public static function unset(?string $key = null)
+	{
+		if ( $key ) {
+			unset($_SERVER[$key]);
+
+		} else {
+			$_SERVER = [];
+		}
+	}
+
 	/**
 	 * Get remote IP address.
 	 *
@@ -84,11 +100,11 @@ final class Server
 	 * @param string $domain
 	 * @return mixed
 	 */
-	public static function getIP($domain = null)
+	public static function getIp(?string $domain = null)
 	{
 		if ( $domain ) {
 			$ip = gethostbyname($domain);
-			return Validator::isValidIP($ip);
+			return Validator::isValidIp($ip);
 		}
 
 		if ( self::isSetted('http-x-real-ip') ) {
@@ -100,14 +116,14 @@ final class Server
 			$ip = Stringify::stripSlash($ip);
 			$ip = Stringify::split($ip, ['regex' => '/,/']);
 			$ip = (string)trim(current($ip));
- 			return Validator::isValidIP($ip);
+ 			return Validator::isValidIp($ip);
 
 		} elseif ( self::isSetted('http-cf-connecting-ip') ) {
 			$ip = self::get('http-cf-connecting-ip');
 			$ip = Stringify::stripSlash($ip);
 			$ip = Stringify::split($ip, ['regex' => '/,/']);
 			$ip = (string)trim(current($ip));
- 			return Validator::isValidIP($ip);
+ 			return Validator::isValidIp($ip);
 
 		} elseif ( self::isSetted('remote-addr') ) {
 			$ip = self::get('remote-addr');
@@ -121,19 +137,17 @@ final class Server
 	 * Get prefered protocol.
 	 *
 	 * @access public
-	 * @param void
 	 * @return string
 	 */
 	public static function getProtocol()
 	{
-		return self::isSSL() ? 'https://' : 'http://';
+		return self::isSsl() ? 'https://' : 'http://';
 	}
 
 	/**
 	 * Get country code from request headers.
 	 *
 	 * @access public
-	 * @param void
 	 * @return string
 	 */
 	public static function getCountryCode()
@@ -163,13 +177,15 @@ final class Server
 	 * @access public
 	 * @param string $url
 	 * @param int $code
-	 * @param string $message
 	 * @return void
 	 */
-	public static function redirect($url = '/', $code = 301, $message = 'Moved Permanently')
+	public static function redirect(string $url = '/', int $code = 0)
 	{
-		header("Status: {$code} {$message}", false, $code);
-		header("Location: {$url}");
+		if ( $code ) {
+			$message = Response::getMessage($code);
+			header("Status: {$code} {$message}", true, $code);
+		}
+		header("Location: {$url}", true, $code);
 		exit();
 	}
 
@@ -177,17 +193,15 @@ final class Server
 	 * Get base URL.
 	 *
 	 * @access public
-	 * @param void
 	 * @return string
 	 */
-	public static function getBaseUrl()
+	public static function getBaseUrl() : string
 	{
 		$url = self::get('http-host');
-		if ( self::isSSL() ) {
+		if ( self::isSsl() ) {
 			return "https://{$url}";
-		} else {
-			return "http://{$url}";
 		}
+		return "http://{$url}";
 	}
 
 	/**
@@ -197,7 +211,7 @@ final class Server
 	 * @param bool $escape
 	 * @return string
 	 */
-	public static function getCurrentUrl($escape = false)
+	public static function getCurrentUrl($escape = false) : string
 	{
 		$url = self::getBaseUrl() . self::get('request-uri');
 		if ( $escape ) {
@@ -234,13 +248,12 @@ final class Server
 	}
 
 	/**
-	 * Check is authenticated.
+	 * Check basic authentication.
 	 *
 	 * @access public
-	 * @param void
 	 * @return bool
 	 */
-	public static function isBasicAuth()
+	public static function isBasicAuth() : bool
 	{
 		if ( self::isSetted('php-auth-user') && self::isSetted('php-auth-pw') ) {
 			return true;
@@ -249,25 +262,23 @@ final class Server
 	}
 
 	/**
-	 * Get authentication user.
+	 * Get basic authentication user.
 	 *
 	 * @access public
-	 * @param void
 	 * @return string
 	 */
-	public static function getBasicAuthUser()
+	public static function getBasicAuthUser() : string
 	{
 		return self::isSetted('php-auth-user') ? self::get('php-auth-user') : '';
 	}
 
 	/**
-	 * Get authentication password.
+	 * Get get basic authentication password.
 	 *
 	 * @access public
-	 * @param void
 	 * @return string
 	 */
-	public static function getBasicAuthPwd()
+	public static function getBasicAuthPwd() : string
 	{
 		return self::isSetted('php-auth-pw') ? self::get('php-auth-pw') : '';
 	}
@@ -275,8 +286,7 @@ final class Server
 	/**
 	 * Get authorization header.
 	 *
-	 * @access private
-	 * @param void
+	 * @access public
 	 * @return mixed
 	 */
 	public static function getAuthorizationHeaders()
@@ -303,26 +313,25 @@ final class Server
 	/**
 	 * Get authorization token.
 	 *
-     * @access private
-     * @param void
-     * @return mixed
+     * @access public
+     * @return string
      */
-    public static function getBearerToken()
+    public static function getBearerToken() : string
     {
+		$token = false;
         if ( ($headers = self::getAuthorizationHeaders()) ) {
-            return Stringify::match('/Bearer\s(\S+)/', $headers, 1);
+            $token = Stringify::match('/Bearer\s(\S+)/', $headers, 1);
         }
-        return false;
+        return (string)$token;
     }
 
 	/**
 	 * Check whether protocol is HTTPS (SSL).
 	 *
 	 * @access public
-	 * @param void
 	 * @return bool
 	 */
-	public static function isSSL()
+	public static function isSsl() : bool
 	{
 		if ( self::isSetted('https') && !empty(self::get('https')) ) {
 			if ( self::get('https') !== 'off' ) {

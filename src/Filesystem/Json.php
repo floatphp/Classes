@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -19,9 +18,10 @@ namespace FloatPHP\Classes\Filesystem;
 final class Json extends File
 {
 	/**
-	 * Parse JSON.
+	 * Parse JSON file.
 	 *
 	 * @access public
+	 * @param string $file
 	 * @param bool $isArray
 	 * @return mixed
 	 */
@@ -34,17 +34,17 @@ final class Json extends File
 	 * Decode JSON.
 	 *
 	 * @access public
-	 * @param string $content
+	 * @param string $value
 	 * @param bool $isArray
 	 * @return mixed
 	 */
-	public static function decode($content, $isArray = false)
+	public static function decode($value, $isArray = false)
 	{
-		return json_decode((string)$content, (bool)$isArray);
+		return json_decode((string)$value, (bool)$isArray);
 	}
 
 	/**
-	 * Encode JSON.
+	 * Encode JSON without flags.
 	 *
 	 * @access public
 	 * @param mixen $value

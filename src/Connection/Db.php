@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Connection Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -26,22 +25,18 @@ use \PDO;
 class Db
 {
     /**
-     * @access private
+     * @access protected
      * @var object $pdo
+     * @var object $query
      * @var bool $isConnected
      * @var array $parameters
      * @var object $logger
      */
-    private $pdo = null;
-    private $isConnected = false;
-    private $parameters = [];
-    private $logger = null;
-
-    /**
-     * @access protected
-     * @var object $query
-     */
+    protected $pdo;
     protected $query;
+    protected $isConnected = false;
+    protected $parameters = [];
+    protected $logger;
 
     /**
      * Connect to database.
@@ -49,7 +44,7 @@ class Db
      * @param array $config
      * @param object LoggerInterface $logger
      */
-    public function __construct($config = [], LoggerInterface $logger = null)
+    public function __construct(array $config = [], LoggerInterface $logger = null)
     {
         $this->logger = $logger;
         $this->connect($config);
@@ -60,7 +55,6 @@ class Db
      * Close connection.
      *
      * @access public
-     * @param void
      * @return void
      */
     public function close()
@@ -72,11 +66,11 @@ class Db
      * Bind parameters.
      *
      * @access public
-     * @param array $bind
-     * @param string $value
+     * @param string $bind
+     * @param mixed $value
      * @return void
      */
-    public function bind($bind, $value)
+    public function bind(string $bind, $value = null)
     {
         $this->parameters[sizeof($this->parameters)] = [":{$bind}", $value];
     }
@@ -88,7 +82,7 @@ class Db
      * @param array $bind
      * @return void
      */
-    public function bindMore($bind)
+    public function bindMore(array $bind)
     {
         if ( empty($this->parameters) ) {
             if ( TypeCheck::isArray($bind) ) {
@@ -100,35 +94,38 @@ class Db
         }
     }
 
-    /**
-     * Query.
-     *
+	/**
+	 * Get query result.
+	 * 
      * @access public
-     * @param string $query
+     * @param string $sql
      * @param array $params
-     * @param const $fetchmode
+     * @param int $mode
      * @return mixed
      */
-    public function query(string $query, $params = null, $fetchmode = PDO::FETCH_ASSOC)
+    public function query(string $sql, ?array $params = null, int $mode = PDO::FETCH_ASSOC)
     {
-        $query = trim(Stringify::replace("\r", ' ', $query));
-        $this->Init($query, $params);
-        $rawStatement = explode(' ',Stringify::replaceRegex("/\s+|\t+|\n+/", ' ', $query));
-        // Which SQL statement is used
-        $statement = strtolower($rawStatement[0]);
-        if ( $statement === 'select' || $statement === 'show' ) {
-            return $this->query->fetchAll($fetchmode);
-        } elseif ( $statement === 'insert' || $statement === 'update' || $statement === 'delete' ) {
+        // Format SQL
+        $sql = trim(Stringify::replace("\r", ' ', $sql));
+
+        // Init SQL
+        $this->init($sql, $params);
+
+        // Catch SQL statement
+        if ( $this->getStatementType($sql) == 'read' ) {
+            return $this->query->fetchAll($mode);
+
+        } elseif ( $this->getStatementType($sql) == 'write' ) {
             return $this->query->rowCount();
         }
+
         return null;
     }
 
     /**
-     * Get last insert Id.
+     * Get last inserted Id.
      *
      * @access public
-     * @param void
      * @return mixed
      */
     public function lastInsertId()
@@ -137,52 +134,49 @@ class Db
     }
     
     /**
-     * Starts the transaction.
+     * Begin transaction.
      *
      * @access public
-     * @param void
      * @return bool
      */
-    public function beginTransaction()
+    public function beginTransaction() : bool
     {
         return $this->pdo->beginTransaction();
     }
     
     /**
-     * Execute Transaction.
+     * Execute transaction.
      *
      * @access public
-     * @param void
      * @return bool
      */
-    public function executeTransaction()
+    public function executeTransaction() : bool
     {
         return $this->pdo->commit();
     }
     
     /**
-     * Rollback of Transaction.
+     * Rollback transaction.
      *
      * @access public
-     * @param void
      * @return bool
      */
-    public function rollBack()
+    public function rollBack() : bool
     {
         return $this->pdo->rollBack();
     }
     
     /**
-     * Returns an array which represents a column from the result set.
+     * Returns column from the result set.
      *
      * @access public
-     * @param string $query
+     * @param string $sql
      * @param array $params
-     * @return array
+     * @return mixed
      */
-    public function column($query, $params = null)
+    public function column(string $sql, ?array $params = null)
     {
-        $this->Init($query, $params);
+        $this->init($sql, $params);
         $columns = $this->query->fetchAll(PDO::FETCH_NUM);
         $column = null;
         foreach ($columns as $cells) {
@@ -192,33 +186,33 @@ class Db
     }
 
     /**
-     * Returns an array which represents a row from the result set.
+     * Returns row from the result set.
      *
      * @access public
-     * @param string $query
+     * @param string $sql
      * @param array $params
-     * @param int $fetchmode
-     * @return array
+     * @param int $mode
+     * @return mixed
      */
-    public function row($query, $params = null, $fetchmode = PDO::FETCH_ASSOC)
+    public function row(string $sql, ?array $params = null, int $mode = PDO::FETCH_ASSOC)
     {
-        $this->Init($query, $params);
-        $result = $this->query->fetch($fetchmode);
+        $this->init($sql, $params);
+        $result = $this->query->fetch($mode);
         $this->query->closeCursor(); 
         return $result;
     }
 
     /**
-     *  Returns the value of one single field/column.
+     *  Returns value of one single field (column).
      *
      * @access public
-     * @param string $query
+     * @param string $sql
      * @param array $params
      * @return mixed
      */
-    public function single($query, $params = null)
+    public function single(string $sql, ?array $params = null)
     {
-        $this->Init($query, $params);
+        $this->init($sql, $params);
         $result = $this->query->fetchColumn();
         $this->query->closeCursor(); 
         return $result;
@@ -227,70 +221,81 @@ class Db
     /**
      * Connect to database.
      *
-     * @access private
+     * @access protected
      * @param array $config
      * @return void
      */
-    private function connect($config = [])
+    protected function connect(array $config = [])
     {
         try {
-            // Read settings & set PDO params
-            $db      = $config['db']      ?? '';
-            $host    = $config['host']    ?? 'localhost';
-            $port    = $config['port']    ?? 3306;
-            $user    = $config['user']    ?? 'root';
-            $pswd    = $config['pswd']    ?? '';
-            $charset = $config['charset'] ?? 'utf8';
+
+            // Get configuration
+            $config = Arrayify::merge([
+                'db'      => '',
+                'host'    => 'localhost',
+                'port'    => 3306,
+                'user'	  => '',
+                'pswd'    => '',
+                'charset' => 'utf8'
+            ], $config);
+
+            extract($config);
 
             $dsn = "mysql:dbname={$db};host={$host};port={$port}";
-            $this->pdo = new PDO($dsn,$user,$pswd,[
+            $this->pdo = new PDO($dsn, $user, $pswd, [
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$charset}"
             ]);
 
-            // log any exceptions on Fatal error
+            // Log errors
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-            // Disable emulation of prepared statements
+            // Disable prepare statement emulation
             $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
 
             // Connection succeeded
             $this->isConnected = true;
 
         } catch (PDOException $e) {
-            // Write into logs
             echo $this->log($e->getMessage());
             die();
         }
     }
 
     /**
-     * Every method which needs to execute a SQL query uses this method.
+     * Init SQL query.
      *
-     * @access public
-     * @param string $query
+     * @access protected
+     * @param string $sql
      * @param array $params
      * @return void
      */
-    private function Init($query, $params = [])
+    protected function init(string $sql, array $params = [])
     {
         // Connect to database
         if ( !$this->isConnected ) {
             $this->connect();
         }
+
         try {
+
             // Prepare query
-            $this->query = $this->pdo->prepare($query);
+            $this->query = $this->pdo->prepare($sql);
+
             // Add bind parameters
             $this->bindMore($params);
+
             // Bind parameters
             if ( !empty($this->parameters) ) {
                 foreach ($this->parameters as $param => $value) {
                     if ( TypeCheck::isInt($value[1]) ) {
                         $type = PDO::PARAM_INT;
+
                     } elseif ( TypeCheck::isBool($value[1]) ) {
                         $type = PDO::PARAM_BOOL;
+
                     } elseif ( TypeCheck::isNull($value[1]) ) {
                         $type = PDO::PARAM_NULL;
+
                     } else {
                         $type = PDO::PARAM_STR;
                     }
@@ -298,26 +303,53 @@ class Db
                     $this->query->bindValue($value[0], $value[1], $type);
                 }
             }
+
             // Execute SQL 
             $this->query->execute();
+
         } catch (PDOException $e) {
-            // Write into log and display Exception
-            echo $this->log($e->getMessage(), $query);
+            // Write into log and display exception
+            echo $this->log($e->getMessage(), $sql);
             die();
         }
+
         // Reset bind parameters
         $this->parameters = [];
     }
 
     /** 
-     * Writes the log and returns the exception.
+     * Get query statement type.
      *
-     * @access private
+     * @access protected
+     * @param string $sql
+     * @return mixed
+     */
+    protected function getStatementType(string $sql = '')
+    {
+        $sql = Stringify::replaceRegex("/\s+|\t+|\n+/", ' ', $sql);
+        $raw = explode(' ', $sql);
+        $header = $raw[0] ?? '';
+        $st = strtolower($header);
+
+        if ( $st == 'select' || $st == 'show' ) {
+            return 'read';
+
+        } elseif ( $st == 'insert' || $st == 'update' || $st == 'delete' ) {
+            return 'write';
+        }
+
+        return false;
+    }
+
+    /** 
+     * Log error.
+     *
+     * @access protected
      * @param string $message
      * @param string $sql
      * @return string
      */
-    private function log($message = '', $sql = '')
+    protected function log(?string $message = null, string $sql = null)
     {
         if ( empty($message) ) {
             $message = 'Unhandled Exception';

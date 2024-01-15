@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -21,31 +20,36 @@ use FloatPHP\Classes\Filesystem\Json;
 final class Response extends Status
 {
 	/**
-	 * @param string $message
-	 * @param array $content
+	 * Set HTTP response.
+	 * 
+	 * @param string $msg
+	 * @param mixed $content
 	 * @param string $status
 	 * @param int $code
-	 * @return string
+	 * @return void
 	 */
-	public static function set($message = '', $content = [], $status = 'success', $code = 200)
+	public static function set(string $msg = '', $content = [], string $status = 'success', int $code = 200)
 	{
 		self::setHttpHeaders($code);
 		echo Json::encode([
 			'status'  => $status,
 			'code'    => $code,
-			'message' => $message,
+			'message' => $msg,
 			'content' => $content
 		]);
 		die();
 	}
 
 	/**
+	 * Set HTTP response header.
+	 * 
 	 * @access public 
 	 * @param int $code
 	 * @param string $type
 	 * @return void
+	 * @todo Content-Type: application/json; charset=utf-8
 	 */
-	public static function setHttpHeaders($code, $type = 'application/json')
+	public static function setHttpHeaders(int $code, string $type = 'application/json')
 	{
 		$status = self::getMessage($code);
 		$protocol = Server::get('server-protocol');

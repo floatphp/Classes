@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -21,29 +20,31 @@ use FloatPHP\Classes\Filesystem\Stringify;
 final class ResponseXML
 {
 	/**
+	 * Format XML string.
+	 * 
 	 * @access public 
 	 * @param string $xml
 	 * @return string
 	 */
-	public static function format($xml)
+	public static function format(string $xml) : string
 	{
-		$xml = Stringify::replace('<?xml version="1.0" encoding="utf-8" ?>', '', (string)$xml);
-		$xml = Stringify::replace('</xml>', '', $xml);
+		$xml = Stringify::remove('<?xml version="1.0" encoding="utf-8" ?>', $xml);
+		$xml = Stringify::remove('</xml>', $xml);
 		return $xml;
 	}
 	
 	/**
 	 * Parse XML string.
 	 * 
-	 * LIBXML_NOCDATA: 16384
-	 * LIBXML_VERSION: 20908
+	 * [NOCDATA: 16384]
+	 * [VERSION: 20908]
 	 * 
 	 * @access public 
 	 * @param string $xml
 	 * @param int $args
 	 * @return mixed
 	 */
-	public static function parse($xml, $args = 16384|20908)
+	public static function parse(string $xml, int $args = 16384|20908)
 	{
 		return @simplexml_load_string($xml, 'SimpleXMLElement', $args);
 	}
@@ -52,24 +53,24 @@ final class ResponseXML
 	 * Parse XML file.
 	 * 
 	 * @access public 
-	 * @param string $xml
+	 * @param string $path
 	 * @param int $args
 	 * @return mixed
 	 */
-	public static function parseFile($xml, $args = 16384|20908)
+	public static function parseFile(string $path, int $args = 16384|20908)
 	{
-		return @simplexml_load_file($xml, 'SimpleXMLElement', $args);
+		return @simplexml_load_file($path, 'SimpleXMLElement', $args);
 	}
 
 	/**
 	 * Ignore XML errors.
 	 * 
 	 * @access public 
-	 * @param bool $user, User errors
+	 * @param bool $handling, User errors
 	 * @return mixed
 	 */
-	public static function ignoreErrors($user = true)
+	public static function ignoreErrors(bool $handling = true)
 	{
-		return libxml_use_internal_errors($user);
+		return libxml_use_internal_errors($handling);
 	}
 }

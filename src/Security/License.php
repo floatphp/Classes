@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Security Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -24,6 +23,9 @@ use FloatPHP\Classes\{
     Filesystem\Arrayify
 };
 
+/**
+ * Built-in licensing class.
+ */
 class License
 {
     /**
@@ -112,7 +114,6 @@ class License
      * Get license data.
      *
      * @access public
-     * @param void
      * @return array
      */
     public function getData() : array
@@ -124,7 +125,6 @@ class License
      * Get license error.
      *
      * @access public
-     * @param void
      * @return string
      */
     public function getError() : string
@@ -276,13 +276,12 @@ class License
      * Set server data.
      *
      * @access protected
-     * @param void
      * @return void
      */
     protected function setServerData()
     {
         $this->server = [
-            'ip'   => Server::getIP(),
+            'ip'   => Server::getIp(),
             'host' => Server::isSetted('http-host') ? Server::get('http-host') : ''
         ];
     }
@@ -291,7 +290,6 @@ class License
      * Server validation status.
      *
      * @access protected
-     * @param void
      * @return bool
      */
     protected function useServer() : bool
@@ -303,7 +301,6 @@ class License
      * Time validation status.
      *
      * @access protected
-     * @param void
      * @return bool
      */
     protected function useTime() : bool
@@ -315,7 +312,6 @@ class License
      * Localhost validation status.
      *
      * @access protected
-     * @param void
      * @return bool
      */
     protected function allowLocalhost() : bool
@@ -327,7 +323,6 @@ class License
      * Get default license key.
      *
      * @access protected
-     * @param void
      * @return string
      */
     protected function getDefaultKey() : string
@@ -342,7 +337,6 @@ class License
      * Get default license Id.
      *
      * @access protected
-     * @param void
      * @return string
      */
     protected function getDefaultId() : string
@@ -354,7 +348,6 @@ class License
      * Get default license strings.
      *
      * @access protected
-     * @param void
      * @return array
      */
     protected function getDefaultStrings() : array
@@ -370,7 +363,6 @@ class License
      * Get default license settings.
      *
      * @access protected
-     * @param void
      * @return array
      */
     protected function getDefaultSettings() : array
@@ -389,7 +381,6 @@ class License
      * Get default license data args.
      *
      * @access protected
-     * @param void
      * @return array
      */
     protected function getDefaultArgs() : array
@@ -531,7 +522,7 @@ class License
      */
     private function isLocalhost(array $data = []) : bool
     {
-        $local = ['127.0.0.1','::1'];
+        $local = ['127.0.0.1', '::1'];
 		if ( isset($data['server']['ip']) ) {
 			if ( Stringify::contains($local, $data['server']['ip']) ) {
 				return true;

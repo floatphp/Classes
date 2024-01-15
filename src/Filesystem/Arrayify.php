@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -20,22 +19,26 @@ final class Arrayify
 {
 	/**
 	 * @access private
-	 * @var array|string $orderby
+	 * @var mixed $orderby
 	 */
 	private static $orderby;
 
 	/**
+	 * Check array item.
+	 * 
 	 * @access public
-	 * @param mixed $needle
-	 * @param array $haystack
+	 * @param mixed $item
+	 * @param array $array
 	 * @return bool
 	 */
-	public static function inArray($needle, array $haystack) : bool
+	public static function inArray($item, array $array) : bool
 	{
-		return in_array($needle, $haystack, true);
+		return in_array($item, $array, true);
 	}
 
 	/**
+	 * Merge arrays.
+	 * 
 	 * @access public
 	 * @param array $arrays
 	 * @return array
@@ -46,6 +49,8 @@ final class Arrayify
 	}
 
 	/**
+	 * Push array.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @param mixed $values
@@ -57,6 +62,8 @@ final class Arrayify
 	}
 
 	/**
+	 * Combine array.
+	 * 
 	 * @access public
 	 * @param array $keys
 	 * @param array $values
@@ -68,6 +75,8 @@ final class Arrayify
 	}
 
 	/**
+	 * Map array.
+	 * 
 	 * @access public
 	 * @param callable $callback
 	 * @param array $array
@@ -80,6 +89,8 @@ final class Arrayify
 	}
 
 	/**
+	 * Shift array.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @return mixed
@@ -90,6 +101,8 @@ final class Arrayify
 	}
 	
 	/**
+	 * Pop array.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @return mixed
@@ -100,6 +113,8 @@ final class Arrayify
 	}
 
 	/**
+	 * Get array diff.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @param array $arrays
@@ -111,8 +126,10 @@ final class Arrayify
 	}
 
 	/**
+	 * Check array key.
+	 * 
 	 * @access public
-	 * @param string|int $key
+	 * @param mixed $key
 	 * @param array $array
 	 * @return bool
 	 */
@@ -122,6 +139,8 @@ final class Arrayify
 	}
 
 	/**
+	 * Get array keys.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @return array
@@ -130,8 +149,10 @@ final class Arrayify
 	{
 		return array_keys($array);
 	}
-
+	
 	/**
+	 * Get array values.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @return array
@@ -142,17 +163,21 @@ final class Arrayify
 	}
 
 	/**
+	 * Randomize array.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @param int $num
 	 * @return mixed
 	 */
-	public static function rand(array $array, $num = 1)
+	public static function rand(array $array, int $num = 1)
 	{
 		return array_rand($array, $num);
 	}
 
 	/**
+	 * Slice array.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @param int $offset
@@ -160,19 +185,21 @@ final class Arrayify
 	 * @param bool $preserve
 	 * @return array
 	 */
-	public static function slice(array $array, $offset, $length = null, $preserve = false) : array
+	public static function slice(array $array, int $offset, ?int $length = null, bool $preserve = false) : array
 	{
 		return array_slice($array, $offset, $length, $preserve);
 	}
 
 	/**
+	 * Filter array.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @param callable $callback
 	 * @param int $mode
 	 * @return array
 	 */
-	public static function filter(array $array, $callback = null, $mode = 0) : array
+	public static function filter(array $array, $callback = null, int $mode = 0) : array
 	{
 		if ( !TypeCheck::isNull($callback) ) {
 			return array_filter($array, $callback, $mode);
@@ -181,40 +208,48 @@ final class Arrayify
 	}
 
 	/**
+	 * Format array key case.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @param int $case
 	 * @return array
 	 */
-	public static function formatKeyCase($array, $case = CASE_LOWER) : array
+	public static function formatKeyCase(array $array, int $case = CASE_LOWER) : array
 	{
-		return array_change_key_case((array)$array, $case);
+		return array_change_key_case($array, $case);
 	}
 
 	/**
+	 * Walk recursive array.
+	 * 
 	 * @access public
-	 * @param array|object &$array
+	 * @param array|object $array
 	 * @param callable $callback
 	 * @param mixed $arg
 	 * @return bool
 	 */
-	public static function walkRecursive(&$array, $callback, $arg = null) : bool
+	public static function recursive(&$array, $callback, $arg = null) : bool
 	{
 		return array_walk_recursive($array, $callback, $arg);
 	}
 
 	/**
+	 * Unique array.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @param int $flags
 	 * @return array
 	 */
-	public static function unique(array $array, $flags = SORT_STRING) : array
+	public static function unique(array $array, int $flags = SORT_STRING) : array
 	{
 		return array_unique($array, $flags);
 	}
 
 	/**
+	 * Unique arrays.
+	 * 
 	 * @access public
 	 * @param array $array
 	 * @return array
@@ -225,26 +260,10 @@ final class Arrayify
 			self::map('serialize', $array)
 		));
 	}
-
-	/**
-	 * @access public
-	 * @param array $array
-	 * @param string $key
-	 * @return array
-	 */
-	public static function uniqueMultipleByKey(array $array, $key = '') : array
-	{
-		$temp = [];
-		foreach ($array as &$val) {
-			if ( !isset($temp[$val[$key]]) ) {
-				$temp[$val[$key]] =& $val;
-			}
-		}
-       	$array = self::values($temp);
-       	return $array;
-	}
 	
     /**
+     * Sort array.
+     *
      * @access public
      * @param array $array
      * @param mixed $orderby
@@ -270,6 +289,7 @@ final class Arrayify
 
 		if ( $preserve ) {
 			uasort($array, ['\FloatPHP\Classes\Filesystem\Arrayify', 'sortCallback']);
+			
 		} else {
 			usort($array, ['\FloatPHP\Classes\Filesystem\Arrayify', 'sortCallback']);
 		}
@@ -278,6 +298,8 @@ final class Arrayify
     }
 
     /**
+	 * Sort array callback.
+	 * 
      * @access public
      * @param mixed $a
      * @param mixed $b
@@ -302,9 +324,9 @@ final class Arrayify
 				continue;
 			}
 
-			$results = ('DESC' === $direction) ? [1,-1] : [-1,1];
+			$results = ('DESC' === $direction) ? [1, -1] : [-1, 1];
 
-			if ( TypeCheck::isInt($a[$field],true) && TypeCheck::isInt($b[$field],true) ) {
+			if ( TypeCheck::isNumeric($a[$field]) && TypeCheck::isNumeric($b[$field]) ) {
 				return ($a[$field] < $b[$field]) ? $results[0] : $results[1];
 			}
 

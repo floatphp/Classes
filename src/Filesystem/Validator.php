@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -22,24 +21,41 @@ class Validator
      * Validate email.
      *
 	 * @access public
-	 * @param string $email
+	 * @param mixed $email
 	 * @return bool
 	 */
 	public static function isValidEmail($email) : bool
 	{
-		return (bool)Stringify::filter((string)$email, null, FILTER_VALIDATE_EMAIL);
+		return (bool)Stringify::filter($email, null, FILTER_VALIDATE_EMAIL);
 	}
 
     /**
      * Validate URL.
      *
      * @access public
-     * @param string $url
+     * @param mixed $url
      * @return bool
      */
     public static function isValidUrl($url) : bool
     {
-    	return (bool)Stringify::filter((string)$url, null, FILTER_VALIDATE_URL);
+    	return (bool)Stringify::filter($url, null, FILTER_VALIDATE_URL);
+    }
+
+    /**
+     * Validate date.
+     *
+     * @access public
+     * @param mixed $date
+     * @param bool $time
+     * @return bool
+     */
+    public static function isValidDate($date, bool $time = false) : bool
+    {
+		$pattern = '/^(\d{4})[-,\/](\d{2})[-,\/](\d{2})$/';
+		if ( $time ) {
+			$pattern = '/(\d{2,4})[-,\/](\d{2})[-,\/](\d{2,4})[ ,T](\d{2})/i';
+		}
+		return (bool)Stringify::match($pattern, $date);
     }
 
     /**
@@ -49,35 +65,13 @@ class Validator
 	 * @param string $ip
 	 * @return mixed
 	 */
-	public static function isValidIP($ip)
+	public static function isValidIp(string $ip)
 	{
 	    $pattern = '/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/';
-	    if ( Stringify::match($pattern,$ip) || self::isIPv6($ip) ) {
+	    if ( Stringify::match($pattern, $ip) || self::isIpV6($ip) ) {
 	        return $ip;
 	    }
 	    return false;
-	}
-
-    /**
-     * Validate mime type.
-     *
-	 * @access public
-	 * @param string $filename
-	 * @param array $mimes
-	 * @return bool
-	 */
-	public static function isValidMime($filename, $mimes = []) : bool
-	{
-		if ( TypeCheck::isArray($mimes) && !empty($mimes) ) {
-			foreach ( $mimes as $key => $value ) {
-				$search = '!\.(' . $key . ')$!i';
-				if ( Stringify::match($search, $filename, 1) ) {
-					return true;
-					break;
-				}
-			}
-		}
-		return false;
 	}
 
     /**
@@ -87,7 +81,7 @@ class Validator
      * @param string $address
      * @return bool
      */
-    public static function isValidMAC($address) : bool
+    public static function isValidMac($address) : bool
     {
         return (bool)Stringify::match(
         	"/^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$/i",
@@ -102,10 +96,10 @@ class Validator
 	 * @param string $ip
 	 * @return bool
 	 */
-	public static function isIPv6($ip) : bool
+	public static function isIpV6($ip) : bool
 	{
-	    $ip = self::uncompressIPv6($ip);
-	    list($ipv6, $ipv4) = self::splitIPv6($ip);
+	    $ip = self::uncompressIpV6($ip);
+	    list($ipv6, $ipv4) = self::splitIpV6($ip);
 	    $ipv6 = explode(':',$ipv6);
 	    $ipv4 = explode('.',$ipv4);
 	    if ( count($ipv6) === 8 && count($ipv4) === 1 || count($ipv6) === 6 && count($ipv4) === 4 ) {
@@ -142,10 +136,9 @@ class Validator
 	 * Uncompresses IPv6 address.
 	 *
 	 * @access private
-	 * @param void
 	 * @return string
 	 */
-	private static function uncompressIPv6($ip) : string
+	private static function uncompressIpV6($ip) : string
 	{
 	    if ( substr_count($ip, '::') !== 1 ) {
 	        return $ip;
@@ -182,7 +175,7 @@ class Validator
 	 * @param string $ip
 	 * @return array
 	 */
-	private static function splitIPv6($ip) : array
+	private static function splitIpV6($ip) : array
 	{
 	    if ( strpos($ip, '.') !== false ) {
 	        $pos = (int)strrpos($ip, ':');

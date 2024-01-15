@@ -2,7 +2,9 @@
 
 <img src="https://www.floatphp.com/assets/img/floatphp.png" width="100" alt="Micro PHP framework">
 
-FloatPHP **Classes Components**.
+FloatPHP **Classes Components** Without 3th-parties.
+This components tweaks build-in (Native) PHP functions to customize its behavior.
+In the majority of cases, the most used build-in function with underscore are redefined.
 
 ## ⚡ Installing:
 

@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -19,6 +18,8 @@ namespace FloatPHP\Classes\Filesystem;
 final class TypeCheck
 {
 	/**
+	 * Check string.
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -29,6 +30,8 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check object.
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @param string $class
@@ -44,6 +47,8 @@ final class TypeCheck
 	}
 	
 	/**
+	 * Check array.
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -54,6 +59,8 @@ final class TypeCheck
 	}
 	
 	/**
+	 * Check iterator.
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -64,20 +71,32 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check int.
+	 * 
 	 * @access public
 	 * @param mixed $value
-	 * @param bool $string
 	 * @return bool
 	 */
-	public static function isInt($value, bool $string = false) : bool
+	public static function isInt($value) : bool
 	{
-		if ( $string ) {
-			return is_numeric($value);
-		}
 		return is_int($value);
 	}
 
 	/**
+	 * Check numeric (string cast).
+	 * 
+	 * @access public
+	 * @param mixed $value
+	 * @return bool
+	 */
+	public static function isNumeric($value) : bool
+	{
+		return is_numeric($value);
+	}
+
+	/**
+	 * Check float.
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @param bool $string
@@ -92,6 +111,8 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check bool.
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -102,6 +123,8 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check null.
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -112,6 +135,50 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check false.
+	 * 
+	 * @access public
+	 * @param mixed $value
+	 * @return bool
+	 */
+	public static function isFalse($value) : bool
+	{
+		return ($value === false);
+	}
+
+	/**
+	 * Check true.
+	 * 
+	 * @access public
+	 * @param mixed $value
+	 * @return bool
+	 */
+	public static function isTrue($value) : bool
+	{
+		return ($value === true);
+	}
+
+	/**
+	 * Check empty (string or array).
+	 * 
+	 * @access public
+	 * @param mixed $value
+	 * @return bool
+	 */
+	public static function isEmpty($value) : bool
+	{
+		if ( self::isString($value) ) {
+			return (trim($value) === '');
+		}
+		if ( self::isArray($value) ) {
+			return empty($value);
+		}
+		return false;
+	}
+
+	/**
+	 * Check NAN (Not a number).
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -122,6 +189,8 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check callable.
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -132,6 +201,8 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check function.
+	 * 
 	 * @access public
 	 * @param string $function
 	 * @return bool
@@ -142,16 +213,21 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check class.
+	 * 
 	 * @access public
 	 * @param string $class
+	 * @param bool $autoload
 	 * @return bool
 	 */
-	public static function isClass(string $class) : bool
+	public static function isClass(string $class, bool $autoload = true) : bool
 	{
-		return class_exists($class);
+		return class_exists($class, $autoload);
 	}
 
 	/**
+	 * Check sub class.
+	 * 
 	 * @access public
 	 * @param string $sub
 	 * @param string $class
@@ -163,13 +239,15 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check interface.
+	 * 
 	 * @access public
 	 * @param mixed $class
 	 * @param string $interface
 	 * @param bool $short
 	 * @return bool
 	 */
-	public static function hasInterface($class, string $interface, $short = true) : bool
+	public static function hasInterface($class, string $interface, bool $short = true) : bool
 	{
 		$implements = class_implements($class);
 		if ( $short ) {
@@ -181,6 +259,8 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check method.
+	 * 
 	 * @access public
 	 * @param object $object
 	 * @param string $method
@@ -192,6 +272,8 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check countable.
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -202,6 +284,8 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check ressource.
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -212,6 +296,8 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check scalar.
+	 * 
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -222,6 +308,8 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check stream.
+	 * 
 	 * @access public
 	 * @param string $path
 	 * @return bool

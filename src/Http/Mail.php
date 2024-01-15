@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -46,7 +45,7 @@ class Mail
     protected $uid;
 
     /**
-     * @param void
+     * Set UID.
      */
     public function __construct()
     {
@@ -57,7 +56,6 @@ class Mail
      * Get instance.
      *
      * @access public
-     * @param void
      * @return object
      */
     public static function instance()
@@ -83,7 +81,6 @@ class Mail
      * Get To.
      *
      * @access public
-     * @param void
      * @return array
      */
     public function getTo() : array
@@ -146,7 +143,6 @@ class Mail
      * Set Html.
      *
      * @access public
-     * @param void
      * @return object
      */
     public function setHtml() : object
@@ -175,7 +171,6 @@ class Mail
      * Get subject.
      *
      * @access public
-     * @param void
      * @return string
      */
     public function getSubject() : string
@@ -200,7 +195,6 @@ class Mail
      * Get message.
      *
      * @access public
-     * @param void
      * @return string
      */
     public function getMessage() : string
@@ -308,7 +302,6 @@ class Mail
      * Get headers.
      *
      * @access public
-     * @param void
      * @return array
      */
     public function getHeaders() : array
@@ -333,7 +326,6 @@ class Mail
      * Get additional parameters.
      *
      * @access public
-     * @param void
      * @return string
      */
     public function getParameters() : string
@@ -362,7 +354,6 @@ class Mail
      * Get wrap.
      *
      * @access public
-     * @param void
      * @return int
      */
     public function getWrap() : int
@@ -374,7 +365,6 @@ class Mail
      * Send mail.
      *
      * @access public
-     * @param void
      * @return bool
      * @throws RuntimeException
      */
@@ -400,7 +390,6 @@ class Mail
      * Check attachments.
      *
      * @access protected
-     * @param void
      * @return bool
      */
     protected function hasAttachments() : bool
@@ -412,7 +401,6 @@ class Mail
      * Assemble attachment headers.
      *
      * @access protected
-     * @param void
      * @return string
      */
     protected function assembleAttachmentHeaders() : string
@@ -427,7 +415,6 @@ class Mail
      * Assemble attachment body.
      *
      * @access protected
-     * @param void
      * @return string
      */
     protected function assembleAttachmentBody() : string
@@ -591,7 +578,6 @@ class Mail
      * Get headers for send.
      *
      * @access protected
-     * @param void
      * @return string
      */
     protected function getHeadersForSend() : string
@@ -606,7 +592,6 @@ class Mail
      * Get mail for send.
      *
      * @access protected
-     * @param void
      * @return string
      */
     protected function getMailForSend() : string
@@ -621,7 +606,6 @@ class Mail
      * Get wrap message.
      *
      * @access protected
-     * @param void
      * @return string
      */
     protected function getWrapMessage() : string

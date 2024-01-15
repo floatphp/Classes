@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Html Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -19,50 +18,51 @@ namespace FloatPHP\Classes\Html;
 use FloatPHP\Classes\Filesystem\{
 	TypeCheck, Stringify, Arrayify
 };
-use FloatPHP\Classes\Http\{
-	Request, Server
-};
+use FloatPHP\Classes\Http\Request;
 
 /**
- * Form builder.
+ * Built-in Form generator class.
  */
 class Form
 {
 	/**
-	 * @access private
-	 * @var array $attributes
-	 * @var array $options
-	 * @var string $output
-	 * @var string $token
-	 * @var array $inputs
-	 * @var array $html
-	 * @var bool $hasSubmit
+	 * @access protected
+	 * @var array $atts Form attributes
+	 * @var array $options Form options
+	 * @var array $inputs Form inputs
+	 * @var array $values Form values
+	 * @var array $default Form default values
+	 * @var array $vars Form vars
+	 * @var array $html Form HTML wrapper
+	 * @var string $output Form HTML output
+	 * @var bool $hasSubmit Form submit status
 	 */
-	private $attributes = [];
-	private $options = [];
-	private $output = '';
-	private $token = '';
-	private $inputs = [];
-	private $html = [];
-	private $hasSubmit = false;
+	protected $atts = [];
+	protected $options = [];
+	protected $inputs = [];
+	protected $values = [];
+	protected $default = [];
+	protected $vars = [];
+	protected $html = [];
+	protected $output = '';
+	protected $hasSubmit = false;
 
 	/**
+	 * Init form.
+	 * 
 	 * @param array $options
-	 * @param array $attributes
+	 * @param array $atts
 	 */
-	public function __construct($options = false, $attributes = false)
+	public function __construct(array $options = [], array $atts = [])
 	{
-		// Merge form options
 		$this->mergeOptions($options);
-		// Merge form attributes
-		$this->mergeAttributes($attributes);
+		$this->mergeAtts($atts);
 	}
 
 	/**
-	 * Get form options
+	 * Get form options.
 	 *
 	 * @access public
-	 * @param void
 	 * @return array
 	 */
 	public function getOptions() : array
@@ -71,22 +71,20 @@ class Form
 	}
 
 	/**
-	 * Get form attributes
+	 * Get form attributes.
 	 *
 	 * @access public
-	 * @param void
 	 * @return array
 	 */
-	public function getAttributes() : array
+	public function getAtts() : array
 	{
-		return $this->attributes;
+		return $this->atts;
 	}
 
 	/**
-	 * Get form inputs
+	 * Get form inputs.
 	 *
 	 * @access public
-	 * @param void
 	 * @return array
 	 */
 	public function getInputs() : array
@@ -95,67 +93,66 @@ class Form
 	}
 
 	/**
-	 * Set form token
-	 *
-	 * @access public
-	 * @param string $token
-	 * @return void
-	 */
-	public function setToken($token = '')
-	{
-		$this->token = $token;
-	}
-
-	/**
-	 * Set form inputs values
-	 *
-	 * @access public
-	 * @param array $values
-	 * @return void
-	 */
-	public function setValues($values = [])
-	{
-		if ( !empty($values) ) {
-			// Override inputs values
-			foreach ($this->inputs as $key => $value) {
-				if ( isset($values[$value['name']]) ) {
-					if ( $value['type'] == 'select' ) {
-						$this->inputs[$key]['selected'] = $values[$value['name']];
-
-					} elseif ( $value['type'] == 'checkbox' || $value['type'] == 'radio' ) {
-						if ( count($value['options']) == 1 && $values[$value['name']] == 1 ) {
-							$this->inputs[$key]['checked'] = true;
-						}
-
-					} else {
-						$this->inputs[$key]['value'] = $values[$value['name']];
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Set form inputs
+	 * Set form inputs.
 	 *
 	 * @access public
 	 * @param array $inputs
-	 * @return void
+	 * @return object
 	 */
-	public function setInputs($inputs = [])
+	public function setInputs(array $inputs = []) : self
 	{
 		$this->inputs = $inputs;
+		return $this;
 	}
 
 	/**
-	 * Validate and set form attribute
+	 * Set form inputs values.
+	 *
+	 * @access public
+	 * @param array $values
+	 * @return object
+	 */
+	public function setValues(array $values = []) : self
+	{
+		$this->values = $values;
+		return $this;
+	}
+
+	/**
+	 * Set form inputs default values.
+	 *
+	 * @access public
+	 * @param array $default
+	 * @return object
+	 */
+	public function setDefault(array $default = []) : self
+	{
+		$this->default = $default;
+		return $this;
+	}
+
+	/**
+	 * Set form dynamic vars.
+	 *
+	 * @access public
+	 * @param array $vars
+	 * @return object
+	 */
+	public function setVars(array $vars = []) : self
+	{
+		$this->vars = $vars;
+		return $this;
+	}
+
+	/**
+	 * Set and validate form attribute.
 	 *
 	 * @access public
 	 * @param string $key
-	 * @param string $value
+	 * @param mixed $value
 	 * @return bool
 	 */
-	public function setAttribute($key, $value) : bool
+	public function setAttribute(string $key, $value) : bool
 	{
 		switch ($key) {
 
@@ -169,36 +166,36 @@ class Form
 				break;
 
 			case 'method':
-				$var = ['post','get'];
-				if ( !TypeCheck::isString($value) || !Stringify::contains($var,$value) ) {
+				$var = ['post', 'get'];
+				if ( !TypeCheck::isString($value) || !Stringify::contains($var, $value) ) {
 					$value = '';
 				}
 				break;
 
 			case 'autocomplete':
-				$var = ['on','off'];
-				if ( !TypeCheck::isString($value) || !Stringify::contains($var,$value) ) {
+				$var = ['on', 'off'];
+				if ( !TypeCheck::isString($value) || !Stringify::contains($var, $value) ) {
 					$value = '';
 				}
 				break;
 
 			case 'enctype':
-				$var = ['application/x-www-form-urlencoded','multipart/form-data','text/plain'];
-				if ( !TypeCheck::isString($value) || !Stringify::contains($var,$value) ) {
+				$var = ['application/x-www-form-urlencoded', 'multipart/form-data', 'text/plain'];
+				if ( !TypeCheck::isString($value) || !Stringify::contains($var, $value) ) {
 					$value = '';
 				}
 				break;
 
 			case 'target':
-				$var = ['_blank','_self','_parent','_top'];
-				if ( !TypeCheck::isString($value) || !Stringify::contains($var,$value) ) {
+				$var = ['_blank', '_self', '_parent', '_top'];
+				if ( !TypeCheck::isString($value) || !Stringify::contains($var, $value) ) {
 					$value = '';
 				}
 				break;
 
 			case 'rel':
-				$var = ['external','help','license','next','nofollow','noopener','noreferrer','opener','prev','search'];
-				if ( !TypeCheck::isString($value) || !Stringify::contains($var,$value) ) {
+				$var = ['external', 'help', 'license', 'next', 'nofollow', 'noopener', 'noreferrer', 'opener', 'prev', 'search'];
+				if ( !TypeCheck::isString($value) || !Stringify::contains($var, $value) ) {
 					$value = '';
 				}
 				break;
@@ -213,24 +210,23 @@ class Form
 				return false;
 		}
 
-		$this->attributes[$key] = $value;
+		$this->atts[$key] = $value;
 		return true;
 	}
 
 	/**
-	 * Validate and set form options
+	 * Set and validate form options.
 	 *
 	 * @access public
 	 * @param string $key
-	 * @param string $value
+	 * @param mixed $value
 	 * @return bool
 	 */
-	public function setOptions($key, $value)
+	public function setOptions(string $key, $value) : bool
 	{
 		switch ($key) {
 
 			case 'form':
-			case 'security':
 			case 'submit':
 				if ( !TypeCheck::isBool($value) ) {
 					$value = true;
@@ -260,107 +256,58 @@ class Form
 		$this->options[$key] = $value;
 		return true;
 	}
-
-	/**
-	 * Get form source (Security)
-	 *
-	 * @access public
-	 * @param void
-	 * @return string
-	 */
-	public function getSource() : string
-	{
-		$source = '';
-		if ( TypeCheck::isArray($this->attributes['class']) ) {
-			if ( count($this->attributes['class']) > 0 ) {
-				$source = Arrayify::shift($this->attributes['class']);
-			}
-		} elseif ( TypeCheck::isString($this->attributes['class']) ) {
-			if ( !empty($this->attributes['class']) ) {
-				$source = $this->attributes['class'];
-			}
-		}
-		if ( empty($source) ) {
-			if ( !empty($this->attributes['id']) ) {
-				$source = $this->attributes['id'];
-
-			} elseif ( !empty($this->attributes['name']) ) {
-				$source = $this->attributes['name'];
-
-			} else {
-				$source = Server::get('request-uri');
-				$source = Stringify::slugify($source);
-			}
-		}
-		return $source;
-	}
 	
 	/**
-	 * Add input field
+	 * Add input field.
 	 *
 	 * @access public
-	 * @param string $label
-	 * @param string $args
+	 * @param mixed $label
+	 * @param array $args
 	 * @param string $slug
 	 * @return void
 	 */
-	public function addInput($label = '', $args = [], $slug = '')
+	public function addInput($label, array $args = [], ?string $slug = null)
 	{
-		if ( empty($slug) ) {
+		if ( !$slug ) {
 			$slug = Stringify::slugify($label);
 		}
-		// Combined defaults and arguments
-		$args = $this->sanitizeInputAttributes($args);
-		$args = Arrayify::merge($this->getDefaultInputAttributes($label,$slug),$args);
+		$args = $this->sanitizeInputAtts($args);
+		$args = Arrayify::merge($this->getDefaultInputAttrs($label, $slug), $args);
 		$this->inputs[$slug] = $args;
 	}
 
 	/**
-	 * Add multiple inputs
+	 * Add multiple inputs.
 	 *
 	 * @access public
-	 * @param $inputs
-	 * @return bool
+	 * @param array $inputs
+	 * @return void
 	 */
-	public function addInputs($inputs)
+	public function addInputs(array $inputs)
 	{
-		if ( TypeCheck::isArray($inputs) ) {
-			foreach ( $inputs as $input ) {
-				$args = isset($input[1]) ? $input[1] : '';
-				$slug = isset($input[2]) ? $input[2] : '';
-				$this->addInput($input[0],$args,$slug);
-			}
-			return true;
+		foreach ( $inputs as $key => $args ) {
+			$label = $input['label'] ?? "{$key}";
+			$slug  = $input['slug']  ?? null;
+			$this->addInput($label, $args, $slug);
 		}
-		return false;
 	}
 
 	/**
-	 * Generate HTML form
+	 * Generate HTML form.
 	 *
 	 * @access public
-	 * @param bool $render
 	 * @return string
 	 */
-	public function generate($render = false)
+	public function generate() : string
 	{
+		// Apply default
+		$this->applyDefault();
+
+		// Apply values
+		$this->applyValues();
+
 		// Build form header <form>
 		$this->buildHeader();
-
-		// Set security system fields <hidden>
-		if ( $this->options['security'] ) {
-			$this->buildSystemInput('--token', [
-				'type'  => 'hidden',
-				'value' => $this->token
-			]);
-			$this->buildSystemInput('--source', [
-				'type'  => 'hidden',
-				'value' => $this->getSource(),
-			]);
-			$this->buildSystemInput('--ignore', [
-				'class' => ['d-none','hidden']
-			]);
-		}
 
 		// Build form fields <input>
 		$this->buildBody();
@@ -371,50 +318,64 @@ class Form
 		// Build form closing </form>
 		$this->buildClose();
 
-		// Output
-		if ( $render ) {
-			echo $this->output;
-		}
-		return $this->output;
+		// Apply vars
+		$this->applyVars();
+
+		// Reset
+		$output = $this->output;
+		$this->inputs = [];
+		$this->output = '';
+
+		return $output;
 	}
 
 	/**
-	 * Build form header
+	 * Render HTML form.
 	 *
-	 * @access private
-	 * @param void
+	 * @access public
 	 * @return void
 	 */
-	private function buildHeader()
+	public function render()
+	{
+		echo $this->generate();
+	}
+
+	/**
+	 * Build form header.
+	 *
+	 * @access protected
+	 * @return void
+	 */
+	protected function buildHeader()
 	{
 		if ( $this->options['form'] ) {
-			$this->output .= '<form method="' . $this->attributes['method'] . '"';
-			if ( !empty($this->attributes['id']) ) {
-				$this->output .= ' id="' . $this->attributes['id'] . '"';
+			$this->output .= '<form method="' . $this->atts['method'] . '"';
+			if ( !empty($this->atts['id']) ) {
+				$this->output .= ' id="' . $this->atts['id'] . '"';
 			}
-			if ( !empty($this->attributes['enctype']) ) {
-				$this->output .= ' enctype="' . $this->attributes['enctype'] . '"';
+			if ( !empty($this->atts['enctype']) ) {
+				$this->output .= ' enctype="' . $this->atts['enctype'] . '"';
 			}
-			if ( !empty($this->attributes['name']) ) {
-				$this->output .= ' name="' . $this->attributes['name'] . '"';
+			if ( !empty($this->atts['name']) ) {
+				$this->output .= ' name="' . $this->atts['name'] . '"';
 			}
-			if ( !empty($this->attributes['action']) ) {
-				$this->output .= ' action="' . $this->attributes['action'] . '"';
+			if ( !empty($this->atts['action']) ) {
+				$this->output .= ' action="' . $this->atts['action'] . '"';
 			}
-			if ( !empty($this->attributes['class']) ) {
-				$classes = $this->outputClasses($this->attributes['class']);
+			if ( !empty($this->atts['class']) ) {
+				$classes = $this->outputClasses($this->atts['class']);
 				$this->output .= ' class="' . $classes . '"';
 			}
-			if ( !empty($this->attributes['autocomplete']) ) {
-				$this->output .= ' autocomplete="' . $this->attributes['autocomplete'] . '"';
+			if ( !empty($this->atts['autocomplete']) ) {
+				$this->output .= ' autocomplete="' . $this->atts['autocomplete'] . '"';
 			}
-			if ( !empty($this->attributes['target']) ) {
-				$this->output .= ' target="' . $this->attributes['target'] . '"';
+			if ( !empty($this->atts['target']) ) {
+				$this->output .= ' target="' . $this->atts['target'] . '"';
 			}
-			if ( !empty($this->attributes['rel']) ) {
-				$this->output .= ' rel="' . $this->attributes['rel'] . '"';
+			if ( !empty($this->atts['rel']) ) {
+				$this->output .= ' rel="' . $this->atts['rel'] . '"';
 			}
-			if ( $this->attributes['novalidate'] ) {
+			if ( $this->atts['novalidate'] ) {
 				$this->output .= ' novalidate';
 			}
 			$this->output .= '>';
@@ -422,15 +383,15 @@ class Form
 	}
 
 	/**
-	 * Build form submit
+	 * Build form submit.
 	 *
-	 * @access private
-	 * @param void
+	 * @access protected
 	 * @return void
 	 */
-	private function buildSubmit()
+	protected function buildSubmit()
 	{
 		if ( !$this->hasSubmit && $this->options['submit'] ) {
+
 			if ( !empty($this->options['submit-before-html']) ) {
 				$this->output .= $this->options['submit-before-html'];
 			}
@@ -438,16 +399,20 @@ class Form
 				$classes = $this->outputClasses($this->options['submit-wrap-class']);
 				$this->output .= '<div class="' . $classes . '">';
 			}
+
 			// type attribute
 			$this->output .= '<input type="submit" ';
+
 			// name attribute
 			if ( !empty($this->options['submit-name']) ) {
 				$this->output .= 'name="' . $this->options['submit-name'] . '" ';
 			}
+
 			// class attribute
 			if ( !empty($this->options['submit-class']) ) {
 				$this->output .= 'class="' . $this->options['submit-class'] . '" ';
 			}
+
 			// value attribute
 			$this->output .= 'value="' . $this->options['submit-text'] . '">';
 			if ( !empty($this->options['submit-wrap-class']) ) {
@@ -460,13 +425,12 @@ class Form
 	}
 
 	/**
-	 * Build form closing
+	 * Build form closing.
 	 *
-	 * @access private
-	 * @param void
+	 * @access protected
 	 * @return void
 	 */
-	private function buildClose()
+	protected function buildClose()
 	{
 		if ( $this->options['form'] ) {
 			$this->output .= '</form>';
@@ -474,14 +438,13 @@ class Form
 	}
 
 	/**
-	 * Build form fields
-	 * {label}{opening}{element}{content}{attributes}{closing}
+	 * Build form fields :
+	 * {label}{opening}{element}{content}{attributes}{closing}.
 	 *
-	 * @access private
-	 * @param void
+	 * @access protected
 	 * @return void
 	 */
-	private function buildBody()
+	protected function buildBody()
 	{
 		foreach ( $this->inputs as $input ) {
 
@@ -505,8 +468,8 @@ class Form
 
 			// Set global value
 			if ( $input['use-request'] ) {
-				$except = ['html','title','radio','checkbox','select','submit'];
-				if ( !Stringify::contains($except,$input['type']) ) {
+				$except = ['html', 'string', 'title', 'radio', 'checkbox', 'select', 'submit'];
+				if ( !Stringify::contains($except, $input['type']) ) {
 					if ( Request::isSetted($input['name']) ) {
 						$input['value'] = Request::get($input['name']);
 					}
@@ -519,23 +482,30 @@ class Form
 			}
 
 			// Set temp html
-			if ( $input['type'] !== 'html' && $input['type'] !== 'title' ) {
+			if ( $input['type'] !== 'html' 
+			  && $input['type'] !== 'title' 
+			  && $input['type'] !== 'string' ) {
 				$this->html['before'] = $this->getInputBefore($input);
 				if ( $input['display-label'] ) {
 					$this->html['label'] = $this->getInputLabel($input);
 				}
-				$this->html['opening'] = $this->getInputOpening($input['type']);
-				$this->html['element'] = $this->getInputElement($input['type']);
-				$this->html['attributes'] = $this->getInputAttributes($input);
-				$this->html['content'] = $this->getInputContent($input);
-				$this->html['closing'] = $this->getInputClosing($input['type']);
+				$this->html['opening']     = $this->getInputOpening($input['type']);
+				$this->html['element']     = $this->getInputElement($input['type']);
+				$this->html['attributes']  = $this->getInputAtts($input);
+				$this->html['content']     = $this->getInputContent($input);
+				$this->html['closing']     = $this->getInputClosing($input['type']);
 				$this->html['description'] = $this->getInputDescription($input);
-				$this->html['after'] = $this->getInputAfter($input);
+				$this->html['after']       = $this->getInputAfter($input);
 			}
 
 			// Set custom html
 			if ( $input['type'] == 'html' ) {
 				$this->output .= $input['html'];
+			}
+
+			// Set custom string
+			if ( $input['type'] == 'string' ) {
+				$this->output .= $input['string'];
 			}
 
 			// Set custom title
@@ -563,49 +533,18 @@ class Form
 	}
 
 	/**
-	 * Add system input field to form
+	 * Extract classes.
 	 *
-	 * @access private
-	 * @param string $slug
-	 * @param string $args
-	 * @return void
-	 */
-	private function buildSystemInput($slug, $args = [])
-	{
-		$default = [
-			'type'   => 'text',
-			'name'   => $slug,
-			'class'  => '',
-			'value'  => ''
-		];
-		$args = Arrayify::merge($default,$args);
-		if ( empty($args['value']) && Request::isSetted($args['name']) ) {
-			$args['value'] = Request::get($args['name']);
-		}
-		$classes = $this->outputClasses($args['class']);
-		$this->output .= '<input type="' . $args['type'] . '" ';
-		$this->output .= 'name="' . $args['name'] . '" ';
-		if ( !empty($classes) ) {
-			$this->output .= 'class="' . $classes . '" ';
-		}
-		if ( !empty($args['value']) ) {
-			$this->output .= 'value="' . $args['value'] . '"';
-		}
-		$this->output .= '>';
-	}
-
-	/**
-	 * Extract classes
-	 *
-	 * @access private
-	 * @param array|string $classes
+	 * @access protected
+	 * @param mixed $classes
 	 * @return string
 	 */
-	private function outputClasses($classes = '') : string
+	protected function outputClasses($classes = '') : string
 	{
 		$class = '';
 		if ( TypeCheck::isArray($classes) && count($classes) > 0 ) {
 			$class = implode(' ', $classes);
+
 		} elseif ( TypeCheck::isString($classes) ) {
 			$class .= $classes;
 		}
@@ -613,19 +552,19 @@ class Form
 	}
 
 	/**
-	 * Get default field attributes
+	 * Get default field attributes.
 	 *
-	 * @access private
-	 * @param string $label
+	 * @access protected
+	 * @param mixed $label
 	 * @param string $slug
 	 * @return array
 	 */
-	private function getDefaultInputAttributes($label = '', $slug = '')
+	protected function getDefaultInputAttrs($label, ?string $slug = null)
 	{
 		return [
 			'type'          => 'text',
-			'name'          => $slug,
-			'label'         => $label,
+			'name'          => (string)$slug,
+			'label'         => (string)$label,
 			'id'            => '',
 			'class'         => 'form-control',
 			'value'         => '',
@@ -651,50 +590,50 @@ class Form
 			'before-html'   => '',
 			'after-html'    => '',
 			'html'          => '',
+			'string'        => '',
 			'title'         => '',
 			'title-tag'     => 'h3'
 		];
 	}
 
 	/**
-	 * Sanitize field attributes
+	 * Sanitize field attributes.
 	 *
-	 * @access private
-	 * @param array $attributes
+	 * @access protected
+	 * @param array $atts
 	 * @return array
 	 */
-	private function sanitizeInputAttributes($attributes)
+	protected function sanitizeInputAtts(array $atts)
 	{
-		foreach ($attributes as $key => $value) {
+		foreach ($atts as $key => $value) {
 			if ( !empty($value) ) {
 				switch ($key) {
 					case 'wrap-tag':
 					case 'title-tag':
-						$attributes[$key] = Stringify::replace(['<','>'],'',$value);
+						$atts[$key] = Stringify::replace(['<', '>'], '', $value);
 						break;
 					case 'options':
 						if ( TypeCheck::isString($value) ) {
-							$attributes[$key] = [$value];
+							$atts[$key] = [$value];
 						}
 						break;
 					case 'label':
 					case 'title':
-						$attributes[$key] = Stringify::stripTag($value);
+						$atts[$key] = Stringify::stripTag($value);
 						break;
 				}
 			}
 		}
-		return $attributes;
+		return $atts;
 	}
 
 	/**
-	 * Get form default attribures
+	 * Get form default attribures.
 	 *
-	 * @access private
-	 * @param void
+	 * @access protected
 	 * @return array
 	 */
-	private function getDefaultAttribures()
+	protected function getDefaultAtts()
 	{
 		return [
 			'id'           => '',
@@ -711,17 +650,15 @@ class Form
 	}
 
 	/**
-	 * Get default form options
+	 * Get default form options.
 	 *
-	 * @access private
-	 * @param void
+	 * @access protected
 	 * @return array
 	 */
-	private function getDefaultOptions()
+	protected function getDefaultOptions()
 	{
 		return [
 			'form'               => true,
-			'security'           => true,
 			'submit'             => true,
 			'submit-name'        => 'submit',
 			'submit-text'        => 'Submit',
@@ -733,62 +670,55 @@ class Form
 	}
 
 	/**
-	 * Merge form options
+	 * Merge form options.
 	 *
-	 * @access private
+	 * @access protected
 	 * @param array $options
 	 * @return void
 	 */
-	private function mergeOptions($options = false)
+	protected function mergeOptions(array $options = [])
 	{
-		if ( $options ) {
-			$tmp = Arrayify::merge($this->getDefaultOptions(),$options);
-		} else {
-			$tmp = $this->getDefaultOptions();
-		}
-		foreach ( $tmp as $key => $value ) {
-			if ( !$this->setOptions($key,$value) ) {
+		$options = Arrayify::merge($this->getDefaultOptions(), $options);
+		foreach ( $options as $key => $value ) {
+			if ( !$this->setOptions($key, $value) ) {
 				if ( isset($this->getDefaultOptions()[$key]) ) {
-					$this->setOptions($key,$this->getDefaultOptions()[$key]);
+					$this->setOptions($key, $this->getDefaultOptions()[$key]);
 				}
 			}
 		}
 	}
 
 	/**
-	 * Merge form attributes
+	 * Merge form attributes.
 	 *
-	 * @access private
-	 * @param array $attributes
+	 * @access protected
+	 * @param array $atts
 	 * @return void
 	 */
-	private function mergeAttributes($attributes = false)
+	protected function mergeAtts(array $atts = [])
 	{
-		if ( $attributes ) {
-			$tmp = Arrayify::merge($this->getDefaultAttribures(),$attributes);
-		} else {
-			$tmp = $this->getDefaultAttribures();
-		}
-		foreach ( $tmp as $key => $value ) {
-			if ( !$this->setAttribute($key,$value) ) {
-				if ( isset($this->getDefaultAttribures()[$key]) ) {
-					$this->setAttribute($key,$this->getDefaultAttribures()[$key]);
+		$atts = Arrayify::merge($this->getDefaultAtts(), $atts);
+		foreach ( $atts as $key => $value ) {
+			if ( !$this->setAttribute($key, $value) ) {
+				if ( isset($this->getDefaultAtts()[$key]) ) {
+					$this->setAttribute($key, $this->getDefaultAtts()[$key]);
 				}
 			}
 		}
 	}
 
 	/**
-	 * Validate type attribute
+	 * Validate type attribute.
 	 *
-	 * @access private
+	 * @access protected
 	 * @param string $type
 	 * @return bool
 	 */
-	private function isValidType($type = '') : bool
+	protected function isValidType(string $type) : bool
 	{
 		$types = [
 			'html',
+			'string',
 			'title',
 			'textarea',
 			'select',
@@ -815,7 +745,7 @@ class Form
 			'url',
 			'email'
 		];
-		if ( Stringify::contains($types,$type) ) {
+		if ( Stringify::contains($types, $type) ) {
 			return true;
 		}
 		return false;
@@ -824,11 +754,11 @@ class Form
 	/**
 	 * Get input element
 	 *
-	 * @access private
+	 * @access protected
 	 * @param string $type
 	 * @return bool
 	 */
-	private function getInputElement($type = '') : string
+	protected function getInputElement(string $type = '') : string
 	{
 		switch ($type) {
 			case 'textarea':
@@ -848,13 +778,13 @@ class Form
 	}
 
 	/**
-	 * Get input closing
+	 * Get input closing.
 	 *
-	 * @access private
+	 * @access protected
 	 * @param string $type
 	 * @return string
 	 */
-	private function getInputClosing($type = '') : string
+	protected function getInputClosing(string $type = '') : string
 	{
 		switch ($type) {
 			case 'textarea':
@@ -869,13 +799,13 @@ class Form
 	}
 
 	/**
-	 * Get input description
+	 * Get input description.
 	 *
-	 * @access private
+	 * @access protected
 	 * @param array $input
 	 * @return string
 	 */
-	private function getInputDescription($input = []) : string
+	protected function getInputDescription(array $input = []) : string
 	{
 		$description = '';
 		if ( !empty($input['description']) ) {
@@ -885,13 +815,13 @@ class Form
 	}
 
 	/**
-	 * Get input label
+	 * Get input label.
 	 *
-	 * @access private
+	 * @access protected
 	 * @param array $input
 	 * @return string
 	 */
-	private function getInputLabel($input = []) : string
+	protected function getInputLabel(array $input = []) : string
 	{
 		$label = '';
 		switch ($input['type']) {
@@ -939,13 +869,13 @@ class Form
 	}
 
 	/**
-	 * Get input before html
+	 * Get input before html.
 	 *
-	 * @access private
+	 * @access protected
 	 * @param array $input
 	 * @return string
 	 */
-	private function getInputBefore($input = []) : string
+	protected function getInputBefore(array $input = []) : string
 	{
 		$before = '';
 		if ( $input['type'] !== 'html' && $input['type'] !== 'hidden' ) {
@@ -969,13 +899,13 @@ class Form
 	}
 
 	/**
-	 * Get input before html
+	 * Get input before html.
 	 *
-	 * @access private
+	 * @access protected
 	 * @param array $input
 	 * @return string
 	 */
-	private function getInputAfter($input = []) : string
+	protected function getInputAfter(array $input = []) : string
 	{
 		$after = '';
 		if ( $input['type'] !== 'html' && $input['type'] !== 'hidden' ) {
@@ -988,13 +918,13 @@ class Form
 	}
 
 	/**
-	 * Get input opening
+	 * Get input opening.
 	 *
-	 * @access private
+	 * @access protected
 	 * @param string $type
 	 * @return string
 	 */
-	private function getInputOpening($type = '') : string
+	protected function getInputOpening(string $type = '') : string
 	{
 		switch ($type) {
 			case 'radio':
@@ -1009,13 +939,13 @@ class Form
 	}
 
 	/**
-	 * Get input content
+	 * Get input content.
 	 *
-	 * @access private
+	 * @access protected
 	 * @param array $input
 	 * @return string
 	 */
-	private function getInputContent($input) : string
+	protected function getInputContent(array $input = []) : string
 	{
 		$content = '';
 		switch ($input['type']) {
@@ -1056,17 +986,17 @@ class Form
 						if ( $input['checked'] ) {
 							$checked = true;
 						}
+
 						if ( !$checked ) {
 							if ( $input['use-request'] ) {
 								if ( Request::isSetted($input['name']) ) {
-									if ( Stringify::contains(Request::get($input['name']),$key) ) {
+									if ( Stringify::contains(Request::get($input['name']), $key) ) {
 										$checked = true;
 									}
 								}
 							}
 						}
 						
-
 						// Open input
 						$content .= '<input';
 
@@ -1074,6 +1004,7 @@ class Form
 						if ( count($input['options']) > 1 ) {
 							$slug = Stringify::slugify($option);
 							$content .= ' id="' . $slug . '"';
+
 						} else {
 							if ( !empty($input['id']) ) {
 								$content .= ' id="' . $input['id'] . '"';
@@ -1122,82 +1053,148 @@ class Form
 	}
 
 	/**
-	 * Get input attributes
+	 * Get input attributes.
 	 *
-	 * @access private
+	 * @access protected
 	 * @param array $input
 	 * @return string
 	 */
-	private function getInputAttributes($input) : string
+	protected function getInputAtts(array $input) : string
 	{
-		$attributes = '';
+		$atts = '';
 		if ( $input['type'] !== 'radio' && $input['type'] !== 'checkbox' ) {
-			$attributes = ' ';
+
+			$atts = ' ';
+
 			// id attributes
 			if ( !empty($input['id']) ) {
-				$attributes .= 'id="' . $input['id'] . '" ';
+				$atts .= 'id="' . $input['id'] . '" ';
 			}
+
 			// type textarea
 			if ( $input['type'] !== 'textarea' && $input['type'] !== 'select' ) {
 				if ( !empty($input['type']) ) {
-					$attributes .= 'type="' . $input['type'] . '" ';
+					$atts .= 'type="' . $input['type'] . '" ';
 				}
 			}
+
 			// name attributes
 			if ( !empty($input['name']) ) {
-				$attributes .= 'name="' . $input['name'] . '" ';
+				$atts .= 'name="' . $input['name'] . '" ';
 			}
+
 			// class attributes
 			if ( $input['type'] !== 'hidden' ) {
 				if ( !empty($input['class']) ) {
 					$class = $this->outputClasses($input['class']);
-					$attributes .= 'class="' . $class . '" ';
+					$atts .= 'class="' . $class . '" ';
 				}
 			}
+
 			// placeholder attributes
 			if ( $input['type'] !== 'textarea' && $input['type'] !== 'select' ) {
 				if ( !empty($input['placeholder']) ) {
-					$attributes .= 'placeholder="' . $input['placeholder'] . '" ';
+					$atts .= 'placeholder="' . $input['placeholder'] . '" ';
 				}
 			}
+
 			// value attributes
 			if ( $input['type'] !== 'textarea' && $input['type'] !== 'select' ) {
 				if ( !empty($input['value']) ) {
-					$attributes .= 'value="' . $input['value'] . '" ';
+					$atts .= 'value="' . $input['value'] . '" ';
 				}
 			}
+
 			// Special attributes
 			if ( $input['type'] == 'number' || $input['type'] == 'range' ) {
 				if ( !empty($input['min']) ) {
-					$attributes .= 'min="' . $input['min'] . '" ';
+					$atts .= 'min="' . $input['min'] . '" ';
 				}
 				if ( !empty($input['max']) ) {
-					$attributes .= 'max="' . $input['max'] . '" ';
+					$atts .= 'max="' . $input['max'] . '" ';
 				}
 				if ( !empty($input['step']) ) {
-					$attributes .= 'step="' . $input['step'] . '" ';
+					$atts .= 'step="' . $input['step'] . '" ';
 				}
 			}
+
 			// style attribute
 			if ( !empty($input['style']) ) {
-				$attributes .= 'style="' . $input['style'] . '" ';
+				$atts .= 'style="' . $input['style'] . '" ';
 			}
+
 			// Single attributes
 			if ( $input['autofocus'] ) {
-				$attributes .= 'autofocus ';
+				$atts .= 'autofocus ';
 			}
 			if ( $input['disabled'] ) {
-				$attributes .= 'disabled ';
+				$atts .= 'disabled ';
 			}
 			if ( $input['required'] ) {
-				$attributes .= 'required ';
+				$atts .= 'required ';
 			}
 			if ( $input['readonly'] ) {
-				$attributes .= 'readonly ';
+				$atts .= 'readonly ';
 			}
-			$attributes = rtrim($attributes);
-			$attributes = $attributes . '>';
+			$atts = rtrim($atts);
+			$atts = $atts . '>';
 		}
-		return $attributes;
+		return $atts;
+	}
+
+	/**
+	 * Apply form inputs values.
+	 *
+	 * @access protected
+	 * @return void
+	 */
+	protected function applyValues()
+	{
+		foreach ($this->inputs as $key => $value) {
+			if ( isset($this->values[$value['name']]) ) {
+
+				if ( $value['type'] == 'select' ) {
+					$this->inputs[$key]['selected'] = $this->values[$value['name']];
+
+				} elseif ( $value['type'] == 'checkbox' || $value['type'] == 'radio' ) {
+					if ( count($value['options']) == 1 && $this->values[$value['name']] == 1 ) {
+						$this->inputs[$key]['checked'] = true;
+					}
+
+				} else {
+					$this->inputs[$key]['value'] = $this->values[$value['name']];
+				}
+			}
+		}
+	}
+
+	/**
+	 * Apply form inputs (select) default values.
+	 *
+	 * @access protected
+	 * @return void
+	 */
+	protected function applyDefault()
+	{
+		foreach ($this->inputs as $key => $value) {
+			if ( isset($this->default[$value['name']]) ) {
+				if ( $value['type'] == 'select' && empty($value['options']) ) {
+					if ( TypeCheck::isArray($this->default[$value['name']]) ) {
+						$this->inputs[$key]['options'] = $this->default[$value['name']];
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Apply form vars.
+	 *
+	 * @access protected
+	 * @return void
+	 */
+	protected function applyVars()
+	{
+		$this->output = Stringify::replaceArray($this->vars, $this->output);
 	}
 }

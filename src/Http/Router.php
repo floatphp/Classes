@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -25,7 +24,7 @@ use \Traversable;
 
 /**
  * Built-in HTTP router class,
- * @see Heavily inspired by https://altorouter.com
+ * @uses Inspired by https://altorouter.com
  */
 class Router implements RouterInterface
 {
@@ -67,7 +66,6 @@ class Router implements RouterInterface
      * Useful if you want to process or display routes.
      *
      * @access public
-     * @param void
      * @return array
      */
     public function getRoutes()

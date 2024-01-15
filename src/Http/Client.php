@@ -1,12 +1,11 @@
 <?php
 /**
- * @author     : JIHAD SINNAOUR
+ * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.0.2
- * @category   : PHP framework
- * @copyright  : (c) 2017 - 2023 Jihad Sinnaour <mail@jihadsinnaour.com>
- * @link       : https://www.floatphp.com
+ * @version    : 1.1.0
+ * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @link       : https://floatphp.com
  * @license    : MIT
  *
  * This file if a part of FloatPHP Framework.
@@ -58,14 +57,19 @@ class Client
     {
         // Init client
         $this->init();
+
         // Set method
         $this->method = Stringify::lowercase($method);
+
         // Set body
         $this->setBody($body);
+
         // Set header
         $this->setHeader($header);
+
         // Set url
         $this->setUrl($url);
+
         // Prepare request
         $this->prepare();
 
@@ -85,14 +89,19 @@ class Client
     {
         // Init client
         $this->init();
+
         // Set method
-        $this->method = 'post';
+        $this->method = 'POST';
+
         // Set body
         $this->setBody($body);
+
         // Set header
         $this->setHeader($header);
+
         // Set url
         $this->setUrl($url);
+
         // Prepare request
         $this->prepare();
 
@@ -112,14 +121,19 @@ class Client
     {
         // Init client
         $this->init();
+
         // Set method
-        $this->method = 'get';
+        $this->method = 'GET';
+
         // Set body
         $this->setBody($body);
+
         // Set header
         $this->setHeader($header);
+
         // Set url
         $this->setUrl($url);
+
         // Prepare request
         $this->prepare();
 
@@ -130,7 +144,6 @@ class Client
      * Get response.
      * 
      * @access public
-     * @param void
      * @return array
      */
     public function getResponse() : array
@@ -146,7 +159,6 @@ class Client
      * Get response status.
      * 
      * @access public
-     * @param void
      * @return array
      */
     public function getStatus() : array
@@ -158,7 +170,6 @@ class Client
      * Get response status code.
      * 
      * @access public
-     * @param void
      * @return mixed
      */
     public function getStatusCode()
@@ -173,7 +184,6 @@ class Client
      * Get response header.
      * 
      * @access public
-     * @param void
      * @return array
      */
     public function getHeader() : array
@@ -190,7 +200,7 @@ class Client
      */
     public function setHeader(array $header = [])
     {
-        $this->request['header'] = Arrayify::merge($this->request['header'],$header);
+        $this->request['header'] = Arrayify::merge($this->request['header'], $header);
     }
 
     /**
@@ -241,7 +251,7 @@ class Client
     public function getBody($json = false)
     {
         if ( $json ) {
-           return Json::decode($this->response['body'],true);
+           return Json::decode($this->response['body'], true);
         }
         return $this->response['body'];
     }
@@ -254,7 +264,7 @@ class Client
      * @param bool $parse
      * @return string
      */
-    public function trackUrl($url = '', $parse = true)
+    public function trackUrl(string $url, bool $parse = true) : string
     {
         // Set url
         if ( empty($url) ) {
@@ -263,17 +273,17 @@ class Client
 
         // Init handler
         $handler = curl_init();
-        curl_setopt_array($handler,[
-            CURLOPT_URL            => $url,
-            CURLOPT_HEADER         => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_MAXREDIRS      => 5,
-            CURLOPT_TIMEOUT        => 0,
-            CURLOPT_CUSTOMREQUEST  => 'GET',
-            CURLOPT_HTTPHEADER     => []
+        curl_setopt_array($handler, [
+            "CURLOPT_URL"            => $url,
+            "CURLOPT_HEADER"         => true,
+            "CURLOPT_RETURNTRANSFER" => true,
+            "CURLOPT_FOLLOWLOCATION" => true,
+            "CURLOPT_SSL_VERIFYHOST" => false,
+            "CURLOPT_SSL_VERIFYPEER" => false,
+            "CURLOPT_MAXREDIRS"      => 5,
+            "CURLOPT_TIMEOUT"        => 0,
+            "CURLOPT_CUSTOMREQUEST"  => 'GET',
+            "CURLOPT_HTTPHEADER"     => []
         ]);
 
         // Get response
@@ -288,7 +298,7 @@ class Client
 
         // Parse url
         if ( $parse ) {
-            $parts = parse_url($track);
+            $parts = Stringify::parseUrl($track);
             if ( isset($parts['query']) ) {
                 unset($parts['query']);
             }
@@ -302,7 +312,6 @@ class Client
      * Init client.
      * 
      * @access private
-     * @param void
      * @return void
      */
     private function init()
@@ -322,37 +331,37 @@ class Client
      * Prepare request.
      * 
      * @access private
-     * @param void
      * @return void
      */
     private function prepare()
     {
         // Init curl
         $handler = curl_init();
-        curl_setopt($handler,CURLOPT_URL,$this->url);
+
+        curl_setopt($handler, CURLOPT_URL, $this->url);
         if ( $this->request['header'] ) {
-            curl_setopt($handler,CURLOPT_HTTPHEADER,$this->request['header']);
+            curl_setopt($handler, CURLOPT_HTTPHEADER, $this->request['header']);
         }
-        curl_setopt($handler,CURLOPT_HEADERFUNCTION,[$this,'catchHeader']);
-        curl_setopt($handler,CURLOPT_WRITEFUNCTION,[$this,'catchBody']);
+        curl_setopt($handler, CURLOPT_HEADERFUNCTION, [$this, 'catchHeader']);
+        curl_setopt($handler, CURLOPT_WRITEFUNCTION, [$this, 'catchBody']);
 
         // Additional options
-        curl_setopt($handler,CURLOPT_TIMEOUT,$this->timout);
+        curl_setopt($handler, CURLOPT_TIMEOUT, $this->timout);
         if ( $this->method == 'post' ) {
-            curl_setopt($handler,CURLOPT_POST,true);
-            curl_setopt($handler,CURLOPT_POSTFIELDS,$this->request['body']);
+            curl_setopt($handler, CURLOPT_POST, true);
+            curl_setopt($handler, CURLOPT_POSTFIELDS, $this->request['body']);
 
         } elseif ( $this->method == 'put' ) {
-            curl_setopt($handler,CURLOPT_CUSTOMREQUEST,'PUT');
-            curl_setopt($handler,CURLOPT_POSTFIELDS,$this->request['body']);
+            curl_setopt($handler, CURLOPT_CUSTOMREQUEST, 'PUT');
+            curl_setopt($handler, CURLOPT_POSTFIELDS, $this->request['body']);
 
         } else {
-            curl_setopt($handler,CURLOPT_CUSTOMREQUEST,Stringify::uppercase($this->method));
+            curl_setopt($handler, CURLOPT_CUSTOMREQUEST, Stringify::uppercase($this->method));
         }
 
-        if ( !Server::isSSL() ) {
-            curl_setopt($handler,CURLOPT_SSL_VERIFYHOST,false);
-            curl_setopt($handler,CURLOPT_SSL_VERIFYPEER,false);
+        if ( !Server::isSsl() ) {
+            curl_setopt($handler, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($handler, CURLOPT_SSL_VERIFYPEER, false);
         }
 
         // Execute request
@@ -374,7 +383,7 @@ class Client
         if ( $this->response['status'] == null ) {
             $regex = '/^\s*HTTP\s*\/\s*(?P<protocolVersion>\d*\.\d*)\s*(?P<statusCode>\d*)\s(?P<reasonPhrase>.*)\r\n/';
             preg_match($regex,$header,$matches);
-            foreach (['protocolVersion','statusCode','reasonPhrase'] as $part) {
+            foreach (['protocolVersion', 'statusCode', 'reasonPhrase'] as $part) {
                 if ( isset($matches[$part]) ) {
                     $this->response['status'][$part] = $matches[$part];
                 }
@@ -384,7 +393,7 @@ class Client
         $regex = '/^\s*(?P<attributeName>[a-zA-Z0-9-]*):\s*(?P<attributeValue>.*)\r\n/';
         preg_match($regex,$header,$matches);
         if ( isset($matches['attributeName']) ) {
-            $this->response['header'][$matches['attributeName']] = isset($matches['attributeValue']) ? $matches['attributeValue'] : null;
+            $this->response['header'][$matches['attributeName']] = $matches['attributeValue'] ?? null;
         }
         return strlen($header);
     }
