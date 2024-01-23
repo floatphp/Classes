@@ -71,9 +71,9 @@ class Mail
      * @param string $name
      * @return object
      */
-    public function setTo($email, $name = null) : object
+    public function setTo(string $email, ?string $name = null) : object
     {
-        $this->to[] = $this->formatHeader((string)$email, (string)$name);
+        $this->to[] = $this->formatHeader($email, (string)$name);
         return $this;
     }
 
@@ -134,7 +134,7 @@ class Mail
      * @param string $name
      * @return object
      */
-    public function setReplyTo($email, $name = '') : object
+    public function setReplyTo(string $email, string $name = '') : object
     {
         return $this->addMailHeader('Reply-To', $email, $name);
     }
@@ -208,13 +208,13 @@ class Mail
      * @access public
      * @param string $path
      * @param string $filename
-     * @param null $data
+     * @param string $data
      * @return object
      */
-    public function addAttachment($path, $filename = null, $data = null) : object
+    public function addAttachment(string $path, ?string $filename = null, ?string $data = null) : object
     {
-        $filename = empty($filename) ? basename($path) : $filename;
-        $data = empty($data) ? $this->getAttachmentData($path) : $data;
+        $filename = (!$filename) ? Stringify::basename($path) : $filename;
+        $data = (!$data) ? $this->getAttachmentData($path) : $data;
         $this->attachments[] = [
             'path' => $path,
             'file' => $filename,
@@ -230,7 +230,7 @@ class Mail
      * @param string $path
      * @return string
      */
-    public function getAttachmentData($path) : string
+    public function getAttachmentData(string $path) : string
     {
         $filesize = filesize($path);
         $handle = fopen($path, 'r');

@@ -645,6 +645,8 @@ final class Stringify
 	 * @param int $length
 	 * @param string $char
 	 * @return string
+	 * @todo Remove
+	 * @deprecated
 	 */
 	public static function randomize(?int $length = null, ?string $char = null) : string
 	{
@@ -669,22 +671,36 @@ final class Stringify
 	}
 
 	/**
+	 * Count chars in string.
+	 * 
+	 * @access public
+	 * @param string $string
+	 * @param int $mode
+	 * @return mixed
+	 */
+	public static function count(string $string, int $mode = 0)
+	{
+		return count_chars($string, $mode);
+	}
+
+	/**
 	 * Limit string (Without breaking words).
 	 * 
 	 * @access public
 	 * @param string $string
 	 * @param int $length
 	 * @param int $offset
+	 * @param string $suffix
 	 * @return string
 	 */
-	public static function limit(string $string, int $length = 128, int $offset = 0) : string
+	public static function limit(string $string, int $length = 128, int $offset = 0, string $suffix = '...') : string
 	{
 		$limit = $string;
 
         $words = self::split($string, [
 			'regex' => '/([\s\n\r]+)/u',
 			'limit' => 0,
-			'flags' => PREG_SPLIT_DELIM_CAPTURE
+			'flags' => 2 // PREG_SPLIT_DELIM_CAPTURE
 		]);
 
         if ( ($count = count($words)) ) {
@@ -701,6 +717,10 @@ final class Stringify
 
 		if ( empty($limit) ) {
 			$limit = substr($string, $offset, $length);
+		}
+
+		if ( strlen($string) > $length ) {
+			$limit .= " {$suffix}";
 		}
 
 		return trim($limit);
@@ -777,7 +797,8 @@ final class Stringify
 	/**
 	 * Build query args from string (URL toolkit).
 	 * 
-	 * [PHP_QUERY_RFC1738 : 1]
+	 * [PHP_QUERY_RFC1738: 1]
+	 * [PHP_QUERY_RFC3986: 2]
 	 * 
 	 * @access public
 	 * @param mixed $args
@@ -786,7 +807,7 @@ final class Stringify
 	 * @param int $enc, Encoding type
 	 * @return string
 	 */
-	public static function buildQuery($args, string $prefix = '', ?string $sep, int $enc = 1) : string
+	public static function buildQuery($args, string $prefix = '', ?string $sep = '&', int $enc = 1) : string
 	{
 		return http_build_query($args, $prefix, $sep, $enc);
 	}
@@ -841,5 +862,35 @@ final class Stringify
 	    }
 
 	    return $value;
+	}
+
+	/**
+	 * Format dash (hyphen) into underscore.
+	 *
+	 * @access public
+	 * @param string $string
+	 * @param bool $isGlobal
+	 * @return string
+	 */
+	public static function undash(string $string, bool $isGlobal = false) : string
+	{
+		if ( $isGlobal ) {
+			$string = self::uppercase($string);
+		}
+	    return self::replace('-', '_', $string);
+	}
+
+	/**
+	 * Basename with path format.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param string $suffix
+	 * @return string
+	 */
+	public static function basename(string $path, string $suffix = '') : string
+	{
+		$path = self::replace('\\', '/', $path);
+		return basename($path, $suffix);
 	}
 }

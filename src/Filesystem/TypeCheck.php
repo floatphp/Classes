@@ -252,7 +252,7 @@ final class TypeCheck
 		$implements = class_implements($class);
 		if ( $short ) {
 			foreach ($implements as $key => $value) {
-				$implements[$key] = basename($value);
+				$implements[$key] = Stringify::basename($value);
 			}
 		}
 		return Arrayify::inArray($interface, $implements);

@@ -79,7 +79,8 @@ class File
 	 */
 	public static function getName(string $path) : string
 	{
-		return Stringify::replaceRegex('/\.[^.]+$/', '', basename($path));
+		$path = Stringify::basename($path);
+		return Stringify::replaceRegex('/\.[^.]+$/', '', $path);
 	}
 
 	/**
@@ -91,7 +92,7 @@ class File
 	 */
 	public static function getFileName(string $path) : string
 	{
-		return basename(Stringify::formatPath($path));
+		return Stringify::basename($path);
 	}
 
 	/**
@@ -649,7 +650,7 @@ class File
 	{
 		if ( self::exists($path) ) {
 			$file = self::r($path);
-			$filename = Stringify::replace(' ', '-', basename($path));
+			$filename = Stringify::replace(' ', '-', Stringify::basename($path));
 			header('Content-type: application/force-download');
 			header("Content-Disposition: attachment; filename={$filename};");
 			echo $file;
@@ -682,7 +683,7 @@ class File
 	 */
 	public static function getMime(string $path, array $mimes = []) : array
 	{
-		$filename = basename($path);
+		$filename = Stringify::basename($path);
 		if ( empty($mimes) ) {
 			$mimes = self::mimes();
 		}
