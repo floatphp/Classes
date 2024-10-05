@@ -268,71 +268,57 @@ final class Arrayify
      * @param array $array
      * @param mixed $orderby
      * @param string $order
-     * @param bool $preserve, Preserve keys
+     * @param bool $preserve (keys)
      * @return array
      */
-    public static function sort($array = [], $orderby = [], $order = 'ASC', $preserve = false)
-    {
-		if ( empty($orderby) ) {
-			return $array;
-		}
+	public static function sort(array $array, $orderby, string $order = 'ASC', bool $preserve = false) : array
+	{
+	    if ( !$orderby ) {
+	        return $array;
+	    }
 
-		if ( TypeCheck::isString($orderby) ) {
-			$orderby = [$orderby => $order];
-		}
+	    if ( TypeCheck::isString($orderby) ) {
+	        $orderby = [$orderby => $order];
+	    }
 
-		foreach ( $orderby as $field => $direction ) {
-			$orderby[$field] = ('DESC' === Stringify::uppercase($direction)) ? 'DESC' : 'ASC';
-		}
+	    foreach ($orderby as $field => $dir) {
+	        $orderby[$field] = ('DESC' === Stringify::uppercase($dir)) ? 'DESC' : 'ASC';
+	    }
 
-		static::$orderby = $orderby;
+	    $sort = function($a, $b) use ($orderby) {
 
-		if ( $preserve ) {
-			uasort($array, ['\FloatPHP\Classes\Filesystem\Arrayify', 'sortCallback']);
-			
-		} else {
-			usort($array, ['\FloatPHP\Classes\Filesystem\Arrayify', 'sortCallback']);
-		}
+	        $a = (array)$a;
+	        $b = (array)$b;
 
-		return $array;
-    }
+	        foreach ($orderby as $field => $dir) {
 
-    /**
-	 * Sort array callback.
-	 * 
-     * @access public
-     * @param mixed $a
-     * @param mixed $b
-     * @return mixed
-     */
-    public static function sortCallback($a, $b)
-    {
-		if ( !static::$orderby ) {
-			return 0;
-		}
+	            if ( !isset($a[$field]) || !isset($b[$field]) ) {
+	                continue;
+	            }
 
-		$a = (array)$a;
-		$b = (array)$b;
+	            if ( $a[$field] == $b[$field] ) {
+	                continue;
+	            }
 
-		foreach ( static::$orderby as $field => $direction ) {
+	            $val = ('DESC' === $dir) ? [1, -1] : [-1, 1];
 
-			if ( !isset($a[$field]) || !isset($b[$field]) ) {
-				continue;
-			}
+	            if ( TypeCheck::isNumeric($a[$field]) && TypeCheck::isNumeric($b[$field]) ) {
+	                return ($a[$field] < $b[$field]) ? $val[0] : $val[1];
+	            }
 
-			if ( $a[$field] == $b[$field] ) {
-				continue;
-			}
+	            return 0 > strcmp($a[$field], $b[$field]) ? $val[0] : $val[1];
+	        }
 
-			$results = ('DESC' === $direction) ? [1, -1] : [-1, 1];
+	        return 0;
+	    };
 
-			if ( TypeCheck::isNumeric($a[$field]) && TypeCheck::isNumeric($b[$field]) ) {
-				return ($a[$field] < $b[$field]) ? $results[0] : $results[1];
-			}
+	    if ( $preserve ) {
+	        uasort($array, $sort);
 
-			return 0 > strcmp($a[$field],$b[$field]) ? $results[0] : $results[1];
-		}
+	    } else {
+	        usort($array, $sort);
+	    }
 
-		return 0;
-    }
+	    return $array;
+	}
 }
