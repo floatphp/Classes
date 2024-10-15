@@ -20,14 +20,14 @@ use FloatPHP\Interfaces\Classes\LoggerInterface;
 class Logger implements LoggerInterface
 {
     /**
-     * @access private
+     * @access protected
      * @var string $path
      * @var string $filename
      * @var string $extension
      */
-    private $path;
-    private $filename;
-    private $extension;
+    protected $path;
+    protected $filename;
+    protected $extension;
 
     /**
      * Init logger.
