@@ -1,6 +1,6 @@
 # FloatPHP (Classes)
 
-<img src="https://www.floatphp.com/assets/img/floatphp.png" width="100" alt="Micro PHP framework">
+<img src="https://avatars.githubusercontent.com/u/33136510" width="100" alt="Micro PHP framework">
 
 FloatPHP **Classes Components** Without 3th-parties.
 This components tweaks build-in (Native) PHP functions to customize its behavior.
