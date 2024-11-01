@@ -16,14 +16,14 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\{
-	Stringify, Arrayify, Validator
+	Stringify, Arrayify, TypeCheck, Validator
 };
 
 final class Server
 {
 	/**
 	 * Get _SERVER value.
-	 * 
+	 *
 	 * @access public
 	 * @param string $key
 	 * @param bool $format
@@ -32,9 +32,7 @@ final class Server
 	public static function get(?string $key = null, $format = true)
 	{
 		if ( $key ) {
-			if ( $format ) {
-				$key = self::formatArgs($key);
-			}
+			if ( $format ) $key = Stringify::undash($key, true);
 			return self::isSetted($key) ? $_SERVER[$key] : null;
 		}
 		return self::isSetted() ? $_SERVER : null;
@@ -42,7 +40,7 @@ final class Server
 
 	/**
 	 * Set _SERVER value.
-	 * 
+	 *
 	 * @access public
 	 * @param string $key
 	 * @param mixed $value
@@ -51,26 +49,22 @@ final class Server
 	 */
 	public static function set(string $key, $value = null, $format = true)
 	{
-		if ( $format ) {
-			$value = self::formatArgs($value);
-		}
+		if ( $format ) $value = Stringify::undash($key, true);
 		$_SERVER[$key] = $value;
 	}
 
 	/**
 	 * Check _SERVER value.
-	 * 
+	 *
 	 * @access public
 	 * @param string $key
 	 * @param bool $format
 	 * @return bool
 	 */
-	public static function isSetted(?string $key = null, $format = true)
+	public static function isSetted(?string $key = null, $format = true) : bool
 	{
 		if ( $key ) {
-			if ( $format ) {
-				$key = self::formatArgs($key);
-			}
+			if ( $format ) $key = Stringify::undash($key, true);
 			return isset($_SERVER[$key]);
 		}
 		return isset($_SERVER) && !empty($_SERVER);
@@ -78,7 +72,7 @@ final class Server
 
 	/**
 	 * Unset _SERVER value.
-	 * 
+	 *
 	 * @access public
 	 * @param string $key
 	 * @return void
@@ -134,58 +128,60 @@ final class Server
 	}
 
 	/**
-	 * Get prefered protocol.
+	 * Get protocol.
 	 *
 	 * @access public
 	 * @return string
 	 */
 	public static function getProtocol()
 	{
-		return self::isSsl() ? 'https://' : 'http://';
+		return (self::isSsl()) ? 'https://' : 'http://';
 	}
 
 	/**
 	 * Get country code from request headers.
 	 *
 	 * @access public
+	 * @param array $headers
 	 * @return string
 	 */
-	public static function getCountryCode()
+	public static function getCountryCode(array $headers = [])
 	{
-		$headers = [
+		$headers = Arrayify::merge([
 			'mm-country-code',
 			'geoip-country-code',
 			'http-cf-ipcountry',
 			'http-x-country-code'
-		];
+		], $headers);
+
 		foreach ($headers as $header) {
 			if ( self::isSetted($header) ) {
 				$code = self::get($header);
 				if ( !empty($code) ) {
 					$code = Stringify::stripSlash($code);
 					return Stringify::uppercase($code);
-					break;
 				}
 			}
 		}
+		
 		return false;
 	}
-	
+
 	/**
-	 * Redirect URL.
+	 * Redirect request.
 	 *
 	 * @access public
-	 * @param string $url
-	 * @param int $code
+	 * @param string $location
+	 * @param int $status
 	 * @return void
 	 */
-	public static function redirect(string $url = '/', int $code = 0)
+	public static function redirect(string $location, int $status = 301)
 	{
-		if ( $code ) {
-			$message = Response::getMessage($code);
-			header("Status: {$code} {$message}", true, $code);
+		if ( $status ) {
+			$message = Response::getMessage($status);
+			header("Status: {$status} {$message}", true, $status);
 		}
-		header("Location: {$url}", true, $code);
+		header("Location: {$location}", true, $status);
 		exit();
 	}
 
@@ -198,10 +194,8 @@ final class Server
 	public static function getBaseUrl() : string
 	{
 		$url = self::get('http-host');
-		if ( self::isSsl() ) {
-			return "https://{$url}";
-		}
-		return "http://{$url}";
+		$schema = (self::isSsl()) ? 'https://' : 'http://';
+		return "{$schema}{$url}";
 	}
 
 	/**
@@ -231,9 +225,13 @@ final class Server
 	 * @param string $url
 	 * @return string
 	 */
-	public static function parseBaseUrl($url = '')
+	public static function parseBaseUrl(string $url) : string
 	{
-		if ( !empty($url) && ($url = Stringify::parseUrl($url)) ) {
+		if ( empty($url) ) {
+			return $url;
+		}
+
+		if ( ($url = Stringify::parseUrl($url)) ) {
 			unset($url['path']);
 			$tmp = '';
 			if ( isset($url['scheme']) ) {
@@ -244,7 +242,8 @@ final class Server
 			}
 			$url = $tmp;
 		}
-		return (string)$url;
+
+		return $url;
 	}
 
 	/**
@@ -255,10 +254,7 @@ final class Server
 	 */
 	public static function isBasicAuth() : bool
 	{
-		if ( self::isSetted('php-auth-user') && self::isSetted('php-auth-pw') ) {
-			return true;
-		}
-		return false;
+		return (self::getBasicAuthUser() && self::getBasicAuthPwd());
 	}
 
 	/**
@@ -269,18 +265,18 @@ final class Server
 	 */
 	public static function getBasicAuthUser() : string
 	{
-		return self::isSetted('php-auth-user') ? self::get('php-auth-user') : '';
+		return self::get('php-auth-user') ?: '';
 	}
 
 	/**
-	 * Get get basic authentication password.
+	 * Get basic authentication password.
 	 *
 	 * @access public
 	 * @return string
 	 */
 	public static function getBasicAuthPwd() : string
 	{
-		return self::isSetted('php-auth-pw') ? self::get('php-auth-pw') : '';
+		return self::get('php-auth-pw') ?: '';
 	}
 
 	/**
@@ -297,7 +293,7 @@ final class Server
         } elseif ( self::isSetted('http-authorization') ) {
             return trim(self::get('http-authorization'));
 
-        } elseif ( function_exists('apache_request_headers') ) {
+        } elseif ( TypeCheck::isFunction('apache-request-headers') ) {
             $requestHeaders = apache_request_headers();
             $requestHeaders = Arrayify::combine(
             	Arrayify::map('ucwords', Arrayify::keys($requestHeaders)),
@@ -341,17 +337,27 @@ final class Server
 		return false;
 	}
 
-	/**
-	 * Format args.
-	 *
-	 * @access private
-	 * @param string $arg
-	 * @return string
-	 * @internal
-	 */
-	private static function formatArgs($arg)
-	{
-	    $arg = Stringify::replace('-', '_', $arg);
-	    return Stringify::uppercase($arg);
-	}
+    /**
+     * Get domain name from URL.
+     *
+     * @access public
+     * @param string $url
+     * @return string
+     */
+    public static function getDomain(?string $url = null) : string
+    {
+		if ( !$url ) {
+			$url = self::getCurrentUrl(true);
+		}
+
+		$pieces  = Stringify::parseUrl($url);
+		$domain  = isset($pieces['host']) ? $pieces['host'] : $pieces['path'];
+		$pattern = '/(?P<domain>[a-z0-9][a-z0-9\\-]{1,63}\\.[a-z\\.]{2,6})$/i';
+		
+		if ( ($domain = Stringify::match($pattern, $domain)) ) {
+			return $domain;
+		}
+
+		return $url;
+    }
 }
