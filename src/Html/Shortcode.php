@@ -30,6 +30,21 @@ final class Shortcode extends Hook
 	public $shortcodeTags = [];
 
 	/**
+	 * Get singleton hook instance.
+	 *
+	 * @access public
+	 * @return object
+	 */
+	public static function getInstance() : Shortcode
+	{
+		static $instance;
+		if ( $instance === null ) {
+			$instance = new self();
+		}
+		return $instance;
+	}
+
+	/**
 	 * Add shortcode.
 	 *
 	 * @access public
@@ -249,6 +264,7 @@ final class Shortcode extends Hook
 		  || !TypeCheck::isArray($this->shortcodeTags) ) {
 			return $content;
 		}
+		
 		$pattern = $this->getShortcodeRegex();
 		return preg_replace_callback("/$pattern/s", [$this, 'stripShortcodeTag'], $content);
 	}
@@ -259,6 +275,7 @@ final class Shortcode extends Hook
 	 * @access public
 	 * @param string $tag
 	 * @return mixed
+	 * @todo
 	 */
 	private function doShortcodeTag($tag)
 	{
@@ -267,16 +284,20 @@ final class Shortcode extends Hook
 			return substr($tag[0], 1, -1);
 		}
 
-		$tag = $tag[2];
-		$attr = $this->shortcodeParseAtts($tag[3]);
+		$tag  = $tag[2];
+		$atts = $this->shortcodeParseAtts($tag[3]);
 
 		// enclosing tag - extra parameter
 		if ( isset($tag[5]) ) {
-			return $tag[1] . call_user_func($this->shortcodeTags[$tag], $attr, $tag[5], $tag) . $tag[6];
+			// return $tag[1] . call_user_func($this->shortcodeTags[$tag], $atts, $tag[5], $tag) . $tag[6];
 		}
 
 		// self-closing tag
-		return $tag[1] . call_user_func($this->shortcodeTags[$tag], $attr, null, $tag) . $tag[6];
+		if ( isset($tag[6]) ) {
+			// return $tag[1] . call_user_func($this->shortcodeTags[$tag], $atts, null, $tag) . $tag[6];
+		}
+
+		return call_user_func($this->shortcodeTags[$tag], $atts, null, $tag);
 	}
 
 	/**
