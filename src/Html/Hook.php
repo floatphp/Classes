@@ -44,22 +44,6 @@ class Hook
 	private const PRIORITY = 50;
 
 	/**
-	 * Prevent object clone.
-	 */
-    public function __clone()
-    {
-        die(__METHOD__.': Clone denied');
-    }
-
-	/**
-	 * Prevent object serialization.
-	 */
-    public function __wakeup()
-    {
-        die(__METHOD__.': Unserialize denied');
-    }
-
-	/**
 	 * Get singleton hook instance.
 	 *
 	 * @access public
