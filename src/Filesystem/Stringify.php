@@ -23,10 +23,10 @@ final class Stringify
 	 * @access public
 	 * @param mixed $search
 	 * @param mixed $replace
-	 * @param string $subject
+	 * @param mixed $subject
 	 * @return mixed
 	 */
-	public static function replace($search, $replace, string $subject)
+	public static function replace($search, $replace, $subject)
 	{
 		return str_replace($search, $replace, $subject);
 	}
@@ -66,7 +66,7 @@ final class Stringify
 
 	/**
 	 * Search replace string(s) using regex.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $regex
 	 * @param mixed $replace
@@ -81,8 +81,24 @@ final class Stringify
 	}
 
 	/**
+	 * Search replace string(s) using regex callback.
+	 *
+	 * @access public
+	 * @param mixed $regex
+	 * @param mixed $callback
+	 * @param mixed $subject
+	 * @param int $limit
+	 * @param int $count
+	 * @return mixed
+	 */
+	public static function replaceRegexCb($regex, $callback, $subject, $limit = -1, &$count = null)
+	{
+		return preg_replace_callback($regex, $callback, $subject, $limit, $count);
+	}
+
+	/**
 	 * Remove string from other string.
-	 * 
+	 *
 	 * @access public
 	 * @param string $search
 	 * @param string $subject
