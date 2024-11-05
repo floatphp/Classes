@@ -1,0 +1,13 @@
+# Text break
+* text=auto
+* text eol=lf
+
+# Archive ignore
+/.github export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
+README.md export-ignore
+CODE-OF-CONDUCT.md export-ignore
+CONTRIBUTING.md export-ignore
+SECURITY.md export-ignore
+_config.yml export-ignore
