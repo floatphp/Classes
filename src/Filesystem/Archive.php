@@ -43,7 +43,7 @@ final class Archive extends File
 			if ( empty($to) ) {
 				$to = dirname($path);
 			}
-			
+
 			$to = Stringify::formatPath($to, true);
 			$to = "{$to}/{$archive}.zip";
 			$zip = new ZIP();
@@ -60,7 +60,7 @@ final class Archive extends File
 					        $zip->addFile($p, basename($name));
 					    }
 					}
-					
+
 				} elseif ( self::isFile($path) ) {
 					$zip->addFile($path, basename($path));
 				}
@@ -177,6 +177,7 @@ final class Archive extends File
 	 */
 	public static function isValid(string $archive) : bool
 	{
+		$archive = Stringify::formatPath($archive);
 		if ( TypeCheck::isClass('ZipArchive') && self::isFile($archive) ) {
 			$zip = new ZIP();
 			if ( $zip->open($archive) === true ) {
