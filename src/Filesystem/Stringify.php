@@ -24,11 +24,12 @@ final class Stringify
 	 * @param mixed $search
 	 * @param mixed $replace
 	 * @param mixed $subject
-	 * @return mixed
+	 * @param int $count
+	 * @return string
 	 */
-	public static function replace($search, $replace, $subject)
+	public static function replace($search, $replace, $subject, ?int &$count = null)
 	{
-		return str_replace($search, $replace, $subject);
+		return str_replace($search, $replace, $subject, $count);
 	}
 
 	/**
@@ -41,7 +42,7 @@ final class Stringify
 	 * @param mixed $length
 	 * @return mixed
 	 */
-	public static function subreplace($search, $replace, $offset = 0, $length = null)
+	public static function subReplace($search, $replace, $offset = 0, $length = null)
 	{
 		return substr_replace($search, $replace, $offset, $length);
 	}
@@ -50,16 +51,14 @@ final class Stringify
 	 * Search replace string(s) using array.
 	 * 
 	 * @access public
-	 * @param array $search
+	 * @param array $replace
 	 * @param string $subject
 	 * @return string
 	 */
 	public static function replaceArray(array $replace, string $subject) : string
 	{
-		if ( TypeCheck::isArray($replace) ) {
-			foreach ($replace as $key => $value) {
-				$subject = self::replace($key, $value, $subject);
-			}
+		foreach ($replace as $key => $value) {
+			$subject = self::replace($key, $value, $subject);
 		}
 		return $subject;
 	}
@@ -100,13 +99,43 @@ final class Stringify
 	 * Remove string from other string.
 	 *
 	 * @access public
-	 * @param string $search
+	 * @param string $string
 	 * @param string $subject
 	 * @return string
 	 */
-	public static function remove(string $search, string $subject) : string
+	public static function remove(string $string, string $subject) : string
 	{
-		return (string)self::replace($search, '', $subject);
+		return (string)self::replace($string, '', $subject);
+	}
+
+	/**
+	 * Remove sub string.
+	 * 
+	 * @access public
+	 * @param string $string
+	 * @param mixed $offset
+	 * @param mixed $length
+	 * @return string
+	 */
+	public static function subRemove(string $string, $offset = 0, $length = null) : string
+	{
+		if ( !$length ) {
+			$length = strlen($string);
+		}
+		return self::subReplace($string, '', $offset, $length);
+	}
+
+	/**
+	 * Remove string from other string using regex.
+	 * 
+	 * @access public
+	 * @param string $regex
+	 * @param string $subject
+	 * @return string
+	 */
+	public static function removeRegex(string $regex, string $subject) : string
+	{
+		return (string)self::replaceRegex($regex, '', $subject);
 	}
 
 	/**
@@ -156,6 +185,31 @@ final class Stringify
 	public static function capitalize(string $string) : string
 	{
 		return ucfirst(self::lowercase($string));
+	}
+
+	/**
+	 * Camelcase string.
+	 * 
+	 * @access public
+	 * @param string $string
+	 * @return string
+	 */
+	public static function camelcase(string $string) : string
+	{
+		$string = explode('-', self::slugify($string));
+		$string = Arrayify::values(
+			Arrayify::filter($string)
+		);
+		$first  = $string[0] ?? '';
+		$string = Arrayify::map(function($val) use ($first) {
+			if ( $val === $first ) {
+				return $val;
+			}
+			return self::capitalize($val);
+		}, $string);
+		return self::undash(
+			implode('', $string)
+		);
 	}
 
 	/**
@@ -365,39 +419,50 @@ final class Stringify
 
 	/**
 	 * Format key.
-	 * 
+	 *
 	 * @access public
 	 * @param string $key
 	 * @return string
 	 */
 	public static function formatKey(string $key) : string
 	{
-    	$key = self::lowercase($key);
-    	return (string)self::replaceRegex('/[^a-z0-9_\-]/', '', $key);
+		$key = self::lowercase($key);
+		return (string)self::replaceRegex('/[^a-z0-9_\-]/', '', $key);
 	}
 
 	/**
-	 * Remove slash from string.
+	 * Remove slashes from value,
+	 * Accept string and array.
 	 * 
 	 * @access public
-	 * @param string $string
-	 * @return string
+	 * @param mixed $value
+	 * @return mixed
 	 */
-	public static function unSlash(string $string) : string
+	public static function unSlash($value)
 	{
-	    return ltrim($string, '/\\');
+	    return self::replaceRegex('/\//', '', $value);
 	}
 
 	/**
-	 * Add slashes to string.
+	 * Add slashes to value,
+	 * Accept string and array.
 	 * 
 	 * @access public
-	 * @param string $string
-	 * @return string
+	 * @param mixed $value
+	 * @return mixed
 	 */
-	public static function slash(string $string) : string
+	public static function slash($value)
 	{
-	    return '/' . self::unSlash($string);
+		if ( TypeCheck::isString($value) ) {
+			return '/' . self::unSlash($value);
+		}
+		if ( TypeCheck::isArray($value) ) {
+			foreach ($value as $key => $val) {
+				$val = (string)$val;
+				$value[$key] = '/' . self::unSlash($val);
+			}
+		}
+		return $value;
 	}
 
 	/**
@@ -425,25 +490,39 @@ final class Stringify
 	}
 
 	/**
-	 * Strip slashes from quotes,
-	 * (array, object, scalar).
-	 * 
+	 * Strip slashes in quotes or single quotes,
+	 * Removes double backslashs.
+	 *
 	 * @access public
 	 * @param string $string
 	 * @return string
 	 */
-	public static function stripSlash($string) : string
+	public static function stripSlash(string $string) : string
 	{
-		return self::deepMap($string, function($string) {
+		return stripslashes($string);
+	}
+	
+	/**
+	 * Strip slashes in quotes or single quotes,
+	 * Removes double backslashs.
+	 * (array, object, scalar).
+	 *
+	 * @access public
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	public static function deepStripSlash($value)
+	{
+		return self::deepMap($value, function($string) {
 			return TypeCheck::isString($string) 
-			? stripslashes( $string ) : $string;
+			? self::stripSlash($string) : $string;
 		});
 	}
 
 	/**
-	 * Strip HTML tags from string,
+	 * Strip HTML tags in string,
 	 * Including script and style.
-	 * 
+	 *
 	 * @access public
 	 * @param string $string
 	 * @param bool $unbreak
@@ -451,18 +530,18 @@ final class Stringify
 	 */
 	public static function stripTag(string $string, bool $unbreak = false) : string
 	{
-	    $string = self::replaceRegex('@<(script|style)[^>]*?>.*?</\\1>@si', '', $string);
-	    $string = strip_tags($string);
-	    if ( $unbreak ) {
-	        $string = self::replaceRegex('/[\r\n\t ]+/', ' ', $string);
-	    }
-	    return trim($string);
+		$string = self::replaceRegex('@<(script|style)[^>]*?>.*?</\\1>@si', '', $string);
+		$string = strip_tags($string);
+		if ( $unbreak ) {
+		    $string = self::replaceRegex('/[\r\n\t ]+/', ' ', $string);
+		}
+		return trim($string);
 	}
 
 	/**
-	 * Strip numbers from string,
+	 * Strip numbers in string,
 	 * Using custom replace string.
-	 * 
+	 *
 	 * @access public
 	 * @param string $string
 	 * @param string $replace
@@ -474,9 +553,9 @@ final class Stringify
 	}
 
 	/**
-	 * Strip characters from string,
+	 * Strip special characters in string,
 	 * Using custom replace string.
-	 * 
+	 *
 	 * @access public
 	 * @param string $string
 	 * @param string $replace
@@ -488,9 +567,9 @@ final class Stringify
 	}
 
 	/**
-	 * Strip spaces from string,
+	 * Strip spaces in string,
 	 * Using custom replace string.
-	 * 
+	 *
 	 * @access public
 	 * @param string $string
 	 * @param string $replace
@@ -502,9 +581,9 @@ final class Stringify
 	}
 
 	/**
-	 * Strip break from string,
+	 * Strip break in string,
 	 * Using custom replace string.
-	 * 
+	 *
 	 * @access public
 	 * @param string $string
 	 * @param string $replace
@@ -516,7 +595,7 @@ final class Stringify
 	}
 
 	/**
-	 * Unserialize value if serialized.
+	 * Unserialize serialized value.
 	 *
 	 * @access public
 	 * @param string $value
@@ -616,7 +695,7 @@ final class Stringify
 
 	/**
 	 * Match string using regex.
-	 * 
+	 *
 	 * @access public
 	 * @param string $regex
 	 * @param string $string
@@ -635,8 +714,8 @@ final class Stringify
 	}
 
 	/**
-	 * Match all strings using regex.
-	 * 
+	 * Match all strings using regex (g).
+	 *
 	 * @access public
 	 * @param string $regex
 	 * @param string $string
@@ -709,17 +788,16 @@ final class Stringify
 	 * @param string $suffix
 	 * @return string
 	 */
-	public static function limit(string $string, int $length = 128, int $offset = 0, string $suffix = '...') : string
+	public static function limit(string $string, int $length = 128, int $offset = 0, ?string $suffix = '...') : string
 	{
 		$limit = $string;
-
-        $words = self::split($string, [
+		$words = self::split($string, [
 			'regex' => '/([\s\n\r]+)/u',
 			'limit' => 0,
 			'flags' => 2 // PREG_SPLIT_DELIM_CAPTURE
 		]);
 
-        if ( ($count = count($words)) ) {
+		if ( ($count = count($words)) ) {
 			$strlen = 0;
 			$last = $offset;
 			for (; $last < $count; ++$last) {
@@ -897,7 +975,35 @@ final class Stringify
 	}
 
 	/**
-	 * Basename with path format.
+	 * Format dash (Alias).
+	 *
+	 * @access public
+	 * @param mixed $value
+	 * @param array $except
+	 * @return mixed
+	 */
+	public static function underscore($value, array $except = [])
+	{
+		if ( TypeCheck::isArray($value) ) {
+			foreach ($value as $k => $v) {
+				if ( !TypeCheck::isString($k) || Arrayify::inArray($k, $except) ) {
+					continue;
+				}
+				if ( self::contains($k, '-') ) {
+					unset($value[$k]);
+					$k = self::undash($k);
+					$value[$k] = $v;
+				}
+			}
+		}
+		if ( TypeCheck::isString($value) && !Arrayify::inArray($value, $except) ) {
+			$value = self::undash($value);
+		}
+	    return $value;
+	}
+
+	/**
+	 * Get basename with path format.
 	 *
 	 * @access public
 	 * @param string $path
@@ -908,5 +1014,32 @@ final class Stringify
 	{
 		$path = self::replace('\\', '/', $path);
 		return basename($path, $suffix);
+	}
+
+	/**
+	 * Get break to line.
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public static function break() : string
+	{
+		return PHP_EOL;
+	}
+
+	/**
+	 * Convert string to interface.
+	 *
+	 * @access public
+	 * @param string $string
+	 * @return string
+	 */
+	public static function toInterface(string $string) : string
+	{
+		$i = self::lowercase($string);
+		if ( !self::contains($i, 'interface') ) {
+			$string = "{$string}Interface";
+		}
+		return $string;
 	}
 }
