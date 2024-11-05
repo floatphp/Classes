@@ -15,7 +15,10 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
-final class Exception
+/**
+ * Exception and error handler helper.
+ */
+final class Exception extends \Exception
 {
 	/**
 	 * Handle shutdown exception.
@@ -34,8 +37,7 @@ final class Exception
 	 * Get last error.
 	 *
 	 * @access public
-	 * @param void
-	 * @return string
+	 * @return mixed
 	 */
 	public static function getLastError()
 	{
@@ -46,7 +48,6 @@ final class Exception
 	 * Clear last error.
 	 *
 	 * @access public
-	 * @param void
 	 * @return void
 	 */
 	public static function clearLastError()
@@ -57,12 +58,14 @@ final class Exception
 	/**
 	 * Trigger user error.
 	 *
+	 * [E_USER_NOTICE: 1024]
+	 *
 	 * @access public
 	 * @param string $error
 	 * @param int $type
 	 * @return bool
 	 */
-	public static function trigger(string $error, int $type = E_USER_NOTICE) : bool
+	public static function trigger(string $error, int $type = 1024) : bool
 	{
 		return trigger_error($error, $type);
 	}
