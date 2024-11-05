@@ -18,14 +18,8 @@ namespace FloatPHP\Classes\Filesystem;
 final class Arrayify
 {
 	/**
-	 * @access private
-	 * @var mixed $orderby
-	 */
-	private static $orderby;
-
-	/**
 	 * Check array item.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $item
 	 * @param array $array
@@ -37,8 +31,21 @@ final class Arrayify
 	}
 
 	/**
+	 * Search array key.
+	 *
+	 * @access public
+	 * @param mixed $item
+	 * @param array $array
+	 * @return mixed
+	 */
+	public static function search($item, array $array)
+	{
+		return array_search($item, $array, true);
+	}
+
+	/**
 	 * Merge arrays.
-	 * 
+	 *
 	 * @access public
 	 * @param array $arrays
 	 * @return array
@@ -49,8 +56,31 @@ final class Arrayify
 	}
 
 	/**
+	 * Merge multidimensional arrays.
+	 *
+	 * @access public
+	 * @param array $override
+	 * @param array $arrays
+	 * @return array
+	 */
+	public static function mergeAll(array $override, array &$array) : array
+	{
+		$merged = $override;
+		foreach ($array as $key => $value) {
+			if ( TypeCheck::isArray($value) 
+			  && isset($merged[$key]) 
+			  && TypeCheck::isArray($merged[$key]) ) {
+				$merged[$key] = self::mergeAll($merged[$key], $value);
+			} else {
+				$merged[$key] = $value;
+			}
+		}
+		return $merged;
+	}
+
+	/**
 	 * Push array.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @param mixed $values
@@ -63,7 +93,7 @@ final class Arrayify
 
 	/**
 	 * Combine array.
-	 * 
+	 *
 	 * @access public
 	 * @param array $keys
 	 * @param array $values
@@ -76,7 +106,7 @@ final class Arrayify
 
 	/**
 	 * Map array.
-	 * 
+	 *
 	 * @access public
 	 * @param callable $callback
 	 * @param array $array
@@ -90,7 +120,7 @@ final class Arrayify
 
 	/**
 	 * Shift array.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @return mixed
@@ -102,7 +132,7 @@ final class Arrayify
 	
 	/**
 	 * Pop array.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @return mixed
@@ -114,7 +144,7 @@ final class Arrayify
 
 	/**
 	 * Get array diff.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @param array $arrays
@@ -127,7 +157,7 @@ final class Arrayify
 
 	/**
 	 * Check array key.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $key
 	 * @param array $array
@@ -140,7 +170,7 @@ final class Arrayify
 
 	/**
 	 * Get array keys.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @return array
@@ -152,7 +182,7 @@ final class Arrayify
 	
 	/**
 	 * Get array values.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @return array
@@ -164,7 +194,7 @@ final class Arrayify
 
 	/**
 	 * Randomize array.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @param int $num
@@ -177,7 +207,7 @@ final class Arrayify
 
 	/**
 	 * Slice array.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @param int $offset
@@ -192,7 +222,7 @@ final class Arrayify
 
 	/**
 	 * Filter array.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @param callable $callback
@@ -209,7 +239,7 @@ final class Arrayify
 
 	/**
 	 * Format array key case.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @param int $case
@@ -222,7 +252,7 @@ final class Arrayify
 
 	/**
 	 * Walk recursive array.
-	 * 
+	 *
 	 * @access public
 	 * @param array|object $array
 	 * @param callable $callback
@@ -236,7 +266,7 @@ final class Arrayify
 
 	/**
 	 * Unique array.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @param int $flags
@@ -249,7 +279,7 @@ final class Arrayify
 
 	/**
 	 * Unique arrays.
-	 * 
+	 *
 	 * @access public
 	 * @param array $array
 	 * @return array
