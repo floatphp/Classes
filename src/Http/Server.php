@@ -202,10 +202,10 @@ final class Server
 	 * Get current URL.
 	 *
 	 * @access public
-	 * @param bool $escape
+	 * @param bool $escape, Escape query
 	 * @return string
 	 */
-	public static function getCurrentUrl($escape = false) : string
+	public static function getCurrentUrl(bool $escape = false) : string
 	{
 		$url = self::getBaseUrl() . self::get('request-uri');
 		if ( $escape ) {
