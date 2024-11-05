@@ -15,6 +15,8 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Html;
 
+use FloatPHP\Classes\Filesystem\Arrayify;
+use FloatPHP\Classes\Filesystem\Stringify;
 use FloatPHP\Classes\Filesystem\TypeCheck;
 
 /**
@@ -23,6 +25,12 @@ use FloatPHP\Classes\Filesystem\TypeCheck;
  */
 final class Shortcode extends Hook
 {
+	/**
+	 * @access public
+	 * @var array SPIN, Spintax pattern
+	 */
+	public const SPIN = '/\{(((?>[^\{\}]+)|(?R))*?)\}/x';
+
 	/**
 	 * @access public
 	 * @var array $shortcodeTags
@@ -49,13 +57,13 @@ final class Shortcode extends Hook
 	 *
 	 * @access public
 	 * @param string $tag
-	 * @param string $callable
+	 * @param callable $callback
 	 * @return bool
 	 */
-	public function addShortcode($tag, $callable)
+	public function addShortcode(string $tag, $callback) : bool
 	{
-		if ( TypeCheck::isCallable($callable) ) {
-			$this->shortcodeTags[$tag] = $callable;
+		if ( TypeCheck::isCallable($callback) ) {
+			$this->shortcodeTags[$tag] = $callback;
 			return true;
 		}
 		return false;
@@ -68,7 +76,7 @@ final class Shortcode extends Hook
 	 * @param string $tag
 	 * @return bool
 	 */
-	public function removeShortcode($tag) : bool
+	public function removeShortcode(string $tag) : bool
 	{
 		if ( isset($this->shortcodeTags[$tag]) ) {
 			unset($this->shortcodeTags[$tag]);
@@ -95,9 +103,9 @@ final class Shortcode extends Hook
 	 * @param string $tag
 	 * @return bool
 	 */
-	public function shortcodeExists($tag) : bool
+	public function shortcodeExists(string $tag) : bool
 	{
-		return array_key_exists($tag, $this->shortcodeTags);
+		return Arrayify::hasKey($tag, $this->shortcodeTags);
 	}
 
 	/**
@@ -108,16 +116,20 @@ final class Shortcode extends Hook
 	 * @param string $tag
 	 * @return bool
 	 */
-	public function hasShortcode($content, $tag) : bool
+	public function hasShortcode(string $content, string $tag) : bool
 	{
-		if ( false === strpos($content, '[') ) {
+		if ( strpos($content, '[') === false ) {
 			return false;
 		}
+
 		if ( $this->shortcodeExists($tag) ) {
-			preg_match_all("/{$this->getShortcodeRegex()}/s", $content, $matches, PREG_SET_ORDER);
+
+			$regex = "/{$this->getShortcodeRegex()}/s";
+			preg_match_all($regex, $content, $matches, 2);
 			if ( empty($matches) ) {
 				return false;
 			}
+
 			foreach ($matches as $shortcode) {
 				if ( $tag === $shortcode[2] ) {
 					return true;
@@ -126,7 +138,9 @@ final class Shortcode extends Hook
 					return true;
 				}
 			}
+
 		}
+
 		return false;
 	}
 
@@ -155,8 +169,9 @@ final class Shortcode extends Hook
 	 */
 	public function getShortcodeRegex()
 	{
-		$tagnames = array_keys($this->shortcodeTags);
+		$tagnames  = array_keys($this->shortcodeTags);
 		$tagregexp = implode('|', array_map('preg_quote', $tagnames));
+
 		return
 		  '\\['
 		  . '(\\[?)'
@@ -200,6 +215,7 @@ final class Shortcode extends Hook
 		$atts = [];
 		$pattern = '/(\w+)\s*=\s*"([^"]*)"(?:\s|$)|(\w+)\s*=\s*\'([^\']*)\'(?:\s|$)|(\w+)\s*=\s*([^\s\'"]+)(?:\s|$)|"([^"]*)"(?:\s|$)|(\S+)(?:\s|$)/';
 		$content = preg_replace("/[\x{00a0}\x{200b}]+/u", ' ', $content);
+
 		if ( preg_match_all($pattern, $content, $match, PREG_SET_ORDER) ) {
 			foreach ($match as $tag) {
 				if ( !empty($tag[1]) ) {
@@ -218,9 +234,11 @@ final class Shortcode extends Hook
 					$atts[] = stripcslashes($tag[8]);
 				}
 			}
+
 		} else {
 			$atts = ltrim($content);
 		}
+
 		return $atts;
 	}
 
@@ -238,7 +256,7 @@ final class Shortcode extends Hook
 		$atts = (array)$atts;
 		$out = [];
 		foreach ($pairs as $name => $default) {
-			if ( array_key_exists($name, $atts) ) {
+			if ( Arrayify::hasKey($name, $atts) ) {
 				$out[$name] = $atts[$name];
 
 			} else {
@@ -268,6 +286,26 @@ final class Shortcode extends Hook
 		$pattern = $this->getShortcodeRegex();
 		return preg_replace_callback("/$pattern/s", [$this, 'stripShortcodeTag'], $content);
 	}
+
+	/**
+	 * Spin string.
+	 *
+	 * @access public
+	 * @param string $content
+	 * @return string
+	 */
+    public static function spin(string $content) : string
+    {
+        $cb = function ($match) {
+            $content = self::spin($match[1]);
+            $parts = explode('|', $content);
+            $rand = mt_rand(0, count($parts) - 1);
+            return $parts[$rand];
+        };
+
+        $value = Stringify::replaceRegexCb(self::SPIN, $cb, $content);
+        return $value ?: $content;
+    }
 
 	/**
 	 * Do shortcode hook tag.
