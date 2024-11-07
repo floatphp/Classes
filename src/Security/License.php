@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Security Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -71,7 +71,10 @@ class License
      */
     public function init(array $settings = [])
     {
-        $this->settings = Arrayify::merge($this->getDefaultSettings(), $settings);
+        $this->settings = Arrayify::merge(
+            $this->getDefaultSettings(),
+            $settings
+        );
     }
 
     /**
@@ -81,9 +84,9 @@ class License
      * @param string $key
      * @return void
      */
-    public function setKey(string $key = '')
+    public function setKey(?string $key = null)
     {
-        $this->key = !empty($key) ? $key : $this->getDefaultKey();
+        $this->key = $key ?: $this->getDefaultKey();
     }
 
     /**
@@ -93,9 +96,9 @@ class License
      * @param string $id
      * @return void
      */
-    public function setId(string $id = '')
+    public function setId(?string $id = null)
     {
-        $this->id = !empty($id) ? $id : $this->getDefaultId();
+        $this->id = $id ?: $this->getDefaultId();
     }
 
     /**
@@ -107,7 +110,10 @@ class License
      */
     public function setStrings(array $strings = [])
     {
-        $this->strings = Arrayify::merge($this->getDefaultStrings(), $strings);
+        $this->strings = Arrayify::merge(
+            $this->getDefaultStrings(),
+            $strings
+        );
     }
 
     /**
@@ -139,7 +145,7 @@ class License
      * @param string $var
      * @return mixed
      */
-    public function getDataVar($var = '')
+    public function getDataVar(string $var)
     {
         return $this->data['args'][$var] ?? '';
     }
@@ -196,7 +202,7 @@ class License
      * @param string $secret
      * @return bool
      */
-    public function validate(string $secret = '') : bool
+    public function validate(string $secret) : bool
     {
         // Content validation
         if ( strlen($secret) <= 0 ) {
@@ -488,10 +494,12 @@ class License
     {
         // Encrypt license data
         $secret = $this->encrypt($data);
+
         // Wrap secret
-        $result  = $this->inlineString($this->strings['begin']) . PHP_EOL;
-        $result .= wordwrap($secret, $this->settings['wrap'], PHP_EOL, true);
-        $result .= PHP_EOL . $this->inlineString($this->strings['end']);
+        $result  = $this->inlineString($this->strings['begin']) . Stringify::break();
+        $result .= wordwrap($secret, $this->settings['wrap'], Stringify::break(), true);
+        $result .= Stringify::break() . $this->inlineString($this->strings['end']);
+
         return $result;
     }
 
@@ -507,8 +515,11 @@ class License
         // Sort variables
         $begin = $this->inlineString($this->strings['begin']);
         $end = $this->inlineString($this->strings['end']);
+
         // Format license secret
-        $secret = trim(Stringify::replace([$begin, $end, "\r", "\n", "\t"], '', $secret));
+        $replace = [$begin, $end, "\r", "\n", "\t"];
+        $secret = trim(Stringify::remove($replace, $secret));
+
         // Decrypt license secret
         return $this->decrypt($secret);
     }

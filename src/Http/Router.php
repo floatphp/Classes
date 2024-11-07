@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -15,30 +15,28 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
-use FloatPHP\Interfaces\Classes\RouterInterface;
 use FloatPHP\Classes\Filesystem\{
     TypeCheck, Stringify, Arrayify
 };
-use \RuntimeException;
-use \Traversable;
+use FloatPHP\Interfaces\Classes\RouterInterface;
+use FloatPHP\Exceptions\Classes\RouterException;
 
 /**
  * Built-in HTTP router class,
- * @uses Inspired by https://altorouter.com
+ * @see https://dannyvankooten.github.io/AltoRouter/
  */
 class Router implements RouterInterface
 {
     /**
-     * @access protected
-     * @var array $routes
-     * @var array $namedRoutes
-     * @var array $basePath
-     * @var array $matchTypes
+     * @access public
+     *
+     * @var string BASE, Routes base path
+     * @var string REGEX, Routes compile pattern
+     * @var array TYPES, Routes matching types (regex)
      */
-    protected $routes = [];
-    protected $namedRoutes = [];
-    protected $basePath = '';
-    protected $matchTypes = [
+    public const BASE  = '';
+    public const REGEX = '`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`';
+    public const TYPES = [
         'i'  => '[0-9]++',
         'a'  => '[0-9A-Za-z]++',
         'h'  => '[0-9A-Fa-f]++',
@@ -48,192 +46,196 @@ class Router implements RouterInterface
     ];
 
     /**
-     * Create router in one call from config.
+     * @access protected
      *
-     * @param array $routes
-     * @param string $basePath
-     * @param array $matchTypes
+     * @var array $routes
+     * @var string $base, Route base path
+     * @var array $types, Route types
+     * @var array $names, Named routes
      */
-    public function __construct($routes = [], $basePath = '', $matchTypes = [])
+    protected $routes = [];
+    protected $base;
+    protected $types = [];
+    protected $names = [];
+
+    /**
+     * @inheritdoc
+     */
+    public function __construct(array $routes = [], string $base = self::BASE, array $types = self::TYPES)
     {
         $this->addRoutes($routes);
-        $this->setBasePath($basePath);
-        $this->addMatchTypes($matchTypes);
+        $this->setBase($base);
+        $this->addTypes($types);
     }
 
     /**
-     * Retrieves all routes,
-     * Useful if you want to process or display routes.
-     *
-     * @access public
-     * @return array
+     * @inheritdoc
      */
-    public function getRoutes()
+    public function getRoutes() : array
     {
         return $this->routes;
     }
 
     /**
-     * Add multiple routes at once from array in the following format,
-     * $routes = [[$method, $route, $target, $name]].
-     *
-     * @access public
-     * @param array $routes
-     * @return void
+     * @inheritdoc
      */
-    public function addRoutes($routes)
+    public function addRoutes(array $routes)
     {
-        if ( !TypeCheck::isArray($routes) && !$routes instanceof Traversable ) {
-            throw new RuntimeException('Routes should be an array or an instance of Traversable');
+        if ( !TypeCheck::isArray($routes) && !($routes instanceof \Traversable) ) {
+            throw new RouterException(
+                RouterException::notTraversable()
+            );
         }
+
         foreach ($routes as $route) {
-            call_user_func_array([$this,'map'],$route);
+            call_user_func_array([$this, 'map'], $route);
         }
     }
 
     /**
-     * Set the base path.
-     *
-     * @access public
-     * @param string $basePath
-     * @return void
+     * @inheritdoc
      */
-    public function setBasePath($basePath)
+    public function setBase(string $base)
     {
-        $this->basePath = $basePath;
+        $this->base = $base;
     }
 
     /**
-     * Add named match types.
-     *
-     * @access public
-     * @param array $matchTypes
-     * @return void
+     * @inheritdoc
      */
-    public function addMatchTypes($matchTypes)
+    public function addTypes(array $types)
     {
-        $this->matchTypes = Arrayify::merge($this->matchTypes,$matchTypes);
+        $this->types = Arrayify::merge($this->types, $types);
     }
 
     /**
-     * Map route to target (controller),
-     * (GET|POST|PATCH|PUT|DELETE),
-     * Custom regex must start with an '@'.
-     *
-     * @access public
-     * @param string $method
-     * @param string $route
-     * @param mixed $controller
-     * @param string $name
-     * @param string $permissions
-     * @return void
-     * @throws RuntimeException
+     * @inheritdoc
      */
-    public function map($method, $route, $controller, $name = null, $permissions = null)
+    public function map(string $method, string $route, $controller, ?string $name = null, $permission = null)
     {
-        $this->routes[] = [$method,$route,$controller,$name,$permissions];
+        $this->routes[] = [$method, $route, $controller, $name, $permission];
+
         if ( $name ) {
-            if ( isset($this->namedRoutes[$name]) ) {
-                throw new RuntimeException("Can not redeclare route '{$name}'");
+            if ( isset($this->names[$name]) ) {
+                throw new RouterException(
+                    RouterException::redeclared($name)
+                );
             }
-            $this->namedRoutes[$name] = $route;
+            $this->names[$name] = $route;
         }
+
         return;
     }
 
     /**
-     * Reversed routing,
-     * Generate the URL for a named route.
-     *
-     * @access public
-     * @param string $routeName
-     * @param array @params
-     * @return string
-     * @throws RuntimeException
+     * @inheritdoc
      */
-    public function generate($routeName, $params = [])
+    public function generate(string $name, array $params = []) : string
     {
         // Check if named route exists
-        if ( !isset($this->namedRoutes[$routeName]) ) {
-            throw new RuntimeException("Route '{$routeName}' does not exist");
+        if ( !isset($this->names[$name]) ) {
+            throw new RouterException(
+                RouterException::notExisting($name)
+            );
         }
+
         // Replace named parameters
-        $route = $this->namedRoutes[$routeName];
-        // prepend base path to route url again
-        $url = $this->basePath . $route;
-        if ( $matches = Stringify::matchAll('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`',$route,-1,PREG_SET_ORDER) ) {
+        $route = $this->names[$name];
+
+        // Prepend base path to route url again
+        $url = "{$this->base}{$route}";
+
+        if ( Stringify::matchAll(static::REGEX , $route, $matches, 2) ) {
+
             foreach ($matches as $index => $match) {
+
                 list($block, $pre, $type, $param, $optional) = $match;
+
                 if ( $pre ) {
-                    $block = substr($block,1);
+                    $block = substr($block, 1);
                 }
+
                 if ( isset($params[$param]) ) {
                     // Part is found, replace for param value
-                    $url = Stringify::replace($block, $params[$param],$url);
+                    $url = Stringify::replace($block, $params[$param], $url);
+
                 } elseif ( $optional && $index !== 0 ) {
                     // Only strip preceding slash if it's not at the base
-                    $url = Stringify::replace("{$pre}{$block}",'',$url);
+                    $url = Stringify::remove("{$pre}{$block}", $url);
+
                 } else {
-                    // Strip match block
-                    $url = Stringify::replace($block,'',$url);
+                    // Strip matched block
+                    $url = Stringify::remove($block, $url);
                 }
             }
         }
+
         return $url;
     }
 
     /**
-     * Match given request URL against stored routes.
-     *
-     * @access public
-     * @param string $requestUrl
-     * @param string $requestMethod
-     * @return mixed
+     * @inheritdoc
      */
-    public function match($requestUrl = null, $requestMethod = null)
+    public function match(?string $url = null, ?string $method = null)
     {
         $params = [];
-        // set Request Url if it isn't passed as parameter
-        if ( $requestUrl === null ) {
-            $requestUrl = Server::isSetted('REQUEST_URI') ? Server::get('REQUEST_URI') : '/';
+
+        // Set request URL
+        if ( TypeCheck::isNull($url) ) {
+            $url = Server::get('request-uri') ?: '/';
         }
-        // strip base path from request url
-        $requestUrl = substr($requestUrl, strlen($this->basePath));
-        // Strip query string (?a=b) from Request Url
-        if ( ($strpos = strpos($requestUrl, '?')) !== false ) {
-            $requestUrl = substr($requestUrl, 0, $strpos);
+
+        // Set request method
+        if ( TypeCheck::isNull($method) ) {
+            $method = Server::get('request-method') ?: 'GET';
         }
-        $lastRequestUrlChar = $requestUrl ? $requestUrl[strlen($requestUrl)-1] : '';
-        // set Request Method if it isn't passed as a parameter
-        if ( $requestMethod === null ) {
-            $requestMethod = Server::isSetted('REQUEST_METHOD') ? Server::get('REQUEST_METHOD') : 'GET';
+
+        // Strip base path from request URL
+        $url = substr($url, strlen($this->base));
+
+        // Strip query string (?a=b) from request URL
+        if ( ($strpos = strpos($url, '?')) !== false ) {
+            $url = substr($url, 0, $strpos);
         }
+
+        // Get last request URL char
+        $last = $url ? $url[strlen($url) -1 ] : '';
+
         foreach ($this->routes as $handler) {
-            list($methods,$route,$target,$name,$permissions) = $handler;
-            $method = (stripos($methods,$requestMethod) !== false);
+
+            list($routeMethod, $route, $controller, $name, $permission) = $handler;
+            $routeMethod = (stripos($routeMethod, $method) !== false);
+
             // Method did not match, continue to next route.
-            if ( !$method ) {
+            if ( !$routeMethod ) {
                 continue;
             }
+
             if ( $route === '*' ) {
-                // * wildcard (matches all)
+                // * Wildcard (matches all)
                 $match = true;
+
             } elseif ( isset($route[0]) && $route[0] === '@' ) {
                 // @ regex delimiter
                 $pattern = '`' . substr($route, 1) . '`u';
-                $match = preg_match($pattern, $requestUrl, $params) === 1;
+                $match = Stringify::match($pattern, $url, $params);
+
             } elseif ( ($position = strpos($route, '[')) === false ) {
-                // No params in url, do string comparison
-                $match = strcmp($requestUrl, $route) === 0;
+                // No params in URL, do string comparison
+                $match = strcmp($url, $route) === 0;
+
             } else {
-                // Compare longest non-param string with url before moving on to regex
-                if ( strncmp($requestUrl,$route,$position) !== 0 && ($lastRequestUrlChar === '/' || $route[$position-1] !== '/') ) {
+                // Compare longest non-param string with URL
+                if ( (strncmp($url, $route, $position) !== 0 ) 
+                  && ($last === '/' || $route[$position -1 ] !== '/') ) {
                     continue;
                 }
-                $regex = $this->compileRoute($route);
-                $match = preg_match($regex,$requestUrl,$params) === 1;
+                $regex = $this->compile($route);
+                $match = Stringify::match($regex, $url, $params);
             }
+
             if ( $match ) {
+ 
                 if ( $params ) {
                     foreach ($params as $key => $value) {
                         if ( TypeCheck::isInt($key) ) {
@@ -241,51 +243,59 @@ class Router implements RouterInterface
                         }
                     }
                 }
+
                 return [
-                    'target'      => $target,
-                    'params'      => $params,
-                    'name'        => $name,
-                    'permissions' => $permissions
+                    'target'     => $controller,
+                    'params'     => $params,
+                    'name'       => $name,
+                    'permission' => $permission
                 ];
             }
         }
+
         return false;
     }
 
     /**
-     * Compile regex for given route (Expensive).
+     * Compile route regex (Expensive).
      *
      * @access protected
-     * @param $route
+     * @param string $route
      * @return string
      */
-    protected function compileRoute($route)
+    protected function compile(string $route) : string
     {
-        if ( ($matches = Stringify::matchAll('`(/|\.|)\[([^:\]]*+)(?::([^:\]]*+))?\](\?|)`',$route,-1,PREG_SET_ORDER)) ) {
-            $matchTypes = $this->matchTypes;
+        if ( Stringify::matchAll(static::REGEX , $route, $matches, 2) ) {
+
             foreach ($matches as $match) {
+
                 list($block, $pre, $type, $param, $optional) = $match;
-                if ( isset($matchTypes[$type]) ) {
-                    $type = $matchTypes[$type];
+
+                if ( isset($this->types[$type]) ) {
+                    $type = $this->types[$type];
                 }
+
                 if ( $pre === '.' ) {
                     $pre = '\.';
                 }
-                $optional = $optional !== '' ? '?' : null;
-                // Older versions of PCRE require the 'P' in (?P<named>)
-                $pattern = '(?:'
-                        . ($pre !== '' ? $pre : null)
-                        . '('
-                        . ($param !== '' ? "?P<$param>" : null)
-                        . $type
-                        . ')'
-                        . $optional
-                        . ')'
-                        . $optional;
 
-                $route = Stringify::replace($block,$pattern,$route);
+                $optional = $optional !== '' ? '?' : null;
+
+                // Legacy version of PCRE require the 'P' in (?P<named>)
+                $pattern = '(?:'
+                    . ($pre !== '' ? $pre : null)
+                    . '('
+                    . ($param !== '' ? "?P<$param>" : null)
+                    . $type
+                    . ')'
+                    . $optional
+                    . ')'
+                    . $optional;
+
+                $route = Stringify::replace($block, $pattern, $route);
             }
         }
-        return "`^$route$`u";
+
+        return "`^{$route}$`u";
     }
 }

@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -19,7 +19,7 @@ final class Get
 {
 	/**
 	 * Get _GET value.
-	 * 
+	 *
 	 * @access public
 	 * @param string $key
 	 * @return mixed
@@ -34,7 +34,7 @@ final class Get
 
 	/**
 	 * Set _GET value.
-	 * 
+	 *
 	 * @access public
 	 * @param string $key
 	 * @param mixed $value
@@ -47,12 +47,12 @@ final class Get
 	
 	/**
 	 * Check _GET value.
-	 * 
+	 *
 	 * @access public
 	 * @param string $key
 	 * @return bool
 	 */
-	public static function isSetted(?string $key = null)
+	public static function isSetted(?string $key = null) : bool
 	{
 		if ( $key ) {
 			return isset($_GET[$key]);
@@ -62,7 +62,7 @@ final class Get
 
 	/**
 	 * Unset _GET value.
-	 * 
+	 *
 	 * @access public
 	 * @param string $key
 	 * @return void

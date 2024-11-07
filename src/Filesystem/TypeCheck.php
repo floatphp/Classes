@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -19,7 +19,7 @@ final class TypeCheck
 {
 	/**
 	 * Check string.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -31,14 +31,14 @@ final class TypeCheck
 
 	/**
 	 * Check object.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @param string $class
 	 * @param bool $string, Allow string
 	 * @return bool
 	 */
-	public static function isObject($value, $class = null, bool $string = false) : bool
+	public static function isObject($value, ?string $class = null, bool $string = false) : bool
 	{
 		if ( $class ) {
 			return is_a($value, $class, $string);
@@ -48,7 +48,7 @@ final class TypeCheck
 	
 	/**
 	 * Check array.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -60,7 +60,7 @@ final class TypeCheck
 	
 	/**
 	 * Check iterator.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -72,7 +72,7 @@ final class TypeCheck
 
 	/**
 	 * Check int.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -84,7 +84,7 @@ final class TypeCheck
 
 	/**
 	 * Check numeric (string cast).
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -96,7 +96,7 @@ final class TypeCheck
 
 	/**
 	 * Check float.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @param bool $string
@@ -112,7 +112,7 @@ final class TypeCheck
 
 	/**
 	 * Check bool.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -124,7 +124,7 @@ final class TypeCheck
 
 	/**
 	 * Check null.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -136,7 +136,7 @@ final class TypeCheck
 
 	/**
 	 * Check false.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -148,7 +148,7 @@ final class TypeCheck
 
 	/**
 	 * Check true.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -160,7 +160,7 @@ final class TypeCheck
 
 	/**
 	 * Check empty (string or array).
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -178,7 +178,7 @@ final class TypeCheck
 
 	/**
 	 * Check NAN (Not a number).
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -190,7 +190,7 @@ final class TypeCheck
 
 	/**
 	 * Check callable.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -202,19 +202,19 @@ final class TypeCheck
 
 	/**
 	 * Check function.
-	 * 
+	 *
 	 * @access public
 	 * @param string $function
 	 * @return bool
 	 */
 	public static function isFunction(string $function) : bool
 	{
-		return function_exists($function);
+		return function_exists(Stringify::undash($function));
 	}
 
 	/**
 	 * Check class.
-	 * 
+	 *
 	 * @access public
 	 * @param string $class
 	 * @param bool $autoload
@@ -227,20 +227,33 @@ final class TypeCheck
 
 	/**
 	 * Check sub class.
-	 * 
+	 *
 	 * @access public
-	 * @param string $sub
+	 * @param mixed $sub
 	 * @param string $class
 	 * @return bool
 	 */
-	public static function isSubClassOf(string $sub, string $class) : bool
+	public static function isSubClassOf($sub, string $class) : bool
 	{
 		return is_subclass_of($sub, $class);
+	}
+	
+	/**
+	 * Check interface.
+	 *
+	 * @access public
+	 * @param string $interface
+	 * @param bool $autoload
+	 * @return bool
+	 */
+	public static function isInterface(string $interface, bool $autoload = true) : bool
+	{
+		return interface_exists($interface, $autoload);
 	}
 
 	/**
 	 * Check interface.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $class
 	 * @param string $interface
@@ -255,25 +268,25 @@ final class TypeCheck
 				$implements[$key] = Stringify::basename($value);
 			}
 		}
-		return Arrayify::inArray($interface, $implements);
+		return Arrayify::inArray($interface, (array)$implements);
 	}
 
 	/**
 	 * Check method.
-	 * 
+	 *
 	 * @access public
-	 * @param object $object
+	 * @param mixed $object
 	 * @param string $method
 	 * @return bool
 	 */
-	public static function hasMethod(object $object, string $method) : bool
+	public static function hasMethod($object, string $method) : bool
 	{
 		return method_exists($object, $method);
 	}
 
 	/**
 	 * Check countable.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -285,7 +298,7 @@ final class TypeCheck
 
 	/**
 	 * Check ressource.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -297,7 +310,7 @@ final class TypeCheck
 
 	/**
 	 * Check scalar.
-	 * 
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @return bool
@@ -309,7 +322,7 @@ final class TypeCheck
 
 	/**
 	 * Check stream.
-	 * 
+	 *
 	 * @access public
 	 * @param string $path
 	 * @return bool
@@ -322,5 +335,33 @@ final class TypeCheck
 	    }
 	    $stream = substr($path, 0, $scheme);
 	    return Arrayify::inArray($stream, stream_get_wrappers(), true);
+	}
+	
+	/**
+	 * Check dynamic type.
+	 *
+	 * @access public
+	 * @param string $type
+	 * @param mixed $value
+	 * @return mixed
+	 * @internal
+	 */
+	public static function isDynamicType(string $type, $value = null)
+	{
+		if ( !self::isString($value) ) {
+			return false;
+		}
+
+        $pattern = sprintf('/^%s\|(.+)$/', $type);
+
+		if ( Stringify::match($pattern, $value, $matches) ) {
+			$matches = $matches[1] ?? 'NaN';
+			if ( $type == 'bool' && $matches == '0' ) {
+				$matches = 'NaN';
+			}
+			return $matches;
+		}
+
+		return false;
 	}
 }

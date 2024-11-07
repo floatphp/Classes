@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -148,7 +148,7 @@ final class Arrayify
 	 * @access public
 	 * @param array $array
 	 * @param array $arrays
-	 * @return mixed
+	 * @return array
 	 */
 	public static function diff(array $array, array ...$arrays)
 	{
@@ -173,13 +173,43 @@ final class Arrayify
 	 *
 	 * @access public
 	 * @param array $array
+	 * @param mixed $value
+	 * @param bool $search
 	 * @return array
 	 */
-	public static function keys(array $array) : array
+	public static function keys(array $array, $value = null, bool $search = false) : array
 	{
+		if ( $search ) {
+			return array_keys($array, $value, true);
+		}
 		return array_keys($array);
 	}
-	
+
+	/**
+	 * Get single array key.
+	 *
+	 * @access public
+	 * @param array $array
+	 * @return mixed
+	 */
+	public static function key(array $array)
+	{
+		return array_key_first($array);
+	}
+
+	/**
+	 * Fill array keys.
+	 *
+	 * @access public
+	 * @param array $array
+	 * @param mixed $values
+	 * @return array
+	 */
+	public static function fillKeys(array $array, $values) : array
+	{
+		return array_fill_keys($array, $values);
+	}
+
 	/**
 	 * Get array values.
 	 *
@@ -238,6 +268,20 @@ final class Arrayify
 	}
 
 	/**
+	 * Format array.
+	 *
+	 * @access public
+	 * @param array $array
+	 * @return array
+	 */
+	public static function format(array $array) : array
+	{
+		return self::filter(
+			self::values($array)
+		);
+	}
+
+	/**
 	 * Format array key case.
 	 *
 	 * @access public
@@ -254,7 +298,7 @@ final class Arrayify
 	 * Walk recursive array.
 	 *
 	 * @access public
-	 * @param array|object $array
+	 * @param mixed $array
 	 * @param callable $callback
 	 * @param mixed $arg
 	 * @return bool

@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -189,7 +189,7 @@ class Logger implements LoggerInterface
         $date = date('[d-m-Y]');
         $log  = "{$this->path}/{$this->filename}-{$date}.{$this->extension}";
         $date = date('[d-m-Y H:i:s]');
-        $msg  = "{$date} : [{$status}] - {$message}" . PHP_EOL;
+        $msg  = "{$date} : [{$status}] - {$message}" . Stringify::break();
         return File::w($log, $msg, true);
     }
 }

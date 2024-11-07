@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -17,27 +17,13 @@ namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\Stringify;
 
-final class ResponseXML
+final class Xml
 {
 	/**
-	 * Format XML string.
-	 * 
-	 * @access public 
-	 * @param string $xml
-	 * @return string
-	 */
-	public static function format(string $xml) : string
-	{
-		$xml = Stringify::remove('<?xml version="1.0" encoding="utf-8" ?>', $xml);
-		$xml = Stringify::remove('</xml>', $xml);
-		return $xml;
-	}
-	
-	/**
 	 * Parse XML string.
-	 * 
-	 * [NOCDATA: 16384]
-	 * [VERSION: 20908]
+	 *
+	 * [NOCDATA: 16384].
+	 * [VERSION: 20908].
 	 * 
 	 * @access public 
 	 * @param string $xml
@@ -72,5 +58,19 @@ final class ResponseXML
 	public static function ignoreErrors(bool $handling = true)
 	{
 		return libxml_use_internal_errors($handling);
+	}
+
+	/**
+	 * Format XML string.
+	 * 
+	 * @access public 
+	 * @param string $xml
+	 * @return string
+	 */
+	public static function format(string $xml) : string
+	{
+		$xml = Stringify::remove('<?xml version="1.0" encoding="utf-8" ?>', $xml);
+		$xml = Stringify::remove('</xml>', $xml);
+		return $xml;
 	}
 }

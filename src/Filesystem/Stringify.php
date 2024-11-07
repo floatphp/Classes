@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -99,11 +99,11 @@ final class Stringify
 	 * Remove string from other string.
 	 *
 	 * @access public
-	 * @param string $string
-	 * @param string $subject
+	 * @param mixed $string
+	 * @param mixed $subject
 	 * @return string
 	 */
-	public static function remove(string $string, string $subject) : string
+	public static function remove($string, $subject) : string
 	{
 		return (string)self::replace($string, '', $subject);
 	}
@@ -683,12 +683,14 @@ final class Stringify
 	            }
 	        case 'a':
 	        case 'O':
-	            return (bool)self::match("/^{$token}:[0-9]+:/s", $value);
+				self::match("/^{$token}:[0-9]+:/s", $value, $matches);
+	            return (bool)$matches;
 	        case 'b':
 	        case 'i':
 	        case 'd':
 	            $end = $strict ? '$' : '';
-	            return (bool)self::match("/^{$token}:[0-9.E+-]+;$end/", $value);
+	            self::match("/^{$token}:[0-9.E+-]+;$end/", $value, $matches);
+				return (bool)$matches;
 	    }
 	    return false;
 	}
@@ -699,18 +701,23 @@ final class Stringify
 	 * @access public
 	 * @param string $regex
 	 * @param string $string
-	 * @param int $index
+	 * @param mixed $matches
 	 * @param int $flags
 	 * @param int $offset
-	 * @return mixed
+	 * @return bool
 	 */
-	public static function match(string $regex, string $string, int $index = 0, int $flags = 0, int $offset = 0)
+	public static function match(string $regex, string $string, &$matches, int $flags = 0, int $offset = 0) : bool
 	{
-		preg_match($regex, $string, $matches, $flags, $offset);
-		if ( $index === -1 ) {
-			return $matches;
+		$shift = ($flags === -1) ? true : false;
+		$flags = ($flags !== -1) ? $flags : 0;
+
+		$matched = (bool)preg_match($regex, $string, $matches, $flags, $offset);
+		
+		if ( $shift && $matches ) {
+			$matches = $matches[0] ?? [];
 		}
-		return $matches[$index] ?? false;
+
+		return (bool)$matched;
 	}
 
 	/**
@@ -719,38 +726,23 @@ final class Stringify
 	 * @access public
 	 * @param string $regex
 	 * @param string $string
-	 * @param int $index
+	 * @param mixed $matches
 	 * @param int $flags
 	 * @param int $offset
-	 * @return mixed
+	 * @return bool
 	 */
-	public static function matchAll(string $regex, string $string, int $index = 0, int $flags = 0, int $offset = 0)
+	public static function matchAll(string $regex, string $string, &$matches, int $flags = 0, int $offset = 0) : bool
 	{
-		preg_match_all($regex, $string, $matches, $flags, $offset);
-		if ( $index === -1 ) {
-			return $matches;
-		}
-		return $matches[$index] ?? false;
-	}
+		$shift = ($flags === -1) ? true : false;
+		$flags = ($flags !== -1) ? $flags : 0;
 
-	/**
-	 * Get random string.
-	 * 
-	 * @access public
-	 * @param int $length
-	 * @param string $char
-	 * @return string
-	 * @todo Remove
-	 * @deprecated
-	 */
-	public static function randomize(?int $length = null, ?string $char = null) : string
-	{
-		if ( !$char ) {
-			$char  = implode(range('a', 'f'));
-			$char .= implode(range('0', '9'));
+		$matched = (bool)preg_match_all($regex, $string, $matches, $flags, $offset);
+		
+		if ( $shift && $matches ) {
+			$matches = $matches[0] ?? [];
 		}
-		$shuffled = self::shuffle($char);
-		return substr($shuffled, 0, $length);
+
+		return (bool)$matched;
 	}
 
 	/**

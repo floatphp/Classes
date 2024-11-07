@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Security Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -17,8 +17,14 @@ namespace FloatPHP\Classes\Security;
 
 use FloatPHP\Classes\Filesystem\Stringify;
 
-final class Password extends Tokenizer
+final class Password
 {
+    /**
+     * @access private
+     * @var int LENGTH, Password length
+     */
+    private const LENGTH = 8;
+
     /**
      * Generate password.
      *
@@ -27,9 +33,9 @@ final class Password extends Tokenizer
      * @param bool $special
      * @return string
      */
-    public static function generate(int $length = 8, bool $special = true) : string
+    public static function generate(int $length = self::LENGTH, bool $special = true) : string
     {
-        return parent::generate($length, $special);
+        return Tokenizer::generate($length, $special);
     }
 
     /**
@@ -46,15 +52,19 @@ final class Password extends Tokenizer
     }
 
     /**
+     * Get password hash.
+     *
+     * [BCRYPT: 2y].
+     *
      * @access public
-     * @param string $password
-     * @param string $algo
-     * @param string $options
+     * @param string $pswd
+     * @param mixed $algo
+     * @param array $options
      * @return mixed
      */
-    public static function hash(string $password, string $algo = PASSWORD_BCRYPT, array $options = [])
+    public static function hash(string $pswd, $algo = '2y', array $options = [])
     {
-        return password_hash($password, $algo, $options);
+        return password_hash($pswd, $algo, $options);
     }
 
     /**
@@ -65,16 +75,23 @@ final class Password extends Tokenizer
      * @param int $length
      * @return bool
      */
-    public static function isStrong(string $pswd, int $length = 8) : bool
+    public static function isStrong(string $pswd, int $length = self::LENGTH) : bool
     {
-        if ( $length < 8 ) {
-            $length = 8;
+        if ( $length < self::LENGTH ) {
+            $length = self::LENGTH;
         }
-        
-        $uppercase = Stringify::match('@[A-Z]@', $pswd);
-        $lowercase = Stringify::match('@[a-z]@', $pswd);
-        $number    = Stringify::match('@[0-9]@', $pswd);
-        $special   = Stringify::match('@[^\w]@', $pswd);
+
+        Stringify::match('@[A-Z]@', $pswd, $matches, -1);
+        $uppercase = $matches;
+
+        Stringify::match('@[a-z]@', $pswd, $matches, -1);
+        $lowercase = $matches;
+
+        Stringify::match('@[0-9]@', $pswd, $matches, -1);
+        $number = $matches;
+
+        Stringify::match('@[^\w]@', $pswd, $matches, -1);
+        $special = $matches;
 
         if ( !$uppercase 
           || !$lowercase 
@@ -84,6 +101,7 @@ final class Password extends Tokenizer
         ) {
             return false;
         }
+
         return true;
     }
 }

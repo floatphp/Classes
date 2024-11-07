@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Server Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -16,7 +16,7 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Server;
 
 use FloatPHP\Classes\Filesystem\{
-    TypeCheck, Stringify, Validator
+    Stringify, Validator
 };
 use \DateTime;
 use \DateInterval;
@@ -82,11 +82,11 @@ final class Date extends DateTime
      * Convert date object to string.
      * 
      * @access public
-     * @param self $date
+     * @param object $date
      * @param string $to
      * @return string
      */
-    public static function toString(self $date, string $to = self::FORMAT) : string
+    public static function toString(DateTime $date, string $to = self::FORMAT) : string
     {
         return $date->format($to);
     }
@@ -105,7 +105,7 @@ final class Date extends DateTime
     public static function difference($date, $expire, ?string $i = null, string $to = self::FORMAT) : int
     {
         // Check date
-        if ( !self::isValid($date) || !self::isValid($expire) ) {
+        if ( !Validator::isValidDate($date) || !Validator::isValidDate($expire) ) {
             return -1;
         }
 
@@ -154,7 +154,7 @@ final class Date extends DateTime
     }
 
     /**
-     * Return current time.
+     * Get current time.
      *
      * @access public
      * @return int
@@ -210,7 +210,7 @@ final class Date extends DateTime
     /**
      * Get date expiring interval using duration string,
      * Returns -1 if invalid date or duration.
-     * 
+     *
      * @access public
      * @param string $duration
      * @param mixed $date
@@ -221,7 +221,7 @@ final class Date extends DateTime
     {
         // Check date
         if ( !self::maybeDuration($duration) 
-          || !self::isValid($date) ) {
+          || !Validator::isValidDate($date) ) {
             return -1;
         }
 
@@ -252,24 +252,6 @@ final class Date extends DateTime
         );
 
         return (int)$limit - $now;
-    }
-
-    /**
-     * Validate date.
-     * 
-     * @access public
-     * @param mixed $date
-     * @return bool
-     */
-    public static function isValid($date) : bool
-    {
-        if ( TypeCheck::isString($date) ) {
-            if ( Stringify::lowercase($date) == 'now' 
-              || Validator::isValidDate($date, true) ) {
-                return true;
-            }
-        }
-        return self::isObject($date);
     }
 
     /**

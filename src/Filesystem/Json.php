@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -25,7 +25,7 @@ final class Json extends File
 	 * @param bool $isArray
 	 * @return mixed
 	 */
-	public static function parse($file, $isArray = false)
+	public static function parse(string $file, bool $isArray = false)
 	{
 		return self::decode(self::r($file), $isArray);
 	}
@@ -38,17 +38,17 @@ final class Json extends File
 	 * @param bool $isArray
 	 * @return mixed
 	 */
-	public static function decode($value, $isArray = false)
+	public static function decode(string $value, bool $isArray = false)
 	{
-		return json_decode((string)$value, (bool)$isArray);
+		return json_decode($value, $isArray);
 	}
 
 	/**
 	 * Encode JSON without flags.
 	 *
 	 * @access public
-	 * @param mixen $value
-	 * @return string
+	 * @param mixed $value
+	 * @return mixed
 	 */
 	public static function encode($value)
 	{
@@ -56,19 +56,19 @@ final class Json extends File
 	}
 
 	/**
-	 * Format JSON.
-	 * 
-	 * JSON_UNESCAPED_SLASHES : 64
-	 * JSON_PRETTY_PRINT : 128
-	 * JSON_UNESCAPED_UNICODE : 256
-	 * 
+	 * Encode JSON using flags.
+	 *
+	 * [SLASHES: 64].
+	 * [PRETTY: 128].
+	 * [UNICODE: 256].
+	 *
 	 * @access public
 	 * @param mixed $value
 	 * @param int $flags
 	 * @param int $depth
 	 * @return mixed
 	 */
-	public static function format($value, $flags = 64|256, $depth = 512)
+	public static function format($value, int $flags = 64|256, int $depth = 512)
 	{
 		return json_encode($value, $flags, $depth);
 	}

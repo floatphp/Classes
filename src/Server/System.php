@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Server Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -60,8 +60,8 @@ final class System
      */
     public static function getMemoryLimit() : int
     {
-    	if ( TypeCheck::isFunction('ini_get') ) {
-    		$limit = self::getIni('memory_limit');
+    	if ( TypeCheck::isFunction('ini-get') ) {
+    		$limit = self::getIni('memory-limit');
     		if ( Stringify::contains(Stringify::lowercase($limit), 'g') ) {
     			$limit = intval($limit) * 1024;
     			$limit = "{$limit}M";
@@ -229,7 +229,7 @@ final class System
      */
     public static function getIni(string $option)
     {
-        $option = Stringify::replace('-', '_', $option);
+        $option = Stringify::undash($option);
         return ini_get($option);
     }
 
@@ -255,7 +255,7 @@ final class System
      */
     public static function setMemoryLimit($value = '128M')
     {
-        return self::setIni('memory_limit', $value);
+        return self::setIni('memory-limit', $value);
     }
 
     /**
@@ -296,8 +296,8 @@ final class System
         if ( self::getOsName() == 'windows' ) {
             if ( TypeCheck::isClass('COM') ) {
                 $system = new \COM('WinMgmts:\\\\.');
-                $cpu = $system->InstancesOf('Win32_Processor');
-                $load = 0;
+                $cpu   = $system->InstancesOf('Win32_Processor');
+                $load  = 0;
                 $count = 0;
                 foreach ($cpu as $key => $core) {
                     $load += $core->LoadPercentage;
@@ -323,28 +323,28 @@ final class System
      * Get CPU cores count.
      *
      * @access public
-     * @param void
      * @return int
      */
-    public static function getCpuCores()
+    public static function getCpuCores() : int
     {
         $count = 1; // Init with min
-        if ( !TypeCheck::isFunction('ini_get') ) {
-            return $count;
-        }
-        if ( self::getIni('open_basedir') ) {
+        if ( !TypeCheck::isFunction('ini-get') ) {
             return $count;
         }
 
-        if ( self::getOs() == 'winnt' ) {
+        if ( self::getIni('open-basedir') ) {
+            return $count;
+        }
+
+        if ( self::getOsName() == 'windows' ) {
             $count = (int)getenv('NUMBER_OF_PROCESSORS');
 
         } else {
             if ( !($info = File::r('/proc/cpuinfo')) ) {
                 return $count;
             }
-            if ( ($match = Stringify::matchAll('/^processor/m',$info)) ) {
-                $count = count($match);
+            if ( Stringify::matchAll('/^processor/m', $info, $matches) ) {
+                $count = count($matches);
             }
         }
         return $count;
@@ -384,8 +384,8 @@ final class System
         } else {
             $free = self::runCommand('free');
             $free = (string)trim($free);
-            $args = explode("\n",$free);
-            $memory = explode(' ',$args[1]);
+            $args = explode("\n", $free);
+            $memory = explode(' ', $args[1]);
 
             // Format array
             $memory = Arrayify::filter($memory, function($value) {

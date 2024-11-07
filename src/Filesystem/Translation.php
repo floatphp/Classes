@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -415,12 +415,15 @@ class Translation
 	 */
 	protected function extractPluralForms(string $header) : string
 	{
-		if ( ($regs = Stringify::match("/(^|\n)plural-forms: ([^\n]*)\n/i", $header, -1)) ) {
-			$exp = $regs[2];
+		$pattern = "/(^|\n)plural-forms: ([^\n]*)\n/i";
+		
+		if ( Stringify::match($pattern, $header, $matches) ) {
+			$exp = $matches[2];
 
 		} else {
 			$exp = "nplurals=2; plural=n == 1 ? 0 : 1;";
 		}
+
 		return $exp;
 	}
 

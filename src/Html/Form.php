@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Html Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -610,7 +610,7 @@ class Form
 				switch ($key) {
 					case 'wrap-tag':
 					case 'title-tag':
-						$atts[$key] = Stringify::replace(['<', '>'], '', $value);
+						$atts[$key] = Stringify::remove(['<', '>'], $value);
 						break;
 					case 'options':
 						if ( TypeCheck::isString($value) ) {

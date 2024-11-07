@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -34,7 +34,8 @@ class File
 			'accessed'    => self::getLastAccess($path),
 			'changed'     => self::getLastChange($path),
 			'size'        => self::getSize($path),
-			'permissions' => self::getPermissions($path)
+			'permissions' => self::getPermissions($path),
+			'type'        => self::getMimeType($path)
 		];
 	}
 
@@ -47,11 +48,14 @@ class File
 	 */
 	public static function getParentDir(string $path) : string
 	{
-		return dirname(Stringify::formatPath($path));
+		return dirname(
+			Stringify::formatPath($path)
+		);
 	}
 
 	/**
 	 * Get file extension.
+	 * [PATHINFO_EXTENSION: 4].
 	 *
 	 * @access public
 	 * @param string $path
@@ -60,10 +64,8 @@ class File
 	 */
 	public static function getExtension(string $path, bool $format = true) : string
 	{
-		$ext = pathinfo(
-			Stringify::formatPath($path),
-			PATHINFO_EXTENSION
-		);
+		$path = Stringify::formatPath($path);
+		$ext  = pathinfo($path, 4);
 		if ( $format ) {
 			$ext = strtolower($ext);
 		}
@@ -174,31 +176,59 @@ class File
 	}
 
 	/**
-	 * Get file lines.
-	 * 
-	 * [Ignore new : 2]
-	 * [Skip empty : 4]
+	 * Get all file lines.
+	 * [ignore-new: 2].
+	 * [skip-empty: 4].
 	 *
 	 * @access public
 	 * @param string $path
-	 * @param array $exclude
 	 * @param int $flags
 	 * @return array
 	 */
-	public static function getLines(string $path, array $exclude = [], int $flags = 2|4) : array
+	public static function getLines(string $path, int $flags = 2|4) : array
 	{
 		$lines = [];
-		if ( ($lines = @file($path, $flags)) ) {
-			if ( $exclude ) {
-				foreach ($lines as $key => $value) {
-					foreach ($exclude as $search) {
-						if ( Stringify::contains($value, $search) ) {
-							unset($lines[$key]);
-						}
-					}
-				}
-			}
+		
+		if ( !self::isFile($path) && !self::isEmpty($path) ) {
+			return $lines;
 		}
+
+		if ( ($buffer = @file($path, $flags)) ) {
+			$lines = $buffer;
+		}
+		
+		return $lines;
+	}
+	
+	/**
+	 * Parse file lines using stream.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param int $limit
+	 * @return array
+	 */
+	public static function parseLines(string $path, int $limit = 10) : array
+	{
+		$lines = [];
+
+		if ( !self::isFile($path) && !self::isEmpty($path) ) {
+			return $lines;
+		}
+
+		if ( !$limit ) {
+			$limit = 1;
+		}
+
+		if ( ($handle = fopen($path, 'r')) ) {
+			$offset = 0;
+			while ( (($line = fgets($handle)) !== false) && ($offset < $limit) ) {
+				$offset++;
+				$lines[] = $line;
+			}
+			fclose($handle);
+		}
+
 		return $lines;
 	}
 
@@ -227,7 +257,7 @@ class File
 	public static function addBreak(string $path)
 	{
 		$handle = @fopen($path, 'a');
-		@fwrite($handle, PHP_EOL);
+		@fwrite($handle, Stringify::break());
 		fclose($handle);
 	}
 
@@ -283,8 +313,8 @@ class File
     }
 
 	/**
-	 * Check whether path is regular file.
-	 *
+	 * Check file.
+	 * 
 	 * @access public
 	 * @param string $path
 	 * @return bool
@@ -398,12 +428,11 @@ class File
 	 */
     public static function clearDir(string $path) : bool
     {
-		$handler = false;
-
-		if ( self::isDir($path) ) {
-			$handler = @opendir($path);
+		if ( !self::isDir($path) ) {
+			return false;
 		}
 
+		$handler = @opendir($path);
 		if ( !TypeCheck::isResource($handler) ) {
 			return false;
 		}
@@ -415,7 +444,7 @@ class File
 
 			    } else {
 			    	$dir = "{$path}/{$file}";
-				    foreach( @scandir($dir) as $file ) {
+				    foreach ( @scandir($dir) as $file ) {
 				        if ( '.' === $file || '..' === $file ) {
 				        	continue;
 				        }
@@ -430,6 +459,7 @@ class File
 			    }
 			}
 	   }
+	   
 	   closedir($handler);
 	   return true;
     }
@@ -460,7 +490,7 @@ class File
 	}
 
 	/**
-	 * Check path exists (file|directory).
+	 * Check whether path exists (file|directory).
 	 *
 	 * @access public
 	 * @param string $path
@@ -477,19 +507,19 @@ class File
 	 *
 	 * @access public
 	 * @param string $path
-	 * @param bool $inc (Use include path)
-	 * @param resource|array $context
-	 * @param int $offset
+	 * @param bool $i Include path
+	 * @param mixed $c Context
+	 * @param int $o Offset
 	 * @return mixed
 	 */
-	public static function r(string $path, bool $inc = false, $context = null, int $offset = 0)
+	public static function r(string $path, bool $i = false, $c = null, int $o = 0)
 	{
 		if ( TypeCheck::isStream($path) ) {
-			if ( TypeCheck::isArray($context) ) {
-				$context = stream_context_create($context);
+			if ( TypeCheck::isArray($c) ) {
+				$c = stream_context_create($c);
 			}
 		}
-		return @file_get_contents($path, $inc, $context, $offset);
+		return @file_get_contents($path, $i, $c, $o);
 	}
 
 	/**
@@ -506,17 +536,16 @@ class File
 		$flag = 0;
 		if ( $append ) {
 			$flag = FILE_APPEND;
-			$input .= PHP_EOL;
+			$input .= Stringify::break();
 		}
 		return (bool)@file_put_contents($path, $input, $flag);
 	}
 
 	/**
-	 * Scan path (Directory).
-	 * 
-	 * [ASC : 0]
-	 * [DESC : 1]
-	 * [NO : 2]
+	 * Scan directory,
+	 * [ASC: 0],
+	 * [DESC: 1],
+	 * [NO: 2].
 	 *
 	 * @access public
 	 * @param string $path
@@ -644,6 +673,9 @@ class File
 	 *
 	 * @access public
 	 * @param string $path
+	 * @param bool $remove
+	 * @param string $timeout
+	 * @param bool $verify
 	 * @return mixed
 	 */
 	public static function download(string $path)
@@ -660,55 +692,42 @@ class File
 	}
 
 	/**
-	 * Validate file mime type.
-	 *
-	 * @access public
-	 * @param string $path
-	 * @param array $mimes
-	 * @return bool
-	 */
-	public static function validate(string $path, array $mimes = []) : bool
-	{
-		$mime = self::getMime($path, $mimes);
-		return ($mime['type'] !== false);
-	}
-
-	/**
 	 * Get file mime type.
+	 * [FILEINFO_MIME_TYPE: 16].
 	 *
 	 * @access public
 	 * @param string $path
-	 * @param array $mimes
-	 * @return array
+	 * @param string $ext
+	 * @param array $types
+	 * @return string
 	 */
-	public static function getMime(string $path, array $mimes = []) : array
+	public static function getMimeType(string $path, ?string $ext = null, ?array $types = []) : string
 	{
-		$filename = Stringify::basename($path);
-		if ( empty($mimes) ) {
-			$mimes = self::mimes();
+		if ( TypeCheck::isClass('\finfo') ) {
+			return (new \finfo(16))->file($path) ?: 'undefined';
 		}
 
-		$type = false;
-		$ext  = false;
+		if ( !$ext ) {
+			$ext = self::getExtension($path);
+		}
 
-		foreach ( $mimes as $regex => $mime ) {
-			$regex = '!\.(' . $regex . ')$!i';
-			if ( ($match = Stringify::match($regex, $filename, 1)) ) {
-				$type = $mime;
-				$ext  = $match;
-				break;
+		foreach ($types as $match => $type) {
+			$match = explode('|', $match);
+			if ( Arrayify::inArray($ext, $match)) {
+				return $type;
 			}
 		}
-		return compact('type', 'ext');
+
+		return 'undefined';
 	}
 
 	/**
-	 * Get default file mime types (Regex).
+	 * Get file allowed mime types.
 	 *
 	 * @access public
 	 * @return array
 	 */
-	public static function mimes() : array
+	public static function getMimes() : array
 	{
 		return [
 			'jpg|jpeg|jpe'       => 'image/jpeg',

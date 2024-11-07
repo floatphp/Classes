@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -316,7 +316,8 @@ final class Server
     {
 		$token = false;
         if ( ($headers = self::getAuthorizationHeaders()) ) {
-            $token = Stringify::match('/Bearer\s(\S+)/', $headers, 1);
+			Stringify::match('/Bearer\s(\S+)/', $headers, $matches);
+            $token = $matches[1] ?? false;
         }
         return (string)$token;
     }
@@ -346,18 +347,40 @@ final class Server
      */
     public static function getDomain(?string $url = null) : string
     {
-		if ( !$url ) {
-			$url = self::getCurrentUrl(true);
-		}
+		$url = $url ?: self::getCurrentUrl(true);
 
 		$pieces  = Stringify::parseUrl($url);
 		$domain  = isset($pieces['host']) ? $pieces['host'] : $pieces['path'];
-		$pattern = '/(?P<domain>[a-z0-9][a-z0-9\\-]{1,63}\\.[a-z\\.]{2,6})$/i';
-		
-		if ( ($domain = Stringify::match($pattern, $domain)) ) {
-			return $domain;
-		}
 
-		return $url;
+		$pattern = '/(?P<domain>[a-z0-9][a-z0-9\\-]{1,63}\\.[a-z\\.]{2,6})$/i';
+		Stringify::match($pattern, $domain, $domain, -1);
+
+		return $domain ?: $url;
+    }
+
+    /**
+     * Get HTTP referer.
+     *
+     * @access public
+     * @return mixed
+     */
+    public static function getReferer()
+    {
+		return self::get('http-referer');
+    }
+
+    /**
+     * Get server modules.
+     *
+     * @access public
+     * @return array
+     */
+    public static function getModules() : array
+    {
+		$modules = [];
+		if ( TypeCheck::isFunction('apache-get-modules') ) {
+			$modules = apache_get_modules();
+		}
+		return $modules;
     }
 }

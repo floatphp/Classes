@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -379,7 +379,7 @@ class Mail
         }
         if ( $this->hasAttachments() ) {
             $message  = $this->assembleAttachmentBody();
-            $headers .= PHP_EOL . $this->assembleAttachmentHeaders();
+            $headers .= Stringify::break() . $this->assembleAttachmentHeaders();
         } else {
             $message = $this->getWrapMessage();
         }
@@ -408,7 +408,7 @@ class Mail
         $head = [];
         $head[] = "MIME-Version: 1.0";
         $head[] = "Content-Type: multipart/mixed; boundary=\"{$this->uid}\"";
-        return join(PHP_EOL,$head);
+        return join(Stringify::break(),$head);
     }
 
     /**
@@ -431,7 +431,7 @@ class Mail
         foreach ($this->attachments as $attachment) {
             $body[] = $this->getAttachmentMimeTemplate($attachment);
         }
-        return implode(PHP_EOL, $body) . '--';
+        return implode(Stringify::break(), $body) . '--';
     }
 
     /**
@@ -453,7 +453,7 @@ class Mail
         $head[] = $data;
         $head[] = "";
         $head[] = "--{$this->uid}";
-        return implode(PHP_EOL, $head);
+        return implode(Stringify::break(), $head);
     }
 
     /**
@@ -585,7 +585,7 @@ class Mail
         if ( empty($this->headers) ) {
             return '';
         }
-        return join(PHP_EOL, $this->headers);
+        return join(Stringify::break(), $this->headers);
     }
 
     /**

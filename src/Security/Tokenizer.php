@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Security Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -15,11 +15,12 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Security;
 
-use FloatPHP\Classes\Filesystem\Stringify;
+use FloatPHP\Classes\Filesystem\{
+    Stringify, TypeCheck
+};
 
 /**
- * Built-in tokenizer class,
- * @uses JWT for external use is recommended.
+ * Built-in tokenizer class.
  */
 class Tokenizer
 {
@@ -56,23 +57,30 @@ class Tokenizer
     public static function match(string $public, string $secret, ?string $prefix = null)
     {
         $pattern = '/{user:(.*?)}{pswd:(.*?)}/';
+
         $encryption = new Encryption($public, $secret);
         $encryption->setPrefix((string)$prefix);
         $access = $encryption->decrypt();
-        $user = Stringify::match($pattern, $access, 1);
-        $pswd = Stringify::match($pattern, $access, 2);
+
+        Stringify::match($pattern, $access, $matches);
+        $user = $matches[1] ?? false;
+
+        Stringify::match($pattern, $access, $matches);
+        $pswd = $matches[2] ?? false;
+
         if ( $user && $pswd ) {
             return [
                 'username' => $user,
                 'password' => $pswd
             ];
         }
+
         return false;
     }
 
     /**
      * Get range of numbers.
-     * 
+     *
      * @access public
      * @param int $min
      * @param int $max
@@ -84,21 +92,24 @@ class Tokenizer
         if ( $range < 0 ) {
             return $min;
         }
-        $log = log($range, 2);
-        $bytes = (int)($log / 8) + 1;
-        $bits = (int)$log + 1;
+
+        $log    = log($range, 2);
+        $bytes  = (int)($log / 8) + 1;
+        $bits   = (int)$log + 1;
         $filter = (1 << $bits) - 1;
+
         do {
             $randomBytes = (string)openssl_random_pseudo_bytes($bytes);
             $rand = hexdec(bin2hex($randomBytes));
             $rand = $rand & $filter;
         } while ($rand >= $range);
-        return $min + $rand;
+
+        return ($min + $rand);
     }
 
     /**
-     * Generate token.
-     * 
+     * Generate random token.
+     *
      * @access public
      * @param int $length
      * @param bool $special
@@ -106,7 +117,7 @@ class Tokenizer
      */
     public static function generate(int $length = 16, bool $special = false) : string
     {
-        $token = '';
+        $token  = '';
         $chars  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $chars .= 'abcdefghijklmnopqrstuvwxyz';
         $chars .= '0123456789';
@@ -120,17 +131,17 @@ class Tokenizer
     }
 
     /**
-     * base64 encode.
+     * Encode base64.
      *
      * @access public
-     * @param string $data
+     * @param string $value
      * @param int $loop
      * @return string
      */
-    public static function base64(string $data, int $loop = 1) : string
+    public static function base64(string $value, int $loop = 1) : string
     {
-        $encode = base64_encode($data);
-        $loop = ($loop > 10) ? 10 : $loop;
+        $encode = base64_encode($value);
+        $loop = ($loop > 5) ? 5 : $loop;
         for ($i = 1; $i < $loop; $i++) {
             $encode = base64_encode($encode);
         }
@@ -138,17 +149,17 @@ class Tokenizer
     }
 
     /**
-     * base64 decode.
+     * Decode base64.
      *
      * @access public
-     * @param string $data
+     * @param string $value
      * @param int $loop
      * @return string
      */
-    public static function unbase64(string $data, int $loop = 1) : string
+    public static function unbase64(string $value, int $loop = 1) : string
     {
-        $decode = base64_decode($data);
-        $loop = ($loop > 10) ? 10 : $loop;
+        $decode = base64_decode($value);
+        $loop = ($loop > 5) ? 5 : $loop;
         for ($i = 1; $i < $loop; $i++) {
             $decode = base64_decode($decode);
         }
@@ -159,24 +170,25 @@ class Tokenizer
      * Get unique Id.
      *
      * @access public
+     * @param bool $md5
      * @return string
      */
-    public static function getUniqueId() : string
+    public static function getUniqueId(bool $md5 = true) : string
     {
-        return md5(
-            uniqid((string)time())
-        );
+        $id = uniqid((string)time());
+        return ($md5) ? md5($id) : $id;
     }
 
     /**
      * Get UUID (4).
      *
      * @access public
+     * @param bool $format
      * @return string
      */
-    public static function getUuid() : string
+    public static function getUuid(bool $format = false) : string
     {
-        return sprintf(
+        $uuid = sprintf(
             '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
             mt_rand(0, 0xffff),
             mt_rand(0, 0xffff),
@@ -187,5 +199,28 @@ class Tokenizer
             mt_rand(0, 0xffff),
             mt_rand(0, 0xffff)
         );
+
+        if ( $format ) {
+            $uuid = Stringify::remove('-', $uuid);
+        }
+
+        return $uuid;
     }
+    
+	/**
+	 * Hash data.
+	 *
+	 * @access public
+	 * @param mixed $data
+	 * @param string $salt
+	 * @return string
+	 */
+	public static function hash($data, string $salt = 'Y3biC') : string
+	{
+        if ( !TypeCheck::isString($data) ) {
+            $data = Stringify::serialize($data);
+        }
+		$data = "{$salt}{$data}";
+		return hash('sha256', $data);
+	}
 }

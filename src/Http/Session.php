@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.1.0
+ * @version    : 1.2.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -20,7 +20,7 @@ use FloatPHP\Classes\Server\Date;
 final class Session
 {
     /**
-     * Start session.
+     * Start session if not active.
      */
     public function __construct()
     {
@@ -40,7 +40,9 @@ final class Session
     {
         self::set('--session-id', session_id());
         self::set('--session-time', intval($time));
-        self::set('--session-start', Date::newTime(0, 0, self::get('--session-time')));
+
+        $time = self::get('--session-time');
+        self::set('--session-start', Date::newTime(0, 0, $time));
     }
 
     /**
@@ -92,7 +94,7 @@ final class Session
      * @param string $key
      * @return bool
      */
-    public static function isSetted(?string $key = null)
+    public static function isSetted(?string $key = null) : bool
     {
         if ( $key ) {
             return isset($_SESSION[$key]);
@@ -136,18 +138,19 @@ final class Session
      */
     public static function renew()
     {
-        self::set('--session-start', Date::newTime(0, 0, self::get('--session-time')));
+        $time = self::get('--session-time');
+        self::set('--session-start', Date::newTime(0, 0, $time));
     }
-    
+
     /**
      * Get current session id.
      *
      * @access public
      * @return int
      */
-    public static function getSessionId()
+    public static function getSessionId() : int
     {
-        return self::get('--session-id');
+        return (int)self::get('--session-id');
     }
 
     /**
@@ -163,11 +166,11 @@ final class Session
 
     /**
      * Get session status.
-     * 
-     * Disabled: 0
-     * None: 1
-     * Active: 2
-     * 
+     *
+     * [Disabled : 0].
+     * [None     : 1].
+     * [Active   : 2].
+     *
      * @access public
      * @return int
      */
@@ -184,11 +187,12 @@ final class Session
      */
     public static function isActive() : bool
     {
-        return (self::getStatus() == 2);
+        $status = self::getStatus();
+        return ($status == 2);
     }
-    
+
     /**
-     * Close session (Write data).
+     * Close session (Read-only).
      *
      * @access public
      * @return bool
@@ -199,7 +203,7 @@ final class Session
     }
 
     /**
-     * End session (Destroy data).
+     * End session (Destroy).
      *
      * @access public
      * @return bool
