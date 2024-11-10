@@ -207,10 +207,10 @@ final class Shortcode extends Hook
 	 * Parse shortcodes attributes.
 	 *
 	 * @access public
-	 * @param string $content
+	 * @param mixed $content
 	 * @return mixed
 	 */
-	public function shortcodeParseAtts($content)
+	public function parseAtts($content)
 	{
 		$atts = [];
 		$pattern = '/(\w+)\s*=\s*"([^"]*)"(?:\s|$)|(\w+)\s*=\s*\'([^\']*)\'(?:\s|$)|(\w+)\s*=\s*([^\s\'"]+)(?:\s|$)|"([^"]*)"(?:\s|$)|(\S+)(?:\s|$)/';
@@ -237,6 +237,14 @@ final class Shortcode extends Hook
 
 		} else {
 			$atts = ltrim($content);
+		}
+
+		// Format atts
+		if ( is_array($atts) && count($atts) == 1 ) {
+			$key = array_key_first($atts);
+			if ( is_int($key) ) {
+				$atts = $atts[$key];
+			}
 		}
 
 		return $atts;
@@ -311,31 +319,42 @@ final class Shortcode extends Hook
 	 * Do shortcode hook tag.
 	 *
 	 * @access public
-	 * @param string $tag
+	 * @param array $tag
 	 * @return mixed
 	 * @todo
 	 */
-	private function doShortcodeTag($tag)
+	private function doShortcodeTag(array $tag)
 	{
-		// allow [[foo]] syntax for escaping a tag
-		if ( $tag[1] == '[' && $tag[6] == ']' ) {
+		if ( count($tag) < 7 ) return; 
+
+		$first = $tag[1] ?? '';
+		$last  = $tag[6] ?? '';
+
+		// Allow [[foo]] syntax for escaping a tag
+		if ( $first == '[' && $last == ']' ) {
 			return substr($tag[0], 1, -1);
 		}
 
-		$tag  = $tag[2];
-		$atts = $this->shortcodeParseAtts($tag[3]);
+		$name = $tag[2] ?? '';
+		$atts = $tag[3] ?? '';
+		$atts = $this->parseAtts($atts);
+
+		// Set callback
+		$cb = $this->shortcodeTags[$name] ?? function(){ return 'error'; };
 
 		// enclosing tag - extra parameter
-		if ( isset($tag[5]) ) {
-			// return $tag[1] . call_user_func($this->shortcodeTags[$tag], $atts, $tag[5], $tag) . $tag[6];
+		$open = $tag[5] ?? false;
+		if ( $open ) {
+			return $first . call_user_func($cb, $atts, $open, $tag) . $last;
 		}
 
 		// self-closing tag
-		if ( isset($tag[6]) ) {
-			// return $tag[1] . call_user_func($this->shortcodeTags[$tag], $atts, null, $tag) . $tag[6];
+		$close = $tag[5] ?? false;
+		if ( $close ) {
+			return $first . call_user_func($cb, $atts, null, $tag) . $last;
 		}
 
-		return call_user_func($this->shortcodeTags[$tag], $atts, null, $tag);
+		return call_user_func($cb, $atts, null, $name);
 	}
 
 	/**

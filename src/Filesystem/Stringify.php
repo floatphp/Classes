@@ -90,7 +90,7 @@ final class Stringify
 	 * @param int $count
 	 * @return mixed
 	 */
-	public static function replaceRegexCb($regex, $callback, $subject, $limit = -1, &$count = null)
+	public static function replaceRegexCb($regex, $callback, $subject, int $limit = -1, ?int &$count = null)
 	{
 		return preg_replace_callback($regex, $callback, $subject, $limit, $count);
 	}
@@ -335,7 +335,7 @@ final class Stringify
 	 * @param string $string
 	 * @return bool
 	 */
-	public static function isUtf8($string) : bool
+	public static function isUtf8(string $string) : bool
 	{
 		$length = strlen($string);
 		for ( $i = 0; $i < $length; $i++ ) {
@@ -1033,5 +1033,21 @@ final class Stringify
 			$string = "{$string}Interface";
 		}
 		return $string;
+	}
+
+	/**
+	 * Decode HTML.
+	 *
+	 * [QUOTES : 3].
+	 *
+	 * @access public
+	 * @param string $string
+	 * @param int $flags
+	 * @param string $to, Encoding
+	 * @return string
+	 */
+	public static function decodeHtml(string $string, int $flags = 3, ?string $to = 'UTF-8') : string
+	{
+		return html_entity_decode($string, $flags, $to);
 	}
 }
