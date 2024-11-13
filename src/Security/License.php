@@ -431,7 +431,7 @@ class License
     protected function encrypt(array $data) : string
     {
         // Get random
-        $random = Tokenizer::generate(5);
+        $random = Password::generate(5);
 
         // Get key
         $key = "{$random}{$this->key}";
