@@ -33,9 +33,19 @@ final class Password
      * @param bool $special
      * @return string
      */
-    public static function generate(int $length = self::LENGTH, bool $special = true) : string
+    public static function generate(int $length = self::LENGTH, bool $special = false) : string
     {
-        return Tokenizer::generate($length, $special);
+        $token  = '';
+        $chars  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $chars .= 'abcdefghijklmnopqrstuvwxyz';
+        $chars .= '0123456789';
+        if ( $special ) {
+            $chars .= '!#$%&()*+,-.:;<>?@[]^{}~';
+        }
+        for ($i = 0; $i < $length; $i++) {
+            $token .= $chars[Tokenizer::range(0, strlen($chars))];
+        }
+        return $token;
     }
 
     /**
