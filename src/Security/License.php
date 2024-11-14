@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Security Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -15,13 +15,9 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Security;
 
-use FloatPHP\Classes\{
-    Http\Server,
-    Server\System,
-    Filesystem\TypeCheck,
-    Filesystem\Stringify,
-    Filesystem\Arrayify
-};
+use FloatPHP\Classes\Filesystem\{TypeCheck, Stringify, Arrayify};
+use FloatPHP\Classes\Filesystem\Http\Server;
+use FloatPHP\Classes\Filesystem\Server\System;
 
 /**
  * Built-in licensing class.
@@ -49,7 +45,7 @@ class License
      */
     private $error;
     private $data;
-    
+
     /**
      * @param array $settings
      */
@@ -69,7 +65,7 @@ class License
      * @param array $settings
      * @return void
      */
-    public function init(array $settings = [])
+    public function init(array $settings = []) : void
     {
         $this->settings = Arrayify::merge(
             $this->getDefaultSettings(),
@@ -84,7 +80,7 @@ class License
      * @param string $key
      * @return void
      */
-    public function setKey(?string $key = null)
+    public function setKey(?string $key = null) : void
     {
         $this->key = $key ?: $this->getDefaultKey();
     }
@@ -96,7 +92,7 @@ class License
      * @param string $id
      * @return void
      */
-    public function setId(?string $id = null)
+    public function setId(?string $id = null) : void
     {
         $this->id = $id ?: $this->getDefaultId();
     }
@@ -108,7 +104,7 @@ class License
      * @param array $strings
      * @return void
      */
-    public function setStrings(array $strings = [])
+    public function setStrings(array $strings = []) : void
     {
         $this->strings = Arrayify::merge(
             $this->getDefaultStrings(),
@@ -145,7 +141,7 @@ class License
      * @param string $var
      * @return mixed
      */
-    public function getDataVar(string $var)
+    public function getDataVar(string $var) : mixed
     {
         return $this->data['args'][$var] ?? '';
     }
@@ -159,7 +155,7 @@ class License
      * @param array $args
      * @return mixed
      */
-    public function generate(int $start = 0, $expireIn = 3600, array $args = [])
+    public function generate(int $start = 0, $expireIn = 3600, array $args = []) : string
     {
         // Include key id
         $data['id'] = md5($this->key);
@@ -168,7 +164,7 @@ class License
         $data['server']['ip'] = $this->server['ip'];
         // Include server HOST
         $data['server']['host'] = $this->server['host'];
-        
+
         // Include time
         if ( $this->useTime() ) {
 
@@ -181,7 +177,6 @@ class License
 
             if ( $expireIn === false ) {
                 $data['date']['end'] = 'never';
-
             } else {
                 $data['date']['end'] = $start + $expireIn;
             }
@@ -252,11 +247,11 @@ class License
         if ( $this->useTime() ) {
 
             // Formated start date
-            $formated = date($this->settings['date-format'],$this->data['date']['start']);
+            $formated = date($this->settings['date-format'], $this->data['date']['start']);
             $this->data['date']['formated']['start'] = $formated;
-            
+
             // Formated end date
-            $formated = date($this->settings['date-format'],$this->data['date']['end']);
+            $formated = date($this->settings['date-format'], $this->data['date']['end']);
             $this->data['date']['formated']['end'] = $formated;
 
             // License used before start
@@ -284,11 +279,11 @@ class License
      * @access protected
      * @return void
      */
-    protected function setServerData()
+    protected function setServerData() : void
     {
         $this->server = [
             'ip'   => Server::getIp(),
-            'host' => Server::isSetted('http-host') ? Server::get('http-host') : ''
+            'host' => Server::isSetted('http-host') ?: ''
         ];
     }
 
@@ -333,7 +328,7 @@ class License
      */
     protected function getDefaultKey() : string
     {
-        $key  = 'YmUzYWM2sNGU24NbA363zA7IDSDFGDFGB5aVi35B';
+        $key = 'YmUzYWM2sNGU24NbA363zA7IDSDFGDFGB5aVi35B';
         $key .= 'DFGQ3YNO36ycDFGAATq4sYmSFVDFGDFGps7XDYEz';
         $key .= 'GDDw96OnMW3kjCFJ7M+UV2kHe1WTTEcM09UMHHTX';
         return $key;
@@ -412,7 +407,7 @@ class License
         for ($i = 0; $i < $spaces; $i++) {
             $str = "{$str}{$this->strings['separator']}";
         }
-        if ( $spaces/2 != round($spaces/2) ) {
+        if ( $spaces / 2 != round($spaces / 2) ) {
             $string = substr($str, 0, strlen($str) - 1) . $string;
         } else {
             $string = "{$str}{$string}";
@@ -496,7 +491,7 @@ class License
         $secret = $this->encrypt($data);
 
         // Wrap secret
-        $result  = $this->inlineString($this->strings['begin']) . Stringify::break();
+        $result = $this->inlineString($this->strings['begin']) . Stringify::break();
         $result .= wordwrap($secret, $this->settings['wrap'], Stringify::break(), true);
         $result .= Stringify::break() . $this->inlineString($this->strings['end']);
 
@@ -534,15 +529,19 @@ class License
     private function isLocalhost(array $data = []) : bool
     {
         $local = ['127.0.0.1', '::1'];
-		if ( isset($data['server']['ip']) ) {
-			if ( Stringify::contains($local, $data['server']['ip']) ) {
-				return true;
-			}
-		} elseif ( isset($data['server']['host'] )) {
-			if ( Stringify::contains($local, $data['server']['host']) ) {
-				return true;
-			}
-		}
-		return false;
+
+        if ( isset($data['server']['ip']) ) {
+            if ( Stringify::contains($local, $data['server']['ip']) ) {
+                return true;
+            }
+        }
+
+        if ( isset($data['server']['host']) ) {
+            if ( Stringify::contains($local, $data['server']['host']) ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

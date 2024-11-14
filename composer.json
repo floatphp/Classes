@@ -1,6 +1,6 @@
 {
   "name": "floatphp/classes",
-  "version" : "1.2.3",
+  "version" : "1.3.0",
   "type": "library",
   "description": "FloatPHP Classes Components",
   "keywords": ["floatphp","micro-framework","framework","PSR","ORM","jakiboy"],
@@ -15,7 +15,7 @@
   ],
   "require": {
     "php": ">=8.2",
-    "floatphp/interfaces": "^1.2.0"
+    "floatphp/interfaces": "^1.3.0"
   },
   "autoload": {
     "psr-4" : {

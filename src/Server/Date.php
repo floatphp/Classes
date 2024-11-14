@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Server Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -15,9 +15,7 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Server;
 
-use FloatPHP\Classes\Filesystem\{
-    Stringify, Validator
-};
+use FloatPHP\Classes\Filesystem\{Stringify, Validator};
 use \DateTime;
 use \DateInterval;
 
@@ -38,9 +36,9 @@ final class Date extends DateTime
      * @param bool $isObject
      * @return mixed
      */
-    public static function get(string $date = 'now', string $to = self::FORMAT, bool $isObject = false)
+    public static function get(string $date = 'now', string $to = self::FORMAT, bool $isObject = false) : mixed
     {
-    	$date = new self($date);
+        $date = new self($date);
         $formatted = $date->format($to);
         if ( $isObject ) {
             return $date;
@@ -59,9 +57,9 @@ final class Date extends DateTime
      */
     public static function create(string $date, string $format, string $to = self::FORMAT) : object
     {
-    	$date = self::createFromFormat($format, $date);
-    	$date->format($to);
-    	return $date;
+        $date = self::createFromFormat($format, $date);
+        $date->format($to);
+        return $date;
     }
 
     /**
@@ -75,7 +73,7 @@ final class Date extends DateTime
      */
     public static function convert(string $date, string $format, string $to = self::FORMAT) : string
     {
-    	return self::create($date, $format)->format($to);
+        return self::create($date, $format)->format($to);
     }
 
     /**
@@ -122,16 +120,12 @@ final class Date extends DateTime
         $expire->format($to);
 
         // Format difference interval
-        if ( $i ) {
-            $interval = $date->diff($expire)->format($i);
-
-        } else {
-            $interval = ($expire->getTimestamp() - $date->getTimestamp());
-        }
+        $interval = $i ? $date->diff($expire)->format($i)
+            : $expire->getTimestamp() - $date->getTimestamp();
 
         return (int)$interval;
     }
-    
+
     /**
      * Order dates.
      * 
@@ -142,11 +136,11 @@ final class Date extends DateTime
      */
     public static function order(array $dates, $sort = 'asc', string $format = self::FORMAT) : array
     {
-        usort($dates, function($a, $b) use ($sort, $format) {
+        usort($dates, function ($a, $b) use ($sort, $format) : int {
             if ( Stringify::lowercase($sort) == 'asc' ) {
                 return self::create($a, $format) <=> self::create($b, $format);
-
-            } elseif ( Stringify::lowercase($sort) == 'desc' ) {
+            }
+            if ( Stringify::lowercase($sort) == 'desc' ) {
                 return self::create($b, $format) <=> self::create($a, $format);
             }
         });
@@ -162,18 +156,18 @@ final class Date extends DateTime
     public static function timeNow() : int
     {
         $currentHour = date('H');
-        $currentMin  = date('i');
-        $currentSec  = date('s');
-        $currentMon  = date('m');
-        $currentDay  = date('d');
+        $currentMin = date('i');
+        $currentSec = date('s');
+        $currentMon = date('m');
+        $currentDay = date('d');
         $currentYear = date('y');
         return mktime(
-            (int)$currentHour,
-            (int)$currentMin,
-            (int)$currentSec,
-            (int)$currentMon,
-            (int)$currentDay,
-            (int)$currentYear
+            hour: (int)$currentHour,
+            minute: (int)$currentMin,
+            second: (int)$currentSec,
+            month: (int)$currentMon,
+            day: (int)$currentDay,
+            year: (int)$currentYear
         );
     }
 
@@ -191,19 +185,21 @@ final class Date extends DateTime
      */
     public static function newTime($h = 0, $m = 0, $s = 0, $mt = 0, $d = 0, $y = 0) : int
     {
+        // Get current
         $currentHour = date('H');
-        $currentMin  = date('i');
-        $currentSec  = date('s');
-        $currentMon  = date('m');
-        $currentDay  = date('d');
+        $currentMin = date('i');
+        $currentSec = date('s');
+        $currentMon = date('m');
+        $currentDay = date('d');
         $currentYear = date('y');
+
         return mktime(
-            ($currentHour + $h),
-            ($currentMin  + $m),
-            ($currentSec  + $s),
-            ($currentMon  + $mt),
-            ($currentDay  + $d),
-            ($currentYear + $y)
+            $currentHour + $h,
+            $currentMin + $m,
+            $currentSec + $s,
+            $currentMon + $mt,
+            $currentDay + $d,
+            $currentYear + $y
         );
     }
 
@@ -220,8 +216,10 @@ final class Date extends DateTime
     public static function expireIn(string $duration = 'P1Y', $date = 'now') : int
     {
         // Check date
-        if ( !self::maybeDuration($duration) 
-          || !Validator::isValidDate($date) ) {
+        if (
+            !self::maybeDuration($duration)
+            || !Validator::isValidDate($date)
+        ) {
             return -1;
         }
 
@@ -229,26 +227,26 @@ final class Date extends DateTime
         if ( !self::isObject($date) ) {
             $date = new self($date);
         }
-        
+
         // Set now
         $now = mktime(
-            (int)$date->format('H'),
-            (int)$date->format('i'),
-            (int)$date->format('s'),
-            (int)$date->format('m'),
-            (int)$date->format('d'),
-            (int)$date->format('Y')
+            hour: (int)$date->format('H'),
+            minute: (int)$date->format('i'),
+            second: (int)$date->format('s'),
+            month: (int)$date->format('m'),
+            day: (int)$date->format('d'),
+            year: (int)$date->format('Y')
         );
 
         // Get limit
         $expire = $date->add(new DateInterval($duration));
         $limit = mktime(
-            (int)$expire->format('H'),
-            (int)$expire->format('i'),
-            (int)$expire->format('s'),
-            (int)$expire->format('m'),
-            (int)$expire->format('d'),
-            (int)$expire->format('Y')
+            hour: (int)$expire->format('H'),
+            minute: (int)$expire->format('i'),
+            second: (int)$expire->format('s'),
+            month: (int)$expire->format('m'),
+            day: (int)$expire->format('d'),
+            year: (int)$expire->format('Y')
         );
 
         return (int)$limit - $now;
@@ -263,7 +261,7 @@ final class Date extends DateTime
      */
     public static function isObject($date) : bool
     {
-        return ($date instanceof DateTime);
+        return $date instanceof DateTime;
     }
 
     /**
@@ -276,7 +274,7 @@ final class Date extends DateTime
     public static function maybeDuration(string $duration) : bool
     {
         $duration = Stringify::lowercase($duration);
-        return (strpos($duration, 'p', 0) !== false);
+        return strpos($duration, 'p', 0) !== false;
     }
 
     /**

@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -18,13 +18,13 @@ namespace FloatPHP\Classes\Http;
 final class Request
 {
 	/**
-     * Get _REQUEST value.
-     *
+	 * Get _REQUEST value.
+	 *
 	 * @access public
 	 * @param string $key
 	 * @return mixed
 	 */
-	public static function get(?string $key = null)
+	public static function get(?string $key = null) : mixed
 	{
 		if ( $key ) {
 			return self::isSetted($key) ? $_REQUEST[$key] : null;
@@ -33,18 +33,18 @@ final class Request
 	}
 
 	/**
-     * Set _REQUEST value.
-     * 
+	 * Set _REQUEST value.
+	 * 
 	 * @access public
 	 * @param string $key
 	 * @param mixed $value
 	 * @return void
 	 */
-	public static function set(string $key, $value = null)
+	public static function set(string $key, $value = null) : void
 	{
 		$_REQUEST[$key] = $value;
 	}
-	
+
 	/**
 	 * Check _REQUEST value.
 	 * 
@@ -67,7 +67,7 @@ final class Request
 	 * @param string $key
 	 * @return void
 	 */
-	public static function unset(?string $key = null)
+	public static function unset(?string $key = null) : void
 	{
 		if ( $key ) {
 			unset($_REQUEST[$key]);

@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -15,9 +15,7 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
-use FloatPHP\Classes\Filesystem\{
-    Stringify, Arrayify, Json
-};
+use FloatPHP\Classes\Filesystem\{Stringify, Arrayify, Json};
 
 class Client
 {
@@ -240,7 +238,7 @@ class Client
     {
         $this->timout = $timout;
     }
-    
+
     /**
      * Get response body.
      * 
@@ -251,7 +249,7 @@ class Client
     public function getBody($json = false)
     {
         if ( $json ) {
-           return Json::decode($this->response['body'], true);
+            return Json::decode($this->response['body'], true);
         }
         return $this->response['body'];
     }
@@ -350,11 +348,9 @@ class Client
         if ( $this->method == 'post' ) {
             curl_setopt($handler, CURLOPT_POST, true);
             curl_setopt($handler, CURLOPT_POSTFIELDS, $this->request['body']);
-
         } elseif ( $this->method == 'put' ) {
             curl_setopt($handler, CURLOPT_CUSTOMREQUEST, 'PUT');
             curl_setopt($handler, CURLOPT_POSTFIELDS, $this->request['body']);
-
         } else {
             curl_setopt($handler, CURLOPT_CUSTOMREQUEST, Stringify::uppercase($this->method));
         }
@@ -382,7 +378,7 @@ class Client
         // Parse HTTP status
         if ( $this->response['status'] == null ) {
             $regex = '/^\s*HTTP\s*\/\s*(?P<protocolVersion>\d*\.\d*)\s*(?P<statusCode>\d*)\s(?P<reasonPhrase>.*)\r\n/';
-            preg_match($regex,$header,$matches);
+            preg_match($regex, $header, $matches);
             foreach (['protocolVersion', 'statusCode', 'reasonPhrase'] as $part) {
                 if ( isset($matches[$part]) ) {
                     $this->response['status'][$part] = $matches[$part];
@@ -391,7 +387,7 @@ class Client
         }
         // Digest HTTP header attributes
         $regex = '/^\s*(?P<attributeName>[a-zA-Z0-9-]*):\s*(?P<attributeValue>.*)\r\n/';
-        preg_match($regex,$header,$matches);
+        preg_match($regex, $header, $matches);
         if ( isset($matches['attributeName']) ) {
             $this->response['header'][$matches['attributeName']] = $matches['attributeValue'] ?? null;
         }

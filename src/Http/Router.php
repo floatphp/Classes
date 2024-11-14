@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -16,7 +16,9 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\{
-    TypeCheck, Stringify, Arrayify
+    TypeCheck,
+    Stringify,
+    Arrayify
 };
 use FloatPHP\Interfaces\Classes\RouterInterface;
 use FloatPHP\Exceptions\Classes\RouterException;
@@ -79,7 +81,7 @@ class Router implements RouterInterface
     /**
      * @inheritdoc
      */
-    public function addRoutes(array $routes)
+    public function addRoutes(array $routes) : void
     {
         if ( !TypeCheck::isArray($routes) && !($routes instanceof \Traversable) ) {
             throw new RouterException(
@@ -95,7 +97,7 @@ class Router implements RouterInterface
     /**
      * @inheritdoc
      */
-    public function setBase(string $base)
+    public function setBase(string $base) : void
     {
         $this->base = $base;
     }
@@ -103,7 +105,7 @@ class Router implements RouterInterface
     /**
      * @inheritdoc
      */
-    public function addTypes(array $types)
+    public function addTypes(array $types) : void
     {
         $this->types = Arrayify::merge($this->types, $types);
     }
@@ -145,7 +147,7 @@ class Router implements RouterInterface
         // Prepend base path to route url again
         $url = "{$this->base}{$route}";
 
-        if ( Stringify::matchAll(static::REGEX , $route, $matches, 2) ) {
+        if ( Stringify::matchAll(static::REGEX, $route, $matches, 2) ) {
 
             foreach ($matches as $index => $match) {
 
@@ -199,7 +201,7 @@ class Router implements RouterInterface
         }
 
         // Get last request URL char
-        $last = $url ? $url[strlen($url) -1 ] : '';
+        $last = $url ? $url[strlen($url) - 1] : '';
 
         foreach ($this->routes as $handler) {
 
@@ -214,7 +216,6 @@ class Router implements RouterInterface
             if ( $route === '*' ) {
                 // * Wildcard (matches all)
                 $match = true;
-
             } elseif ( isset($route[0]) && $route[0] === '@' ) {
                 // @ regex delimiter
                 $pattern = '`' . substr($route, 1) . '`u';
@@ -226,8 +227,10 @@ class Router implements RouterInterface
 
             } else {
                 // Compare longest non-param string with URL
-                if ( (strncmp($url, $route, $position) !== 0 ) 
-                  && ($last === '/' || $route[$position -1 ] !== '/') ) {
+                if (
+                    (strncmp($url, $route, $position) !== 0)
+                    && ($last === '/' || $route[$position - 1] !== '/')
+                ) {
                     continue;
                 }
                 $regex = $this->compile($route);
@@ -235,7 +238,7 @@ class Router implements RouterInterface
             }
 
             if ( $match ) {
- 
+
                 if ( $params ) {
                     foreach ($params as $key => $value) {
                         if ( TypeCheck::isInt($key) ) {
@@ -265,7 +268,7 @@ class Router implements RouterInterface
      */
     protected function compile(string $route) : string
     {
-        if ( Stringify::matchAll(static::REGEX , $route, $matches, 2) ) {
+        if ( Stringify::matchAll(static::REGEX, $route, $matches, 2) ) {
 
             foreach ($matches as $match) {
 

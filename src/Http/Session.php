@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -28,7 +28,7 @@ final class Session
             @session_start();
         }
     }
-    
+
     /**
      * Register session.
      *
@@ -36,13 +36,13 @@ final class Session
      * @param int $time
      * @return void
      */
-    public static function register(int $time = 60)
+    public static function register(int $time = 60) : void
     {
         self::set('--session-id', session_id());
         self::set('--session-time', intval($time));
 
         $time = self::get('--session-time');
-        self::set('--session-start', Date::newTime(0, 0, $time));
+        self::set('--session-start', Date::newTime(h: 0, m: 0, s: $time));
     }
 
     /**
@@ -66,7 +66,7 @@ final class Session
      * @param string $key
      * @return mixed
      */
-    public static function get(?string $key = null)
+    public static function get(?string $key = null) : mixed
     {
         if ( $key ) {
             return self::isSetted($key) ? $_SESSION[$key] : null;
@@ -82,7 +82,7 @@ final class Session
      * @param mixed $value
      * @return void
      */
-    public static function set($key, $value = null)
+    public static function set($key, $value = null) : void
     {
         $_SESSION[$key] = $value;
     }
@@ -109,7 +109,7 @@ final class Session
      * @param string $key
      * @return void
      */
-    public static function unset(?string $key = null)
+    public static function unset(?string $key = null) : void
     {
         if ( $key ) {
             unset($_SESSION[$key]);
@@ -127,7 +127,7 @@ final class Session
      */
     public static function isExpired() : bool
     {
-        return (self::get('--session-start') < Date::timeNow());
+        return self::get('--session-start') < Date::timeNow();
     }
 
     /**
@@ -139,7 +139,7 @@ final class Session
     public static function renew()
     {
         $time = self::get('--session-time');
-        self::set('--session-start', Date::newTime(0, 0, $time));
+        self::set('--session-start', Date::newTime(h: 0, m: 0, s: $time));
     }
 
     /**
@@ -159,7 +159,7 @@ final class Session
      * @access public
      * @return mixed
      */
-    public static function getName()
+    public static function getName() : mixed
     {
         return session_name();
     }
@@ -188,7 +188,7 @@ final class Session
     public static function isActive() : bool
     {
         $status = self::getStatus();
-        return ($status == 2);
+        return $status === 2;
     }
 
     /**

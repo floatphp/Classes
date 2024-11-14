@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Html Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -15,9 +15,7 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Html;
 
-use FloatPHP\Classes\Filesystem\{
-	TypeCheck, Stringify, Arrayify
-};
+use FloatPHP\Classes\Filesystem\{TypeCheck, Stringify, Arrayify};
 use FloatPHP\Classes\Http\Request;
 
 /**
@@ -256,7 +254,7 @@ class Form
 		$this->options[$key] = $value;
 		return true;
 	}
-	
+
 	/**
 	 * Add input field.
 	 *
@@ -283,11 +281,11 @@ class Form
 	 * @param array $inputs
 	 * @return void
 	 */
-	public function addInputs(array $inputs)
+	public function addInputs(array $inputs) : void
 	{
-		foreach ( $inputs as $key => $args ) {
+		foreach ($inputs as $key => $args) {
 			$label = $input['label'] ?? "{$key}";
-			$slug  = $input['slug']  ?? null;
+			$slug = $input['slug'] ?? null;
 			$this->addInput($label, $args, $slug);
 		}
 	}
@@ -335,7 +333,7 @@ class Form
 	 * @access public
 	 * @return void
 	 */
-	public function render()
+	public function render() : void
 	{
 		echo $this->generate();
 	}
@@ -346,7 +344,7 @@ class Form
 	 * @access protected
 	 * @return void
 	 */
-	protected function buildHeader()
+	protected function buildHeader() : void
 	{
 		if ( $this->options['form'] ) {
 			$this->output .= '<form method="' . $this->atts['method'] . '"';
@@ -388,7 +386,7 @@ class Form
 	 * @access protected
 	 * @return void
 	 */
-	protected function buildSubmit()
+	protected function buildSubmit() : void
 	{
 		if ( !$this->hasSubmit && $this->options['submit'] ) {
 
@@ -430,7 +428,7 @@ class Form
 	 * @access protected
 	 * @return void
 	 */
-	protected function buildClose()
+	protected function buildClose() : void
 	{
 		if ( $this->options['form'] ) {
 			$this->output .= '</form>';
@@ -444,9 +442,9 @@ class Form
 	 * @access protected
 	 * @return void
 	 */
-	protected function buildBody()
+	protected function buildBody() : void
 	{
-		foreach ( $this->inputs as $input ) {
+		foreach ($this->inputs as $input) {
 
 			// Init temp html
 			$this->html = [
@@ -482,20 +480,22 @@ class Form
 			}
 
 			// Set temp html
-			if ( $input['type'] !== 'html' 
-			  && $input['type'] !== 'title' 
-			  && $input['type'] !== 'string' ) {
+			if (
+				$input['type'] !== 'html'
+				&& $input['type'] !== 'title'
+				&& $input['type'] !== 'string'
+			) {
 				$this->html['before'] = $this->getInputBefore($input);
 				if ( $input['display-label'] ) {
 					$this->html['label'] = $this->getInputLabel($input);
 				}
-				$this->html['opening']     = $this->getInputOpening($input['type']);
-				$this->html['element']     = $this->getInputElement($input['type']);
-				$this->html['attributes']  = $this->getInputAtts($input);
-				$this->html['content']     = $this->getInputContent($input);
-				$this->html['closing']     = $this->getInputClosing($input['type']);
+				$this->html['opening'] = $this->getInputOpening($input['type']);
+				$this->html['element'] = $this->getInputElement($input['type']);
+				$this->html['attributes'] = $this->getInputAtts($input);
+				$this->html['content'] = $this->getInputContent($input);
+				$this->html['closing'] = $this->getInputClosing($input['type']);
 				$this->html['description'] = $this->getInputDescription($input);
-				$this->html['after']       = $this->getInputAfter($input);
+				$this->html['after'] = $this->getInputAfter($input);
 			}
 
 			// Set custom html
@@ -544,7 +544,6 @@ class Form
 		$class = '';
 		if ( TypeCheck::isArray($classes) && count($classes) > 0 ) {
 			$class = implode(' ', $classes);
-
 		} elseif ( TypeCheck::isString($classes) ) {
 			$class .= $classes;
 		}
@@ -559,7 +558,7 @@ class Form
 	 * @param string $slug
 	 * @return array
 	 */
-	protected function getDefaultInputAttrs($label, ?string $slug = null)
+	protected function getDefaultInputAttrs($label, ?string $slug = null) : array
 	{
 		return [
 			'type'          => 'text',
@@ -603,7 +602,7 @@ class Form
 	 * @param array $atts
 	 * @return array
 	 */
-	protected function sanitizeInputAtts(array $atts)
+	protected function sanitizeInputAtts(array $atts) : array
 	{
 		foreach ($atts as $key => $value) {
 			if ( !empty($value) ) {
@@ -633,7 +632,7 @@ class Form
 	 * @access protected
 	 * @return array
 	 */
-	protected function getDefaultAtts()
+	protected function getDefaultAtts() : array
 	{
 		return [
 			'id'           => '',
@@ -655,7 +654,7 @@ class Form
 	 * @access protected
 	 * @return array
 	 */
-	protected function getDefaultOptions()
+	protected function getDefaultOptions() : array
 	{
 		return [
 			'form'               => true,
@@ -676,10 +675,10 @@ class Form
 	 * @param array $options
 	 * @return void
 	 */
-	protected function mergeOptions(array $options = [])
+	protected function mergeOptions(array $options = []) : void
 	{
 		$options = Arrayify::merge($this->getDefaultOptions(), $options);
-		foreach ( $options as $key => $value ) {
+		foreach ($options as $key => $value) {
 			if ( !$this->setOptions($key, $value) ) {
 				if ( isset($this->getDefaultOptions()[$key]) ) {
 					$this->setOptions($key, $this->getDefaultOptions()[$key]);
@@ -695,10 +694,10 @@ class Form
 	 * @param array $atts
 	 * @return void
 	 */
-	protected function mergeAtts(array $atts = [])
+	protected function mergeAtts(array $atts = []) : void
 	{
 		$atts = Arrayify::merge($this->getDefaultAtts(), $atts);
-		foreach ( $atts as $key => $value ) {
+		foreach ($atts as $key => $value) {
 			if ( !$this->setAttribute($key, $value) ) {
 				if ( isset($this->getDefaultAtts()[$key]) ) {
 					$this->setAttribute($key, $this->getDefaultAtts()[$key]);
@@ -770,7 +769,7 @@ class Form
 			case 'checkbox':
 				return '';
 				break;
-			
+
 			default:
 				return 'input';
 				break;
@@ -791,7 +790,7 @@ class Form
 			case 'select':
 				return '</' . $type . '>';
 				break;
-			
+
 			default:
 				return '';
 				break;
@@ -849,7 +848,7 @@ class Form
 					}
 				}
 				break;
-			
+
 			default:
 				if ( $input['type'] !== 'hidden' && $input['type'] !== 'submit' ) {
 					if ( !empty($input['id']) ) {
@@ -931,7 +930,7 @@ class Form
 			case 'checkbox':
 				return '';
 				break;
-			
+
 			default:
 				return '<';
 				break;
@@ -954,7 +953,7 @@ class Form
 				break;
 
 			case 'select':
-				foreach ( $input['options'] as $key => $option ) {
+				foreach ($input['options'] as $key => $option) {
 					$selected = false;
 					if ( $input['use-request'] ) {
 						if ( Request::isSetted($input['name']) ) {
@@ -979,7 +978,7 @@ class Form
 			case 'radio':
 			case 'checkbox':
 				if ( count($input['options']) > 0 ) {
-					foreach ( $input['options'] as $key => $option ) {
+					foreach ($input['options'] as $key => $option) {
 
 						// checked input
 						$checked = false;
@@ -996,7 +995,7 @@ class Form
 								}
 							}
 						}
-						
+
 						// Open input
 						$content .= '<input';
 
@@ -1004,7 +1003,6 @@ class Form
 						if ( count($input['options']) > 1 ) {
 							$slug = Stringify::slugify($option);
 							$content .= ' id="' . $slug . '"';
-
 						} else {
 							if ( !empty($input['id']) ) {
 								$content .= ' id="' . $input['id'] . '"';
@@ -1031,7 +1029,7 @@ class Form
 						if ( count($input['options']) > 1 ) {
 							$content .= ' value="' . $key . '"';
 						}
-						
+
 						// Single attribute
 						if ( $checked ) {
 							$content .= ' checked';
@@ -1148,19 +1146,17 @@ class Form
 	 * @access protected
 	 * @return void
 	 */
-	protected function applyValues()
+	protected function applyValues() : void
 	{
 		foreach ($this->inputs as $key => $value) {
 			if ( isset($this->values[$value['name']]) ) {
 
 				if ( $value['type'] == 'select' ) {
 					$this->inputs[$key]['selected'] = $this->values[$value['name']];
-
 				} elseif ( $value['type'] == 'checkbox' || $value['type'] == 'radio' ) {
 					if ( count($value['options']) == 1 && $this->values[$value['name']] == 1 ) {
 						$this->inputs[$key]['checked'] = true;
 					}
-
 				} else {
 					$this->inputs[$key]['value'] = $this->values[$value['name']];
 				}
@@ -1174,7 +1170,7 @@ class Form
 	 * @access protected
 	 * @return void
 	 */
-	protected function applyDefault()
+	protected function applyDefault() : void
 	{
 		foreach ($this->inputs as $key => $value) {
 			if ( isset($this->default[$value['name']]) ) {
@@ -1193,7 +1189,7 @@ class Form
 	 * @access protected
 	 * @return void
 	 */
-	protected function applyVars()
+	protected function applyVars() : void
 	{
 		$this->output = Stringify::replaceArray($this->vars, $this->output);
 	}

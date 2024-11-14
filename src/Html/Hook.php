@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Html Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -15,9 +15,7 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Html;
 
-use FloatPHP\Classes\Filesystem\{
-	TypeCheck, Arrayify
-};
+use FloatPHP\Classes\Filesystem\{TypeCheck, Arrayify};
 
 /**
  * Built-in Hook class,
@@ -88,17 +86,21 @@ class Hook
 	 * @param int $priority
 	 * @return bool
 	 */
-	public function removeFilter($tag, $callable, $priority = self::PRIORITY)
+	public function removeFilter($tag, $callable, $priority = self::PRIORITY) : bool
 	{
 		$callable = $this->filterUniqueId($callable);
+
 		if ( !isset($this->filters[$tag][$priority][$callable]) ) {
 			return false;
 		}
+
 		unset($this->filters[$tag][$priority][$callable]);
 		if ( empty($this->filters[$tag][$priority]) ) {
 			unset($this->filters[$tag][$priority]);
 		}
+
 		unset($this->mergedFilters[$tag]);
+
 		return true;
 	}
 
@@ -110,19 +112,22 @@ class Hook
 	 * @param int $priority false
 	 * @return bool
 	 */
-	public function removeFilters($tag, $priority = false)
+	public function removeFilters($tag, $priority = false) : bool
 	{
 		if ( isset($this->mergedFilters[$tag]) ) {
 			unset($this->mergedFilters[$tag]);
 		}
+
 		if ( !isset($this->filters[$tag]) ) {
 			return true;
 		}
+
 		if ( $priority !== false && isset($this->filters[$tag][$priority]) ) {
 			unset($this->filters[$tag][$priority]);
 		} else {
 			unset($this->filters[$tag]);
 		}
+
 		return true;
 	}
 
@@ -134,20 +139,23 @@ class Hook
 	 * @param string $callable
 	 * @return mixed
 	 */
-	public function hasFilter($tag, $callable = false)
+	public function hasFilter($tag, $callable = false) : mixed
 	{
 		$has = isset($this->filters[$tag]);
 		if ( $callable === false || !$has ) {
 			return $has;
 		}
+
 		if ( !($id = $this->filterUniqueId($callable)) ) {
 			return false;
 		}
-		foreach ( (array)array_keys($this->filters[$tag]) as $priority ) {
+
+		foreach ((array)array_keys($this->filters[$tag]) as $priority) {
 			if ( isset($this->filters[$tag][$priority][$id]) ) {
 				return $priority;
 			}
 		}
+
 		return false;
 	}
 
@@ -159,7 +167,7 @@ class Hook
 	 * @param mixed $value
 	 * @return mixed
 	 */
-	public function applyFilter($tag, $value)
+	public function applyFilter($tag, $value) : mixed
 	{
 		$args = [];
 
@@ -171,7 +179,7 @@ class Hook
 		}
 
 		if ( !isset($this->filters[$tag]) ) {
-			if (isset($this->filters['all'])) {
+			if ( isset($this->filters['all']) ) {
 				array_pop($this->currentFilter);
 			}
 			return $value;
@@ -192,7 +200,7 @@ class Hook
 		Arrayify::shift($args);
 
 		do {
-			foreach ( (array)current($this->filters[$tag]) as $current ) {
+			foreach ((array)current($this->filters[$tag]) as $current) {
 				if ( $current['callable'] !== null ) {
 					if ( $current['path'] !== null ) {
 						include_once($current['path']);
@@ -201,7 +209,7 @@ class Hook
 					$value = call_user_func_array($current['callable'], $args);
 				}
 			}
-		} while ( next($this->filters[$tag]) !== false );
+		} while (next($this->filters[$tag]) !== false);
 
 		array_pop($this->currentFilter);
 		return $value;
@@ -215,7 +223,7 @@ class Hook
 	 * @param array $args
 	 * @return mixed
 	 */
-	public function applyFilterArray($tag, $args)
+	public function applyFilterArray($tag, $args) : mixed
 	{
 		// Do 'all' actions first
 		if ( isset($this->filters['all']) ) {
@@ -225,7 +233,7 @@ class Hook
 		}
 
 		if ( !isset($this->filters[$tag]) ) {
-			if (isset($this->filters['all'])) {
+			if ( isset($this->filters['all']) ) {
 				array_pop($this->currentFilter);
 			}
 			return $args[0];
@@ -243,7 +251,7 @@ class Hook
 		reset($this->filters[$tag]);
 
 		do {
-			foreach ( (array)current($this->filters[$tag]) as $current ) {
+			foreach ((array)current($this->filters[$tag]) as $current) {
 				if ( $current['callable'] !== null ) {
 					if ( $current['path'] !== null ) {
 						include_once($current['path']);
@@ -251,7 +259,7 @@ class Hook
 					$args[0] = call_user_func_array($current['callable'], $args);
 				}
 			}
-		} while ( next($this->filters[$tag]) !== false );
+		} while (next($this->filters[$tag]) !== false);
 
 		array_pop($this->currentFilter);
 		return $args[0];
@@ -265,7 +273,7 @@ class Hook
 	 * @param array $args
 	 * @return mixed
 	 */
-	public function addAction($tag, $callable, $priority = self::PRIORITY, $path = null)
+	public function addAction($tag, $callable, $priority = self::PRIORITY, $path = null) : bool
 	{
 		return $this->addFilter($tag, $callable, $priority, $path);
 	}
@@ -278,7 +286,7 @@ class Hook
 	 * @param array $args
 	 * @return mixed
 	 */
-	public function hasAction($tag, $callable = false)
+	public function hasAction($tag, $callable = false) : mixed
 	{
 		return $this->hasFilter($tag, $callable);
 	}
@@ -291,7 +299,7 @@ class Hook
 	 * @param array $args
 	 * @return mixed
 	 */
-	public function removeAction($tag, $callable, $priority = self::PRIORITY)
+	public function removeAction($tag, $callable, $priority = self::PRIORITY) : bool
 	{
 		return $this->removeFilter($tag, $callable, $priority);
 	}
@@ -304,9 +312,9 @@ class Hook
 	 * @param int $priority
 	 * @return mixed
 	 */
-	public function removeAllActions($tag, $priority = false)
+	public function removeAllActions($tag, $priority = false) : bool
 	{
-		return $this->removeFilters($tag,$priority);
+		return $this->removeFilters($tag, $priority);
 	}
 
 	/**
@@ -317,7 +325,7 @@ class Hook
 	 * @param mixed $arg
 	 * @return mixed
 	 */
-	public function doAction($tag, $arg = '')
+	public function doAction($tag, $arg = '') : bool
 	{
 		if ( !TypeCheck::isArray($this->actions) ) {
 			$this->actions = [];
@@ -325,7 +333,6 @@ class Hook
 
 		if ( !isset($this->actions[$tag]) ) {
 			$this->actions[$tag] = 1;
-
 		} else {
 			++$this->actions[$tag];
 		}
@@ -350,7 +357,7 @@ class Hook
 
 		$args = [];
 		if ( TypeCheck::isArray($arg) && isset($arg[0]) && TypeCheck::isObject($arg[0]) && 1 == count($arg) ) {
-			$args[] =& $arg[0];
+			$args[] = &$arg[0];
 		} else {
 			$args[] = $arg;
 		}
@@ -367,15 +374,15 @@ class Hook
 		reset($this->filters[$tag]);
 
 		do {
-			foreach ( (array)current($this->filters[$tag]) as $current ) {
+			foreach ((array)current($this->filters[$tag]) as $current) {
 				if ( $current['callable'] !== null ) {
-					if ($current['path'] !== null ) {
-					  include_once($current['path']);
+					if ( $current['path'] !== null ) {
+						include_once($current['path']);
 					}
 					call_user_func_array($current['callable'], $args);
 				}
 			}
-		} while ( next($this->filters[$tag]) !== false );
+		} while (next($this->filters[$tag]) !== false);
 
 		array_pop($this->currentFilter);
 		return true;
@@ -389,7 +396,7 @@ class Hook
 	 * @param array $args
 	 * @return mixed
 	 */
-	public function doActionArray($tag, $args)
+	public function doActionArray($tag, $args) : bool
 	{
 		if ( !TypeCheck::isArray($this->actions) ) {
 			$this->actions = [];
@@ -397,9 +404,8 @@ class Hook
 
 		if ( !isset($this->actions[$tag]) ) {
 			$this->actions[$tag] = 1;
-
 		} else {
-			++ $this->actions[$tag];
+			++$this->actions[$tag];
 		}
 
 		// Do 'all' actions first
@@ -428,7 +434,7 @@ class Hook
 		reset($this->filters[$tag]);
 
 		do {
-			foreach ( (array)current($this->filters[$tag]) as $current ) {
+			foreach ((array)current($this->filters[$tag]) as $current) {
 				if ( $current['callable'] !== null ) {
 					if ( $current['path'] !== null ) {
 						include_once($current['path']);
@@ -436,7 +442,7 @@ class Hook
 					call_user_func_array($current['callable'], $args);
 				}
 			}
-		} while ( next($this->filters[$tag]) !== false );
+		} while (next($this->filters[$tag]) !== false);
 
 		array_pop($this->currentFilter);
 		return true;
@@ -449,10 +455,12 @@ class Hook
 	 * @param string $tag
 	 * @return mixed
 	 */
-	public function didAction($tag)
+	public function didAction(string $tag) : mixed
 	{
-		if ( !TypeCheck::isArray($this->actions) 
-		  || !isset($this->actions[$tag]) ) {
+		if (
+			!TypeCheck::isArray($this->actions)
+			|| !isset($this->actions[$tag])
+		) {
 			return 0;
 		}
 		return $this->actions[$tag];
@@ -464,7 +472,7 @@ class Hook
 	 * @access public
 	 * @return mixed
 	 */
-	public function currentFilter()
+	public function currentFilter() : mixed
 	{
 		return end($this->currentFilter);
 	}
@@ -476,9 +484,10 @@ class Hook
 	 * @param array $args
 	 * @return void
 	 */
-	public function callHooks($args)
+	public function callHooks(array $args) : void
 	{
 		reset($this->filters['all']);
+
 		do {
 			foreach ((array)current($this->filters['all']) as $current) {
 				if ( $current['callable'] !== null ) {
@@ -488,7 +497,7 @@ class Hook
 					call_user_func_array($current['callable'], $args);
 				}
 			}
-		} while ( next($this->filters['all']) !== false );
+		} while (next($this->filters['all']) !== false);
 	}
 
 	/**
@@ -498,19 +507,19 @@ class Hook
 	 * @param array $args
 	 * @return void
 	 */
-	public function callHooksAfter($args)
+	public function callHooksAfter(array $args) : void
 	{
 		$this->callHooks($args);
 	}
-	
+
 	/**
 	 * Filter unique Id.
 	 *
 	 * @access private
-	 * @param string $callable
+	 * @param mixed $callable
 	 * @return mixed
 	 */
-	private function filterUniqueId($callable)
+	private function filterUniqueId($callable) : mixed
 	{
 		if ( TypeCheck::isString($callable) ) {
 			return $callable;
@@ -519,7 +528,6 @@ class Hook
 		if ( TypeCheck::isObject($callable) ) {
 			// Closures are currently implemented as objects
 			$callable = [$callable, ''];
-
 		} else {
 			$callable = (array)$callable;
 		}

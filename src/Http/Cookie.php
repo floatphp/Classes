@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -26,12 +26,12 @@ final class Cookie
 	 * @param string $key
 	 * @return mixed
 	 */
-	public static function get(?string $key = null)
+	public static function get(?string $key = null) : mixed
 	{
-        if ( $key ) {
-            return self::isSetted($key) ? $_COOKIE[$key] : null;
-        }
-        return self::isSetted() ? $_COOKIE : null;
+		if ( $key ) {
+			return self::isSetted($key) ? $_COOKIE[$key] : null;
+		}
+		return self::isSetted() ? $_COOKIE : null;
 	}
 
 	/**
@@ -43,11 +43,11 @@ final class Cookie
 	 * @param mixed $options
 	 * @return bool
 	 */
-	public static function set(string $key, $value = '', $options = [])
+	public static function set(string $key, $value = '', $options = []) : bool
 	{
 		return setcookie($key, $value, $options);
 	}
-	
+
 	/**
 	 * Check _COOKIE value.
 	 * 
@@ -57,12 +57,12 @@ final class Cookie
 	 */
 	public static function isSetted(?string $key = null) : bool
 	{
-        if ( $key ) {
-            return isset($_COOKIE[$key]);
-        }
-        return isset($_COOKIE) && !empty($_COOKIE);
+		if ( $key ) {
+			return isset($_COOKIE[$key]);
+		}
+		return isset($_COOKIE) && !empty($_COOKIE);
 	}
-	
+
 	/**
 	 * Unset _COOKIE value.
 	 * 
@@ -70,7 +70,7 @@ final class Cookie
 	 * @param string $key
 	 * @return void
 	 */
-	public static function unset(?string $key = null)
+	public static function unset(?string $key = null) : void
 	{
 		if ( $key ) {
 			unset($_COOKIE[$key]);
@@ -88,18 +88,18 @@ final class Cookie
 	 */
 	public static function clear() : bool
 	{
-        if ( System::getIni('session.use_cookies') ) {
-            $params = session_get_cookie_params();
-            self::set(Session::getName(), '', [
-            	'expires'  => time() - 42000,
-            	'path'     => $params['path'],
-            	'domain'   => $params['domain'],
-            	'secure'   => $params['secure'],
-            	'httponly' => $params['httponly'],
-            	'samesite' => $params['samesite']
-            ]);
-            return true;
-        }
-        return false;
+		if ( System::getIni(option: 'session.use_cookies') ) {
+			$params = session_get_cookie_params();
+			self::set(Session::getName(), '', [
+				'expires'  => time() - 42000,
+				'path'     => $params['path'],
+				'domain'   => $params['domain'],
+				'secure'   => $params['secure'],
+				'httponly' => $params['httponly'],
+				'samesite' => $params['samesite']
+			]);
+			return true;
+		}
+		return false;
 	}
 }

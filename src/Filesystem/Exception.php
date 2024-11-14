@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -39,7 +39,7 @@ final class Exception extends \Exception
 	 * @access public
 	 * @return mixed
 	 */
-	public static function getLastError()
+	public static function getLastError() : mixed
 	{
 		return error_get_last();
 	}
@@ -50,7 +50,7 @@ final class Exception extends \Exception
 	 * @access public
 	 * @return void
 	 */
-	public static function clearLastError()
+	public static function clearLastError() : void
 	{
 		error_clear_last();
 	}
@@ -62,29 +62,29 @@ final class Exception extends \Exception
 	 *
 	 * @access public
 	 * @param string $error
-	 * @param int $type
+	 * @param int $level
 	 * @return bool
 	 */
-	public static function trigger(string $error, int $type = 1024) : bool
+	public static function trigger(string $error, int $level = 1024) : bool
 	{
-		return trigger_error($error, $type);
+		return trigger_error($error, $level);
 	}
-	
-    /**
+
+	/**
 	 * Log user error.
 	 *
-     * @access public
-     * @param string $error
-     * @param string $type
-     * @param string $path
-     * @param array $headers
-     * @return void
-     */
-    public static function log(string $error, $type = 0, $path = null, $headers = null)
-    {
-    	$logger = new Logger();
-        $logger->log($error, $type, $path, $headers);
-    }
+	 * @access public
+	 * @param string $error
+	 * @param string $type
+	 * @param string $path
+	 * @param array $headers
+	 * @return void
+	 */
+	public static function log(string $error, $type = 0, $path = null, $headers = null) : void
+	{
+		$logger = new Logger();
+		$logger->log($error, $type, $path, $headers);
+	}
 
 	/**
 	 * Throw error with die.
@@ -93,7 +93,7 @@ final class Exception extends \Exception
 	 * @param string $error
 	 * @return void
 	 */
-	public static function throw(string $error)
+	public static function throw(string $error) : never
 	{
 		die($error);
 	}

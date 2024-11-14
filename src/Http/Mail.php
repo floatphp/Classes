@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -58,7 +58,7 @@ class Mail
      * @access public
      * @return object
      */
-    public static function instance()
+    public static function instance() : self
     {
         return new self();
     }
@@ -148,7 +148,8 @@ class Mail
     public function setHtml() : object
     {
         return $this->addGenericHeader(
-            'Content-Type', 'text/html; charset="utf-8"'
+            'Content-Type',
+            'text/html; charset="utf-8"'
         );
     }
 
@@ -268,7 +269,7 @@ class Mail
     {
         if ( count($pairs) === 0 ) {
             throw new InvalidArgumentException(
-                'You must pass at least one name => email pair.'
+                message: 'You must pass at least one name => email pair.'
             );
         }
         $addresses = [];
@@ -343,7 +344,7 @@ class Mail
     public function setWrap($wrap = 78) : object
     {
         $wrap = (int)$wrap;
-        if ($wrap < 1) {
+        if ( $wrap < 1 ) {
             $wrap = 78;
         }
         $this->wrap = $wrap;
@@ -360,7 +361,7 @@ class Mail
     {
         return (int)$this->wrap;
     }
-    
+
     /**
      * Send mail.
      *
@@ -378,7 +379,7 @@ class Mail
             );
         }
         if ( $this->hasAttachments() ) {
-            $message  = $this->assembleAttachmentBody();
+            $message = $this->assembleAttachmentBody();
             $headers .= Stringify::break() . $this->assembleAttachmentHeaders();
         } else {
             $message = $this->getWrapMessage();
@@ -408,7 +409,7 @@ class Mail
         $head = [];
         $head[] = "MIME-Version: 1.0";
         $head[] = "Content-Type: multipart/mixed; boundary=\"{$this->uid}\"";
-        return join(Stringify::break(),$head);
+        return join(Stringify::break(), $head);
     }
 
     /**

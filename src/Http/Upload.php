@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -16,8 +16,11 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\{
-	File, Arrayify, Stringify,
-	TypeCheck, Validator
+	File,
+	Arrayify,
+	Stringify,
+	TypeCheck,
+	Validator
 };
 use FloatPHP\Classes\Security\Tokenizer;
 
@@ -30,7 +33,7 @@ final class Upload
 	 * @param string $key
 	 * @return mixed
 	 */
-	public static function get(?string $key = null)
+	public static function get(?string $key = null) : mixed
 	{
 		if ( $key ) {
 			return self::isSetted($key) ? $_FILES[$key] : null;
@@ -46,7 +49,7 @@ final class Upload
 	 * @param mixed $value
 	 * @return void
 	 */
-	public static function set(string $key, $value = null)
+	public static function set(string $key, $value = null) : void
 	{
 		$_FILES[$key] = $value;
 	}
@@ -66,22 +69,22 @@ final class Upload
 		return isset($_FILES) && !empty($_FILES);
 	}
 
-    /**
-     * Unset _FILES value.
-     *
-     * @access public
-     * @param string $key
-     * @return void
-     */
-    public static function unset(?string $key = null)
-    {
-        if ( $key ) {
-            unset($_FILES[$key]);
+	/**
+	 * Unset _FILES value.
+	 *
+	 * @access public
+	 * @param string $key
+	 * @return void
+	 */
+	public static function unset(?string $key = null) : void
+	{
+		if ( $key ) {
+			unset($_FILES[$key]);
 
-        } else {
-            $_FILES = [];
-        }
-    }
+		} else {
+			$_FILES = [];
+		}
+	}
 
 	/**
 	 * Move uploaded files.
@@ -177,7 +180,7 @@ final class Upload
 	 */
 	public static function sanitize(array $files, ?array $types = []) : array
 	{
-		$data  = [];
+		$data = [];
 		$types = self::getMimes($types);
 
 		foreach ($files as $file) {
@@ -212,7 +215,6 @@ final class Upload
 				'path' => $path,
 				'temp' => $temp
 			];
-
 		}
 
 		return $data;

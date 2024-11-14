@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -30,15 +30,15 @@ final class Converter
 	public static function toObject(array $array, $strict = false) : object
 	{
 		if ( $strict ) {
-		    return (object)Json::decode(
-		    	Json::encode($array)
-		    );
+			return (object)Json::decode(
+				Json::encode($array)
+			);
 		}
-	    $object = new \stdClass;
-	    foreach ( $array as $item => $val ) {
-	        $object->{$item} = $val;
-	    }
-	    return (object)$object;
+		$object = new \stdClass;
+		foreach ($array as $item => $val) {
+			$object->{$item} = $val;
+		}
+		return (object)$object;
 	}
 
 	/**
@@ -50,9 +50,10 @@ final class Converter
 	 */
 	public static function toArray(object $object) : array
 	{
-	    return (array)Json::decode(
-	    	Json::encode($object), true
-	    );
+		return (array)Json::decode(
+			Json::encode($object),
+			true
+		);
 	}
 
 	/**
@@ -104,7 +105,7 @@ final class Converter
 	 * @return mixed
 	 * @internal
 	 */
-	public static function toType($value)
+	public static function toType($value) : mixed
 	{
 		if ( ($match = TypeCheck::isDynamicType('bool', $value)) ) {
 			return ($match === '1') ? true : false;
@@ -126,7 +127,7 @@ final class Converter
 	 * @return mixed
 	 * @internal
 	 */
-	public static function toTypes($value)
+	public static function toTypes($value) : mixed
 	{
 		if ( TypeCheck::isArray($value) ) {
 			return Arrayify::map([static::class, 'toTypes'], $value);
@@ -156,7 +157,7 @@ final class Converter
 	 * @return mixed
 	 * @internal
 	 */
-	public static function fromText(string $value)
+	public static function fromText(string $value) : mixed
 	{
 		$value = Stringify::unserialize($value);
 		if ( TypeCheck::isString($value) ) {

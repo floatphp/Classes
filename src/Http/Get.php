@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -24,7 +24,7 @@ final class Get
 	 * @param string $key
 	 * @return mixed
 	 */
-	public static function get(?string $key = null)
+	public static function get(?string $key = null) : mixed
 	{
 		if ( $key ) {
 			return self::isSetted($key) ? $_GET[$key] : null;
@@ -40,11 +40,11 @@ final class Get
 	 * @param mixed $value
 	 * @return void
 	 */
-	public static function set(string $key, $value = null)
+	public static function set(string $key, $value = null) : void
 	{
 		$_GET[$key] = $value;
 	}
-	
+
 	/**
 	 * Check _GET value.
 	 *
@@ -67,7 +67,7 @@ final class Get
 	 * @param string $key
 	 * @return void
 	 */
-	public static function unset(?string $key = null)
+	public static function unset(?string $key = null) : void
 	{
 		if ( $key ) {
 			unset($_GET[$key]);

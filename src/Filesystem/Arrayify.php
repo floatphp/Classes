@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -38,7 +38,7 @@ final class Arrayify
 	 * @param array $array
 	 * @return mixed
 	 */
-	public static function search($item, array $array)
+	public static function search($item, array $array) : mixed
 	{
 		return array_search($item, $array, true);
 	}
@@ -67,9 +67,11 @@ final class Arrayify
 	{
 		$merged = $override;
 		foreach ($array as $key => $value) {
-			if ( TypeCheck::isArray($value) 
-			  && isset($merged[$key]) 
-			  && TypeCheck::isArray($merged[$key]) ) {
+			if (
+				TypeCheck::isArray($value)
+				&& isset($merged[$key])
+				&& TypeCheck::isArray($merged[$key])
+			) {
 				$merged[$key] = self::mergeAll($merged[$key], $value);
 			} else {
 				$merged[$key] = $value;
@@ -125,11 +127,11 @@ final class Arrayify
 	 * @param array $array
 	 * @return mixed
 	 */
-	public static function shift(array &$array)
+	public static function shift(array &$array) : mixed
 	{
 		return array_shift($array);
 	}
-	
+
 	/**
 	 * Pop array.
 	 *
@@ -137,7 +139,7 @@ final class Arrayify
 	 * @param array $array
 	 * @return mixed
 	 */
-	public static function pop(array &$array)
+	public static function pop(array &$array) : mixed
 	{
 		return array_pop($array);
 	}
@@ -150,7 +152,7 @@ final class Arrayify
 	 * @param array $arrays
 	 * @return array
 	 */
-	public static function diff(array $array, array ...$arrays)
+	public static function diff(array $array, array ...$arrays) : array
 	{
 		return array_diff($array, ...$arrays);
 	}
@@ -192,7 +194,7 @@ final class Arrayify
 	 * @param array $array
 	 * @return mixed
 	 */
-	public static function key(array $array)
+	public static function key(array $array) : mixed
 	{
 		return array_key_first($array);
 	}
@@ -230,7 +232,7 @@ final class Arrayify
 	 * @param int $num
 	 * @return mixed
 	 */
-	public static function rand(array $array, int $num = 1)
+	public static function rand(array $array, int $num = 1) : mixed
 	{
 		return array_rand($array, $num);
 	}
@@ -284,12 +286,14 @@ final class Arrayify
 	/**
 	 * Format array key case.
 	 *
+	 * [CASE_LOWER: 0]
+	 *
 	 * @access public
 	 * @param array $array
 	 * @param int $case
 	 * @return array
 	 */
-	public static function formatKeyCase(array $array, int $case = CASE_LOWER) : array
+	public static function formatKeyCase(array $array, int $case = 0) : array
 	{
 		return array_change_key_case($array, $case);
 	}
@@ -311,12 +315,14 @@ final class Arrayify
 	/**
 	 * Unique array.
 	 *
+	 * [SORT_STRING: 2].
+	 *
 	 * @access public
 	 * @param array $array
 	 * @param int $flags
 	 * @return array
 	 */
-	public static function unique(array $array, int $flags = SORT_STRING) : array
+	public static function unique(array $array, int $flags = 2) : array
 	{
 		return array_unique($array, $flags);
 	}
@@ -334,65 +340,64 @@ final class Arrayify
 			self::map('serialize', $array)
 		));
 	}
-	
-    /**
-     * Sort array.
-     *
-     * @access public
-     * @param array $array
-     * @param mixed $orderby
-     * @param string $order
-     * @param bool $preserve (keys)
-     * @return array
-     */
-	public static function sort(array $array, $orderby, string $order = 'ASC', bool $preserve = false) : array
+
+	/**
+	 * Sort array.
+	 *
+	 * @access public
+	 * @param array $array
+	 * @param mixed $orderby
+	 * @param string $order
+	 * @param bool $preserve (keys)
+	 * @return array
+	 */
+	public static function sort(array $array, $orderby = [], string $order = 'ASC', bool $preserve = false) : array
 	{
-	    if ( !$orderby ) {
-	        return $array;
-	    }
+		if ( !$orderby ) {
+			return $array;
+		}
 
-	    if ( TypeCheck::isString($orderby) ) {
-	        $orderby = [$orderby => $order];
-	    }
+		if ( TypeCheck::isString($orderby) ) {
+			$orderby = [$orderby => $order];
+		}
 
-	    foreach ($orderby as $field => $dir) {
-	        $orderby[$field] = ('DESC' === Stringify::uppercase($dir)) ? 'DESC' : 'ASC';
-	    }
+		foreach ($orderby as $field => $dir) {
+			$orderby[$field] = ('DESC' === Stringify::uppercase($dir)) ? 'DESC' : 'ASC';
+		}
 
-	    $sort = function($a, $b) use ($orderby) {
+		$sort = function ($a, $b) use ($orderby) {
 
-	        $a = (array)$a;
-	        $b = (array)$b;
+			$a = (array)$a;
+			$b = (array)$b;
 
-	        foreach ($orderby as $field => $dir) {
+			foreach ($orderby as $field => $dir) {
 
-	            if ( !isset($a[$field]) || !isset($b[$field]) ) {
-	                continue;
-	            }
+				if ( !isset($a[$field]) || !isset($b[$field]) ) {
+					continue;
+				}
 
-	            if ( $a[$field] == $b[$field] ) {
-	                continue;
-	            }
+				if ( $a[$field] == $b[$field] ) {
+					continue;
+				}
 
-	            $val = ('DESC' === $dir) ? [1, -1] : [-1, 1];
+				$val = ('DESC' === $dir) ? [1, -1] : [-1, 1];
 
-	            if ( TypeCheck::isNumeric($a[$field]) && TypeCheck::isNumeric($b[$field]) ) {
-	                return ($a[$field] < $b[$field]) ? $val[0] : $val[1];
-	            }
+				if ( TypeCheck::isNumeric($a[$field]) && TypeCheck::isNumeric($b[$field]) ) {
+					return ($a[$field] < $b[$field]) ? $val[0] : $val[1];
+				}
 
-	            return 0 > strcmp($a[$field], $b[$field]) ? $val[0] : $val[1];
-	        }
+				return 0 > strcmp($a[$field], $b[$field]) ? $val[0] : $val[1];
+			}
 
-	        return 0;
-	    };
+			return 0;
+		};
 
-	    if ( $preserve ) {
-	        uasort($array, $sort);
+		if ( $preserve ) {
+			uasort($array, $sort);
+		} else {
+			usort($array, $sort);
+		}
 
-	    } else {
-	        usort($array, $sort);
-	    }
-
-	    return $array;
+		return $array;
 	}
 }

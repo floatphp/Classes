@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -187,9 +187,9 @@ class Logger implements LoggerInterface
     protected function write(string $status, string $message) : bool
     {
         $date = date('[d-m-Y]');
-        $log  = "{$this->path}/{$this->filename}-{$date}.{$this->extension}";
+        $log = "{$this->path}/{$this->filename}-{$date}.{$this->extension}";
         $date = date('[d-m-Y H:i:s]');
-        $msg  = "{$date} : [{$status}] - {$message}" . Stringify::break();
+        $msg = "{$date} : [{$status}] - {$message}" . Stringify::break();
         return File::w($log, $msg, true);
     }
 }

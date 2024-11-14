@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -34,7 +34,7 @@ final class Response extends Status
 	 * @param int $code
 	 * @return void
 	 */
-	public static function set(string $message, $content = [], string $status = 'success', int $code = 200)
+	public static function set(string $message, $content = [], string $status = 'success', int $code = 200) : never
 	{
 		self::setHttpHeaders($code);
 		echo Json::encode([
@@ -54,7 +54,7 @@ final class Response extends Status
 	 * @param string $type
 	 * @return void
 	 */
-	public static function setHttpHeaders(int $code, string $type = self::TYPE)
+	public static function setHttpHeaders(int $code, string $type = self::TYPE) : void
 	{
 		$status = self::getMessage($code);
 		$protocol = Server::get('server-protocol');

@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Security Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -35,8 +35,8 @@ final class Password
      */
     public static function generate(int $length = self::LENGTH, bool $special = false) : string
     {
-        $token  = '';
-        $chars  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $token = '';
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $chars .= 'abcdefghijklmnopqrstuvwxyz';
         $chars .= '0123456789';
         if ( $special ) {
@@ -64,15 +64,15 @@ final class Password
     /**
      * Get password hash.
      *
-     * [BCRYPT: 2y].
+     * [BCRYPT: '2y'].
      *
      * @access public
      * @param string $pswd
      * @param mixed $algo
      * @param array $options
-     * @return mixed
+     * @return string
      */
-    public static function hash(string $pswd, $algo = '2y', array $options = [])
+    public static function hash(string $pswd, $algo = '2y', array $options = []) : string
     {
         return password_hash($pswd, $algo, $options);
     }
@@ -103,11 +103,12 @@ final class Password
         Stringify::match('@[^\w]@', $pswd, $matches, -1);
         $special = $matches;
 
-        if ( !$uppercase 
-          || !$lowercase 
-          || !$number 
-          || !$special 
-          || strlen($pswd) < $length 
+        if (
+            !$uppercase
+            || !$lowercase
+            || !$number
+            || !$special
+            || strlen($pswd) < $length
         ) {
             return false;
         }

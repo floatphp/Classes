@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -25,7 +25,7 @@ final class Json extends File
 	 * @param bool $isArray
 	 * @return mixed
 	 */
-	public static function parse(string $file, bool $isArray = false)
+	public static function parse(string $file, bool $isArray = false) : mixed
 	{
 		return self::decode(self::r($file), $isArray);
 	}
@@ -38,7 +38,7 @@ final class Json extends File
 	 * @param bool $isArray
 	 * @return mixed
 	 */
-	public static function decode(string $value, bool $isArray = false)
+	public static function decode(string $value, bool $isArray = false) : mixed
 	{
 		return json_decode($value, $isArray);
 	}
@@ -50,7 +50,7 @@ final class Json extends File
 	 * @param mixed $value
 	 * @return mixed
 	 */
-	public static function encode($value)
+	public static function encode($value) : mixed
 	{
 		return self::format($value, 0);
 	}
@@ -68,7 +68,7 @@ final class Json extends File
 	 * @param int $depth
 	 * @return mixed
 	 */
-	public static function format($value, int $flags = 64|256, int $depth = 512)
+	public static function format($value, int $flags = 64 | 256, int $depth = 512) : mixed
 	{
 		return json_encode($value, $flags, $depth);
 	}

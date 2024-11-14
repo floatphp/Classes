@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Security Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -15,9 +15,7 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Security;
 
-use FloatPHP\Classes\Filesystem\{
-	Stringify, TypeCheck
-};
+use FloatPHP\Classes\Filesystem\{Stringify, TypeCheck};
 
 /**
  * Built-in tokenizer class.
@@ -37,8 +35,10 @@ class Tokenizer
 	{
 		$secret = self::getUniqueId();
 		$token = trim("{user:{$user}}{pswd:{$pswd}}");
+
 		$encryption = new Encryption($token, $secret);
 		$encryption->setPrefix((string)$prefix);
+
 		return [
 			'public' => $encryption->encrypt(),
 			'secret' => $secret
@@ -181,16 +181,16 @@ class Tokenizer
 			return $min;
 		}
 
-		$range  = $max - $min;
-		$log    = log($range, 2);
-		$bytes  = (int)ceil($log / 8);
-		$bits   = (int)ceil($log) + 1;
+		$range = $max - $min;
+		$log = log($range, 2);
+		$bytes = (int)ceil($log / 8);
+		$bits = (int)ceil($log) + 1;
 		$filter = (1 << $bits) - 1;
 
 		do {
 			$pseudo = openssl_random_pseudo_bytes($bytes);
-			$rand   = hexdec(bin2hex($pseudo));
-			$rand   = $rand & $filter;
+			$rand = hexdec(bin2hex($pseudo));
+			$rand = $rand & $filter;
 		} while ($rand >= $range);
 
 		return $min + $rand;
@@ -209,6 +209,7 @@ class Tokenizer
 		if ( !TypeCheck::isString($value) ) {
 			$value = Stringify::serialize($value);
 		}
+
 		$value = "{$salt}{$value}";
 		return hash('sha256', $value);
 	}

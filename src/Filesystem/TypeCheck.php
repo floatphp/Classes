@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -45,7 +45,7 @@ final class TypeCheck
 		}
 		return is_object($value);
 	}
-	
+
 	/**
 	 * Check array.
 	 *
@@ -57,7 +57,7 @@ final class TypeCheck
 	{
 		return is_array($value);
 	}
-	
+
 	/**
 	 * Check iterator.
 	 *
@@ -204,12 +204,12 @@ final class TypeCheck
 	 * Check function.
 	 *
 	 * @access public
-	 * @param string $function
+	 * @param string $name
 	 * @return bool
 	 */
-	public static function isFunction(string $function) : bool
+	public static function isFunction(string $name) : bool
 	{
-		return function_exists(Stringify::undash($function));
+		return function_exists(Stringify::undash($name));
 	}
 
 	/**
@@ -237,7 +237,7 @@ final class TypeCheck
 	{
 		return is_subclass_of($sub, $class);
 	}
-	
+
 	/**
 	 * Check interface.
 	 *
@@ -329,14 +329,14 @@ final class TypeCheck
 	 */
 	public static function isStream(string $path) : bool
 	{
-	    $scheme = strpos($path, '://');
-	    if ( false === $scheme ) {
-	        return false;
-	    }
-	    $stream = substr($path, 0, $scheme);
-	    return Arrayify::inArray($stream, stream_get_wrappers(), true);
+		$scheme = strpos($path, '://');
+		if ( false === $scheme ) {
+			return false;
+		}
+		$stream = substr($path, 0, $scheme);
+		return Arrayify::inArray($stream, stream_get_wrappers());
 	}
-	
+
 	/**
 	 * Check dynamic type.
 	 *
@@ -346,13 +346,13 @@ final class TypeCheck
 	 * @return mixed
 	 * @internal
 	 */
-	public static function isDynamicType(string $type, $value = null)
+	public static function isDynamicType(string $type, $value = null) : mixed
 	{
 		if ( !self::isString($value) ) {
 			return false;
 		}
 
-        $pattern = sprintf('/^%s\|(.+)$/', $type);
+		$pattern = sprintf('/^%s\|(.+)$/', $type);
 
 		if ( Stringify::match($pattern, $value, $matches) ) {
 			$matches = $matches[1] ?? 'NaN';

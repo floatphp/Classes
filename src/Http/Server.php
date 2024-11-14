@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -15,9 +15,7 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
-use FloatPHP\Classes\Filesystem\{
-	Stringify, Arrayify, TypeCheck, Validator
-};
+use FloatPHP\Classes\Filesystem\{Stringify, Arrayify, TypeCheck, Validator};
 
 final class Server
 {
@@ -29,10 +27,10 @@ final class Server
 	 * @param bool $format
 	 * @return mixed
 	 */
-	public static function get(?string $key = null, $format = true)
+	public static function get(?string $key = null, $format = true) : mixed
 	{
 		if ( $key ) {
-			if ( $format ) $key = Stringify::undash($key, true);
+			if ( $format ) $key = Stringify::undash($key, isGlobal: true);
 			return self::isSetted($key) ? $_SERVER[$key] : null;
 		}
 		return self::isSetted() ? $_SERVER : null;
@@ -47,9 +45,9 @@ final class Server
 	 * @param bool $format
 	 * @return void
 	 */
-	public static function set(string $key, $value = null, $format = true)
+	public static function set(string $key, $value = null, $format = true) : void
 	{
-		if ( $format ) $value = Stringify::undash($key, true);
+		if ( $format ) $value = Stringify::undash($key, isGlobal: true);
 		$_SERVER[$key] = $value;
 	}
 
@@ -64,7 +62,7 @@ final class Server
 	public static function isSetted(?string $key = null, $format = true) : bool
 	{
 		if ( $key ) {
-			if ( $format ) $key = Stringify::undash($key, true);
+			if ( $format ) $key = Stringify::undash($key, isGlobal: true);
 			return isset($_SERVER[$key]);
 		}
 		return isset($_SERVER) && !empty($_SERVER);
@@ -81,7 +79,6 @@ final class Server
 	{
 		if ( $key ) {
 			unset($_SERVER[$key]);
-
 		} else {
 			$_SERVER = [];
 		}
@@ -94,7 +91,7 @@ final class Server
 	 * @param string $domain
 	 * @return mixed
 	 */
-	public static function getIp(?string $domain = null)
+	public static function getIp(?string $domain = null) : mixed
 	{
 		if ( $domain ) {
 			$ip = gethostbyname($domain);
@@ -110,14 +107,14 @@ final class Server
 			$ip = Stringify::stripSlash($ip);
 			$ip = Stringify::split($ip, ['regex' => '/,/']);
 			$ip = (string)trim(current($ip));
- 			return Validator::isValidIp($ip);
+			return Validator::isValidIp($ip);
 
 		} elseif ( self::isSetted('http-cf-connecting-ip') ) {
 			$ip = self::get('http-cf-connecting-ip');
 			$ip = Stringify::stripSlash($ip);
 			$ip = Stringify::split($ip, ['regex' => '/,/']);
 			$ip = (string)trim(current($ip));
- 			return Validator::isValidIp($ip);
+			return Validator::isValidIp($ip);
 
 		} elseif ( self::isSetted('remote-addr') ) {
 			$ip = self::get('remote-addr');
@@ -133,7 +130,7 @@ final class Server
 	 * @access public
 	 * @return string
 	 */
-	public static function getProtocol()
+	public static function getProtocol() : string
 	{
 		return (self::isSsl()) ? 'https://' : 'http://';
 	}
@@ -143,9 +140,9 @@ final class Server
 	 *
 	 * @access public
 	 * @param array $headers
-	 * @return string
+	 * @return mixed
 	 */
-	public static function getCountryCode(array $headers = [])
+	public static function getCountryCode(array $headers = []) : mixed
 	{
 		$headers = Arrayify::merge([
 			'mm-country-code',
@@ -163,7 +160,7 @@ final class Server
 				}
 			}
 		}
-		
+
 		return false;
 	}
 
@@ -175,7 +172,7 @@ final class Server
 	 * @param int $status
 	 * @return void
 	 */
-	public static function redirect(string $location, int $status = 301)
+	public static function redirect(string $location, int $status = 301) : never
 	{
 		if ( $status ) {
 			$message = Response::getMessage($status);
@@ -285,42 +282,45 @@ final class Server
 	 * @access public
 	 * @return mixed
 	 */
-	public static function getAuthorizationHeaders()
+	public static function getAuthorizationHeaders() : mixed
 	{
-        if ( self::isSetted('Authorization', false) ) {
-            return trim(self::get('Authorization', false));
+		if ( self::isSetted('Authorization', false) ) {
+			return trim(self::get('Authorization', false));
+		}
 
-        } elseif ( self::isSetted('http-authorization') ) {
-            return trim(self::get('http-authorization'));
+		if ( self::isSetted('http-authorization') ) {
+			return trim(self::get('http-authorization'));
+		}
 
-        } elseif ( TypeCheck::isFunction('apache-request-headers') ) {
-            $requestHeaders = apache_request_headers();
-            $requestHeaders = Arrayify::combine(
-            	Arrayify::map('ucwords', Arrayify::keys($requestHeaders)),
-            	Arrayify::values($requestHeaders)
-            );
-            if ( isset($requestHeaders['Authorization']) ) {
-                return trim($requestHeaders['Authorization']);
-            }
-        }
-        return false;
-    }
+		if ( TypeCheck::isFunction('apache-request-headers') ) {
+			$requestHeaders = apache_request_headers();
+			$requestHeaders = Arrayify::combine(
+				keys: Arrayify::map(callback: 'ucwords', array: Arrayify::keys($requestHeaders)),
+				values: Arrayify::values($requestHeaders)
+			);
+			if ( isset($requestHeaders['Authorization']) ) {
+				return trim($requestHeaders['Authorization']);
+			}
+		}
+
+		return false;
+	}
 
 	/**
 	 * Get authorization token.
 	 *
-     * @access public
-     * @return string
-     */
-    public static function getBearerToken() : string
-    {
+	 * @access public
+	 * @return string
+	 */
+	public static function getBearerToken() : string
+	{
 		$token = false;
-        if ( ($headers = self::getAuthorizationHeaders()) ) {
+		if ( ($headers = self::getAuthorizationHeaders()) ) {
 			Stringify::match('/Bearer\s(\S+)/', $headers, $matches);
-            $token = $matches[1] ?? false;
-        }
-        return (string)$token;
-    }
+			$token = $matches[1] ?? false;
+		}
+		return (string)$token;
+	}
 
 	/**
 	 * Check whether protocol is HTTPS (SSL).
@@ -338,49 +338,49 @@ final class Server
 		return false;
 	}
 
-    /**
-     * Get domain name from URL.
-     *
-     * @access public
-     * @param string $url
-     * @return string
-     */
-    public static function getDomain(?string $url = null) : string
-    {
+	/**
+	 * Get domain name from URL.
+	 *
+	 * @access public
+	 * @param string $url
+	 * @return string
+	 */
+	public static function getDomain(?string $url = null) : string
+	{
 		$url = $url ?: self::getCurrentUrl(true);
 
-		$pieces  = Stringify::parseUrl($url);
-		$domain  = isset($pieces['host']) ? $pieces['host'] : $pieces['path'];
+		$pieces = Stringify::parseUrl($url);
+		$domain = isset($pieces['host']) ? $pieces['host'] : $pieces['path'];
 
 		$pattern = '/(?P<domain>[a-z0-9][a-z0-9\\-]{1,63}\\.[a-z\\.]{2,6})$/i';
-		Stringify::match($pattern, $domain, $domain, -1);
+		Stringify::match($pattern, $domain, $domain, flags: -1);
 
 		return $domain ?: $url;
-    }
+	}
 
-    /**
-     * Get HTTP referer.
-     *
-     * @access public
-     * @return mixed
-     */
-    public static function getReferer()
-    {
+	/**
+	 * Get HTTP referer.
+	 *
+	 * @access public
+	 * @return mixed
+	 */
+	public static function getReferer() : mixed
+	{
 		return self::get('http-referer');
-    }
+	}
 
-    /**
-     * Get server modules.
-     *
-     * @access public
-     * @return array
-     */
-    public static function getModules() : array
-    {
+	/**
+	 * Get server modules.
+	 *
+	 * @access public
+	 * @return array
+	 */
+	public static function getModules() : array
+	{
 		$modules = [];
 		if ( TypeCheck::isFunction('apache-get-modules') ) {
 			$modules = apache_get_modules();
 		}
 		return $modules;
-    }
+	}
 }

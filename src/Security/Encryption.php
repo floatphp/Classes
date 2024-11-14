@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Security Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -15,9 +15,7 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Security;
 
-use FloatPHP\Classes\Filesystem\{
-	Stringify, TypeCheck
-};
+use FloatPHP\Classes\Filesystem\{Stringify, TypeCheck};
 
 /**
  * Built-in encryption class,
@@ -40,8 +38,8 @@ class Encryption
 	 * @var int OPTIONS Default openssl options
 	 * @var string CIPHER Default openssl cipher algorithm
 	 */
-	private const SECRET = 'v6t1pQ97JS';
-	private const VECTOR = 'XRtvQPlFs';
+	private const SECRET  = 'v6t1pQ97JS';
+	private const VECTOR  = 'XRtvQPlFs';
 	private const LENGTH  = 16;
 	private const ALGO    = 'sha256';
 	private const OPTIONS = 0;
@@ -162,7 +160,6 @@ class Encryption
 			if ( $this->bypass && $this->isCrypted() ) {
 				return $this->data;
 			}
-
 		} else {
 			$this->data = Stringify::serialize($this->data);
 		}
@@ -178,6 +175,7 @@ class Encryption
 
 		$crypted = Tokenizer::base64($encrypt, $loop);
 		unset($this->data);
+
 		return "{$this->prefix}{$crypted}";
 	}
 
@@ -245,6 +243,6 @@ class Encryption
 	public function isCrypted() : bool
 	{
 		$prefix = substr($this->data, 0, strlen($this->prefix));
-		return ($prefix === $this->prefix);
+		return $prefix === $this->prefix;
 	}
 }

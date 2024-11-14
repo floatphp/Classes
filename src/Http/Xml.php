@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -30,7 +30,7 @@ final class Xml
 	 * @param int $args
 	 * @return mixed
 	 */
-	public static function parse(string $xml, int $args = 16384|20908)
+	public static function parse(string $xml, int $args = 16384 | 20908) : mixed
 	{
 		return @simplexml_load_string($xml, 'SimpleXMLElement', $args);
 	}
@@ -43,7 +43,7 @@ final class Xml
 	 * @param int $args
 	 * @return mixed
 	 */
-	public static function parseFile(string $path, int $args = 16384|20908)
+	public static function parseFile(string $path, int $args = 16384 | 20908) : mixed
 	{
 		return @simplexml_load_file($path, 'SimpleXMLElement', $args);
 	}
@@ -55,7 +55,7 @@ final class Xml
 	 * @param bool $handling, User errors
 	 * @return mixed
 	 */
-	public static function ignoreErrors(bool $handling = true)
+	public static function ignoreErrors(bool $handling = true) : bool
 	{
 		return libxml_use_internal_errors($handling);
 	}

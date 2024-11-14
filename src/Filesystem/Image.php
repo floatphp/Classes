@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -41,7 +41,7 @@ final class Image
 		if ( !Arrayify::inArray($type, $allowed) ) {
 			return false;
 		}
-		
+
 		// Check info
 		if ( !($info = getimagesize($path)) ) {
 			return false;
@@ -67,10 +67,10 @@ final class Image
 		}
 
 		// Calculate sizes
-		$srcWidth  = $info[0];
+		$srcWidth = $info[0];
 		$srcHeight = $info[1];
 
-		if ( $crop ){
+		if ( $crop ) {
 			if ( $srcWidth < $width or $srcHeight < $height ) {
 				return false;
 			}
@@ -78,7 +78,6 @@ final class Image
 			$srcHeight = $height / $ratio;
 			$x = ($srcWidth - $width / $ratio) / 2;
 			$srcWidth = $width / $ratio;
-
 		} else {
 			if ( $srcWidth < $width and $srcHeight < $height ) {
 				return false;
@@ -114,6 +113,6 @@ final class Image
 		);
 
 		// Save (PNG)
-		return imagepng($image, Stringify::lowercase($path), 0);
+		return imagepng($image, Stringify::lowercase($path), quality: 0);
 	}
 }

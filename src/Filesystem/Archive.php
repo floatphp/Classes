@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Filesystem Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -51,16 +51,15 @@ final class Archive extends File
 			if ( $zip->open($to, ZIP::CREATE | ZIP::OVERWRITE) ) {
 				if ( self::isDir($path) ) {
 					$files = new RecursiveIteratorIterator(
-					    new RecursiveDirectoryIterator($path),
-					    RecursiveIteratorIterator::LEAVES_ONLY
+						new RecursiveDirectoryIterator($path),
+						RecursiveIteratorIterator::LEAVES_ONLY
 					);
 					foreach ($files as $name => $file) {
-					    if ( !$file->isDir() ) {
-					        $p = $file->getRealPath();
-					        $zip->addFile($p, basename($name));
-					    }
+						if ( !$file->isDir() ) {
+							$p = $file->getRealPath();
+							$zip->addFile($p, basename($name));
+						}
 					}
-
 				} elseif ( self::isFile($path) ) {
 					$zip->addFile($path, basename($path));
 				}
@@ -98,11 +97,10 @@ final class Archive extends File
 				$zip = new ZIP();
 				$resource = $zip->open($archive);
 				if ( $resource === true ) {
-			  		$zip->extractTo($to);
-			  		$zip->close();
-			  		$status = true;
+					$zip->extractTo($to);
+					$zip->close();
+					$status = true;
 				}
-
 			} elseif ( self::isGzip($archive) ) {
 				$status = self::unGzip($archive);
 			}
@@ -154,14 +152,14 @@ final class Archive extends File
 			if ( ($gz = gzopen($archive, 'rb')) ) {
 				$filename = Stringify::remove('.gz', $archive);
 				$to = fopen($filename, 'wb');
-				while ( !gzeof($gz) ) {
-				    fwrite($to, gzread($gz, $length));
+				while (!gzeof($gz)) {
+					fwrite($to, gzread($gz, $length));
 				}
 				$status = true;
 				fclose($to);
 			}
 			gzclose($gz);
-			if ($remove) {
+			if ( $remove ) {
 				self::remove($archive);
 			}
 		}

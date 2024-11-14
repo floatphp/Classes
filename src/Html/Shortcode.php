@@ -3,7 +3,7 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Html Component
- * @version    : 1.2.x
+ * @version    : 1.3.x
  * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
@@ -15,9 +15,7 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Html;
 
-use FloatPHP\Classes\Filesystem\{
-	Arrayify, Stringify, TypeCheck
-};
+use FloatPHP\Classes\Filesystem\{Arrayify, Stringify, TypeCheck};
 
 /**
  * Built-in Shortcode class,
@@ -91,7 +89,7 @@ final class Shortcode extends Hook
 	 * @access public
 	 * @return void
 	 */
-	public function removeShortcodes()
+	public function removeShortcodes() : void
 	{
 		$this->shortcodeTags = [];
 	}
@@ -138,7 +136,6 @@ final class Shortcode extends Hook
 					return true;
 				}
 			}
-
 		}
 
 		return false;
@@ -151,7 +148,7 @@ final class Shortcode extends Hook
 	 * @param string $tag
 	 * @return mixed
 	 */
-	public function doShortcode($tag)
+	public function doShortcode(string $tag) : mixed
 	{
 		if ( empty($this->shortcodeTags) || !TypeCheck::isArray($this->shortcodeTags) ) {
 			return $tag;
@@ -164,43 +161,42 @@ final class Shortcode extends Hook
 	 * Get shortcode regex.
 	 *
 	 * @access public
-	 * @param string void
 	 * @return string
 	 */
-	public function getShortcodeRegex()
+	public function getShortcodeRegex() : string
 	{
-		$tagnames  = array_keys($this->shortcodeTags);
+		$tagnames = array_keys($this->shortcodeTags);
 		$tagregexp = implode('|', array_map('preg_quote', $tagnames));
 
 		return
-		  '\\['
-		  . '(\\[?)'
-		  . "($tagregexp)"
-		  . '(?![\\w-])'
-		  . '('
-		  . '[^\\]\\/]*'
-		  . '(?:'
-		  . '\\/(?!\\])'
-		  . '[^\\]\\/]*'
-		  . ')*?'
-		  . ')'
-		  . '(?:'
-		  . '(\\/)'
-		  . '\\]'
-		  . '|'
-		  . '\\]'
-		  . '(?:'
-		  . '('
-		  . '[^\\[]*+'
-		  . '(?:'
-		  . '\\[(?!\\/\\2\\])'
-		  . '[^\\[]*+'
-		  . ')*+'
-		  . ')'
-		  . '\\[\\/\\2\\]'
-		  . ')?'
-		  . ')'
-		  . '(\\]?)';
+			'\\['
+			. '(\\[?)'
+			. "($tagregexp)"
+			. '(?![\\w-])'
+			. '('
+			. '[^\\]\\/]*'
+			. '(?:'
+			. '\\/(?!\\])'
+			. '[^\\]\\/]*'
+			. ')*?'
+			. ')'
+			. '(?:'
+			. '(\\/)'
+			. '\\]'
+			. '|'
+			. '\\]'
+			. '(?:'
+			. '('
+			. '[^\\[]*+'
+			. '(?:'
+			. '\\[(?!\\/\\2\\])'
+			. '[^\\[]*+'
+			. ')*+'
+			. ')'
+			. '\\[\\/\\2\\]'
+			. ')?'
+			. ')'
+			. '(\\]?)';
 	}
 
 	/**
@@ -210,7 +206,7 @@ final class Shortcode extends Hook
 	 * @param mixed $content
 	 * @return mixed
 	 */
-	public function parseAtts($content)
+	public function parseAtts($content) : mixed
 	{
 		$atts = [];
 		$pattern = '/(\w+)\s*=\s*"([^"]*)"(?:\s|$)|(\w+)\s*=\s*\'([^\']*)\'(?:\s|$)|(\w+)\s*=\s*([^\s\'"]+)(?:\s|$)|"([^"]*)"(?:\s|$)|(\S+)(?:\s|$)/';
@@ -220,21 +216,16 @@ final class Shortcode extends Hook
 			foreach ($match as $tag) {
 				if ( !empty($tag[1]) ) {
 					$atts[strtolower($tag[1])] = stripcslashes($tag[2]);
-
 				} elseif ( !empty($tag[3]) ) {
 					$atts[strtolower($tag[3])] = stripcslashes($tag[4]);
-
 				} elseif ( !empty($tag[5]) ) {
 					$atts[strtolower($tag[5])] = stripcslashes($tag[6]);
-
 				} elseif ( isset($tag[7]) && $tag[7] !== '' ) {
 					$atts[] = stripcslashes($tag[7]);
-
 				} elseif ( isset($tag[8]) ) {
 					$atts[] = stripcslashes($tag[8]);
 				}
 			}
-
 		} else {
 			$atts = ltrim($content);
 		}
@@ -259,14 +250,13 @@ final class Shortcode extends Hook
 	 * @param string $shortcode
 	 * @return mixed
 	 */
-	public function shortcodeAtts($pairs, $atts, $shortcode = '')
+	public function shortcodeAtts($pairs, $atts, string $shortcode = '') : mixed
 	{
 		$atts = (array)$atts;
 		$out = [];
 		foreach ($pairs as $name => $default) {
 			if ( Arrayify::hasKey($name, $atts) ) {
 				$out[$name] = $atts[$name];
-
 			} else {
 				$out[$name] = $default;
 			}
@@ -282,15 +272,17 @@ final class Shortcode extends Hook
 	 *
 	 * @access public
 	 * @param string $content
-	 * @return string
+	 * @return mixed
 	 */
-	public function stripShortcodes($content)
+	public function stripShortcodes(string $content) : mixed
 	{
-		if ( empty($this->shortcodeTags) 
-		  || !TypeCheck::isArray($this->shortcodeTags) ) {
+		if (
+			empty($this->shortcodeTags)
+			|| !TypeCheck::isArray($this->shortcodeTags)
+		) {
 			return $content;
 		}
-		
+
 		$pattern = $this->getShortcodeRegex();
 		return preg_replace_callback("/$pattern/s", [$this, 'stripShortcodeTag'], $content);
 	}
@@ -302,18 +294,18 @@ final class Shortcode extends Hook
 	 * @param string $content
 	 * @return string
 	 */
-    public static function spin(string $content) : string
-    {
-        $cb = function ($match) {
-            $content = self::spin($match[1]);
-            $parts = explode('|', $content);
-            $rand = mt_rand(0, count($parts) - 1);
-            return $parts[$rand];
-        };
+	public static function spin(string $content) : string
+	{
+		$cb = function ($match) {
+			$content = self::spin($match[1]);
+			$parts = explode('|', $content);
+			$rand = mt_rand(0, count($parts) - 1);
+			return $parts[$rand];
+		};
 
-        $value = Stringify::replaceRegexCb(self::SPIN, $cb, $content);
-        return $value ?: $content;
-    }
+		$value = Stringify::replaceRegexCb(self::SPIN, $cb, $content);
+		return $value ?: $content;
+	}
 
 	/**
 	 * Do shortcode hook tag.
@@ -325,10 +317,10 @@ final class Shortcode extends Hook
 	 */
 	private function doShortcodeTag(array $tag)
 	{
-		if ( count($tag) < 7 ) return; 
+		if ( count($tag) < 7 ) return;
 
 		$first = $tag[1] ?? '';
-		$last  = $tag[6] ?? '';
+		$last = $tag[6] ?? '';
 
 		// Allow [[foo]] syntax for escaping a tag
 		if ( $first == '[' && $last == ']' ) {
@@ -340,7 +332,9 @@ final class Shortcode extends Hook
 		$atts = $this->parseAtts($atts);
 
 		// Set callback
-		$cb = $this->shortcodeTags[$name] ?? function(){ return 'error'; };
+		$cb = $this->shortcodeTags[$name] ?? function () {
+			return 'error';
+		};
 
 		// enclosing tag - extra parameter
 		$open = $tag[5] ?? false;
