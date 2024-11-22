@@ -1,6 +1,6 @@
 {
   "name": "floatphp/classes",
-  "version" : "1.3.0",
+  "version" : "1.3.1",
   "type": "library",
   "description": "FloatPHP Classes Components",
   "keywords": ["floatphp","micro-framework","framework","PSR","ORM","jakiboy"],
