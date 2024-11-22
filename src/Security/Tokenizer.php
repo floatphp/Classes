@@ -18,7 +18,8 @@ namespace FloatPHP\Classes\Security;
 use FloatPHP\Classes\Filesystem\{Stringify, TypeCheck};
 
 /**
- * Built-in tokenizer class.
+ * Built-in tokenizer class,
+ * JWT is recommended for external use.
  */
 class Tokenizer
 {

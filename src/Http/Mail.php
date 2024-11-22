@@ -15,13 +15,15 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
-use FloatPHP\Classes\{
-    Filesystem\Stringify,
-    Security\Tokenizer
-};
+use FloatPHP\Classes\Filesystem\{Stringify, TypeCheck, File};
+use FloatPHP\Classes\Security\{Tokenizer, Sanitizer};
 use \InvalidArgumentException;
 use \RuntimeException;
 
+/**
+ * Advanced mail manipulation.
+ * @see http://github.com/eoghanobrien/php-simple-mail
+ */
 class Mail
 {
     /**
@@ -29,7 +31,7 @@ class Mail
      * @var int $wrap
      * @var array $to
      * @var string $subject
-     * @var string $message
+     * @var string $body
      * @var array $headers
      * @var string $params
      * @var array $attachments
@@ -38,119 +40,113 @@ class Mail
     protected $wrap = 78;
     protected $to = [];
     protected $subject;
-    protected $message;
+    protected $body;
     protected $headers = [];
     protected $params = '';
     protected $attachments = [];
     protected $uid;
+    protected $isHtml = false;
+
+    protected const FROM  = 'From';
+    protected const CC    = 'Cc';
+    protected const BCC   = 'Bcc';
+    protected const REPLY = 'Reply-To';
+    protected const HTML  = 'text/html; charset="utf-8"';
 
     /**
      * Set UID.
+     *
+     * @access public
+     * @param string $email, Sender
+     * @param string $name, Sender
      */
-    public function __construct()
+    public function __construct(?string $email = null, ?string $name = null)
     {
         $this->uid = Tokenizer::getUniqueId();
+        if ( $email ) {
+            $this->from($email, $name);
+        }
     }
 
     /**
-     * Get instance.
-     *
-     * @access public
-     * @return object
-     */
-    public static function instance() : self
-    {
-        return new self();
-    }
-
-    /**
-     * Set To.
+     * Set receiver(s).
      *
      * @access public
      * @param string $email
      * @param string $name
      * @return object
      */
-    public function setTo(string $email, ?string $name = null) : object
+    public function to(string $email, ?string $name = null) : self
     {
-        $this->to[] = $this->formatHeader($email, (string)$name);
+        $this->to[] = $this->formatAddressHeader($email, $name);
         return $this;
     }
 
     /**
-     * Get To.
-     *
-     * @access public
-     * @return array
-     */
-    public function getTo() : array
-    {
-        return (array)$this->to;
-    }
-
-    /**
-     * Set From.
+     * Set sender.
      *
      * @access public
      * @param string $email
      * @param string $name
      * @return object
      */
-    public function setFrom(string $email, string $name = '') : object
+    public function from(string $email, ?string $name = null) : self
     {
-        $this->addMailHeader('From', $email, $name);
+        $this->setAddressHeader(static::FROM, $email, $name);
         return $this;
     }
 
     /**
-     * Set Cc.
-     *
-     * @access public
-     * @param array $pairs
-     * @return object
-     */
-    public function setCc(array $pairs) : object
-    {
-        return $this->addMailHeaders('Cc', $pairs);
-    }
-
-    /**
-     * Set Bcc.
-     *
-     * @access public
-     * @param array $pairs
-     * @return object
-     */
-    public function setBcc(array $pairs) : object
-    {
-        return $this->addMailHeaders('Bcc', $pairs);
-    }
-
-    /**
-     * Set ReplyTo.
+     * Set Reply-To.
      *
      * @access public
      * @param string $email
      * @param string $name
      * @return object
      */
-    public function setReplyTo(string $email, string $name = '') : object
+    public function replyTo(string $email, ?string $name = null) : self
     {
-        return $this->addMailHeader('Reply-To', $email, $name);
+        $this->setAddressHeader(static::REPLY, $email, $name);
+        return $this;
     }
 
     /**
-     * Set Html.
+     * Set CC (Carbon Copy).
+     *
+     * @access public
+     * @param array $pair
+     * @return object
+     */
+    public function setCc(array $pair) : self
+    {
+        $this->setAddressPairHeader(static::CC, $pair);
+        return $this;
+    }
+
+    /**
+     * Set BCC (Blind Carbon Copy).
+     *
+     * @access public
+     * @param array $pair
+     * @return object
+     */
+    public function setBcc(array $pair) : self
+    {
+        $this->setAddressPairHeader(static::BCC, $pair);
+        return $this;
+    }
+
+    /**
+     * Send body as HTML.
      *
      * @access public
      * @return object
      */
-    public function setHtml() : object
+    public function asHtml() : self
     {
-        return $this->addGenericHeader(
-            'Content-Type',
-            'text/html; charset="utf-8"'
-        );
+        $this->addHeader('Content-Type', static::HTML);
+        $this->isHtml = true;
+        return $this;
     }
 
     /**
@@ -160,279 +156,298 @@ class Mail
      * @param string $subject
      * @return object
      */
-    public function setSubject(string $subject) : object
+    public function setSubject(string $subject) : self
     {
-        $this->subject = $this->encodeUtf8(
-            $this->filterSubject($subject)
-        );
+        $this->subject = Sanitizer::sanitizeMail($subject, 'subject');
         return $this;
     }
 
     /**
-     * Get subject.
+     * Set body (message).
      *
      * @access public
-     * @return string
-     */
-    public function getSubject() : string
-    {
-        return (string)$this->subject;
-    }
-
-    /**
-     * Set message.
-     *
-     * @access public
-     * @param string $message
+     * @param string $body
      * @return object
      */
-    public function setMessage(string $message) : object
+    public function setBody(string $body) : self
     {
-        $this->message = Stringify::replace("\n.", "\n..", $message);
+        $escape = ($this->isHtml) ? false : true;
+        $this->body = Sanitizer::sanitizeMail($body, 'body', $escape);
         return $this;
     }
 
     /**
-     * Get message.
+     * Add content to body.
      *
      * @access public
-     * @return string
+     * @param string $content
+     * @param bool $break
+     * @return object
      */
-    public function getMessage() : string
+    public function addContent(string $content, bool $break = true) : self
     {
-        return (string)$this->message;
+        $escape = ($this->isHtml) ? false : true;
+        $content = Sanitizer::sanitizeMail($content, 'body', $escape);
+
+        if ( $break ) {
+            $this->addBreak();
+        }
+
+        $this->body .= $content;
+        return $this;
     }
 
     /**
-     * Add attachment.
+     * Add break to body.
      *
      * @access public
-     * @param string $path
-     * @param string $filename
+     * @return object
+     */
+    public function addBreak() : self
+    {
+        $this->body .= "\n";
+        return $this;
+    }
+
+    /**
+     * Set attachment(s).
+     *
+     * @param string $path 
+     * @param string $name.
      * @param string $data
      * @return object
      */
-    public function addAttachment(string $path, ?string $filename = null, ?string $data = null) : object
+    public function setAttachment(string $path, ?string $name = null, ?string $data = null) : self
     {
-        $filename = (!$filename) ? Stringify::basename($path) : $filename;
-        $data = (!$data) ? $this->getAttachmentData($path) : $data;
+        $name = $name ?: Stringify::basename($path);
+        $data = $data ?: $this->getAttachmentData($path);
+        $data = Stringify::chunk(Tokenizer::base64($data));
         $this->attachments[] = [
             'path' => $path,
-            'file' => $filename,
-            'data' => chunk_split(Tokenizer::base64($data))
+            'file' => $name,
+            'data' => $data
         ];
         return $this;
     }
 
     /**
-     * Get attachment data.
+     * Set additional mail parameters.
      *
-     * @access public
-     * @param string $path
-     * @return string
-     */
-    public function getAttachmentData(string $path) : string
-    {
-        $filesize = filesize($path);
-        $handle = fopen($path, 'r');
-        $attachment = fread($handle, $filesize);
-        fclose($handle);
-        return (string)$attachment;
-    }
-
-    /**
-     * Add mail header.
-     *
-     * @access public
-     * @param string $header
-     * @param string $email
-     * @param string $name
-     * @return object
-     */
-    public function addMailHeader(string $header, string $email, string $name = '') : object
-    {
-        $address = $this->formatHeader($email, $name);
-        $this->headers[] = sprintf('%s: %s', $header, $address);
-        return $this;
-    }
-
-    /**
-     * Add mail headers.
-     *
-     * @access public
-     * @param string $header
-     * @param array $pairs
-     * @return object
-     * @throws InvalidArgumentException
-     */
-    public function addMailHeaders($header, array $pairs) : object
-    {
-        if ( count($pairs) === 0 ) {
-            throw new InvalidArgumentException(
-                message: 'You must pass at least one name => email pair.'
-            );
-        }
-        $addresses = [];
-        foreach ($pairs as $name => $email) {
-            $name = is_numeric($name) ? null : $name;
-            $addresses[] = $this->formatHeader($email, $name);
-        }
-        $this->addGenericHeader($header, implode(',', $addresses));
-        return $this;
-    }
-
-    /**
-     * Add generic header.
-     *
-     * @access public
-     * @param string $header
-     * @param mixed  $value
-     * @return object
-     */
-    public function addGenericHeader($header, $value) : object
-    {
-        $this->headers[] = sprintf(
-            '%s: %s',
-            (string)$header,
-            (string)$value
-        );
-        return $this;
-    }
-
-    /**
-     * Get headers.
-     *
-     * @access public
-     * @return array
-     */
-    public function getHeaders() : array
-    {
-        return (array)$this->headers;
-    }
-
-    /**
-     * Set additional parameters.
-     *
-     * @access public
      * @param string $params
      * @return object
      */
-    public function setParameters($params = '') : object
+    public function setParams(string $params) : self
     {
         $this->params = (string)$params;
         return $this;
     }
 
     /**
-     * Get additional parameters.
+     * Set body words wrapper.
      *
-     * @access public
-     * @return string
-     */
-    public function getParameters() : string
-    {
-        return (string)$this->params;
-    }
-
-    /**
-     * Set message number of characters.
-     *
-     * @access public
      * @param int $wrap
      * @return object
      */
-    public function setWrap($wrap = 78) : object
+    public function wrap(int $wrap) : self
     {
-        $wrap = (int)$wrap;
-        if ( $wrap < 1 ) {
-            $wrap = 78;
-        }
-        $this->wrap = $wrap;
+        $this->wrap = ($wrap > 1)
+            ? $wrap : $this->wrap;
         return $this;
-    }
-
-    /**
-     * Get wrap.
-     *
-     * @access public
-     * @return int
-     */
-    public function getWrap() : int
-    {
-        return (int)$this->wrap;
     }
 
     /**
      * Send mail.
      *
-     * @access public
-     * @return bool
+     * @return boolean
      * @throws RuntimeException
      */
     public function send() : bool
     {
-        $to = $this->getMailForSend();
-        $headers = $this->getHeadersForSend();
-        if ( empty($to) ) {
+        if ( !($to = $this->getReceivers()) ) {
             throw new RuntimeException(
-                'Unable to send email, Missing receiving address'
+                'Unable to send, Undefined receiver address'
             );
         }
-        if ( $this->hasAttachments() ) {
-            $message = $this->assembleAttachmentBody();
-            $headers .= Stringify::break() . $this->assembleAttachmentHeaders();
-        } else {
-            $message = $this->getWrapMessage();
+
+        $headers = $this->getHeaders();
+        $message = wordwrap($this->body, $this->wrap);
+
+        if ( $this->attachments ) {
+            $message = $this->getAttachmentBody();
+            $headers .= $this->getAttachmentHeader();
         }
-        return @mail($to, $this->subject, $message, $headers, $this->params);
+
+        return mail($to, $this->subject, $message, $headers, $this->params);
     }
 
     /**
-     * Check attachments.
+     * Add mail header.
+     *
+     * @access public
+     * @param string $name
+     * @param string $value
+     * @return object
+     */
+    public function addHeader(string $name, string $value) : self
+    {
+        $this->headers[] = sprintf('%s: %s', $name, $value);
+        return $this;
+    }
+
+    /**
+     * Set address header.
      *
      * @access protected
-     * @return bool
+     * @param string $type
+     * @param string $email
+     * @param string $name
+     * @return void
      */
-    protected function hasAttachments() : bool
+    protected function setAddressHeader(string $type, string $email, ?string $name = null) : void
     {
-        return !empty($this->attachments);
+        $address = $this->formatAddressHeader($email, $name);
+        $this->addHeader($type, $address);
     }
 
     /**
-     * Assemble attachment headers.
+     * Set address pair header.
+     *
+     * @access protected
+     * @param string $type
+     * @param array $pairs
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    protected function setAddressPairHeader(string $type, array $pairs)
+    {
+        $address = [];
+        foreach ($pairs as $name => $email) {
+            if ( TypeCheck::isInt($name) ) {
+                $name = null;
+            }
+            if ( TypeCheck::isString($email) ) {
+                $address[] = $this->formatAddressHeader($email, $name);
+            }
+        }
+
+        if ( !$address ) {
+            throw new InvalidArgumentException(
+                'Invali mail header pairs'
+            );
+        }
+
+        $address = implode(',', $address);
+        $this->addHeader($type, $address);
+    }
+
+    /**
+     * Format address header.
+     *
+     * @access protected
+     * @param string $email
+     * @param string $name
+     * @return string
+     * @throws InvalidArgumentException
+     */
+    protected function formatAddressHeader(string $email, ?string $name = null) : string
+    {
+        $email = Sanitizer::sanitizeEmail($email);
+
+        if ( empty($email) ) {
+            throw new InvalidArgumentException('Invalid email address');
+        }
+
+        if ( $name ) {
+            $name = Sanitizer::sanitizeMail($name, 'name');
+            $email = sprintf('"%s" <%s>', $name, $email);
+        }
+
+        return $email;
+    }
+
+    /**
+     * Get headers.
      *
      * @access protected
      * @return string
      */
-    protected function assembleAttachmentHeaders() : string
+    protected function getHeaders() : string
     {
-        $head = [];
-        $head[] = "MIME-Version: 1.0";
-        $head[] = "Content-Type: multipart/mixed; boundary=\"{$this->uid}\"";
-        return join(Stringify::break(), $head);
+        if ( $this->headers ) {
+            $this->headers = join(Stringify::break(), $this->headers);
+        }
+        return $this->headers;
     }
 
     /**
-     * Assemble attachment body.
+     * Get receivers.
      *
      * @access protected
      * @return string
      */
-    protected function assembleAttachmentBody() : string
+    protected function getReceivers() : string
     {
+        return join(', ', $this->to);
+    }
+
+    /**
+     * Get attachment data.
+     *
+     * @access protected
+     * @param string $path
+     * @return mixed
+     */
+    protected function getAttachmentData(string $path) : mixed
+    {
+        return File::read($path);
+    }
+
+    /**
+     * Get attachment header.
+     *
+     * @access protected
+     * @return string
+     */
+    protected function getAttachmentHeader() : string
+    {
+        $boundary = 'boundary="' . $this->uid . '"';
+
+        $header = [];
+        $header[] = 'MIME-Version: 1.0';
+        $header[] = "Content-Type: multipart/mixed; {$boundary}";
+
+        $header = join(Stringify::break(), $header);
+        $header = Stringify::break() . $header;
+
+        return $header;
+    }
+
+    /**
+     * Get attachment body.
+     *
+     * @access protected
+     * @return string
+     */
+    protected function getAttachmentBody() : string
+    {
+        $charset = 'charset="utf-8"';
+
         $body = [];
-        $body[] = "This is a multi-part message in MIME format.";
+        $body[] = 'This is a multi-part message in MIME format.';
         $body[] = "--{$this->uid}";
-        $body[] = "Content-type:text/html; charset=\"utf-8\"";
-        $body[] = "Content-Transfer-Encoding: 7bit";
-        $body[] = "";
-        $body[] = $this->message;
-        $body[] = "";
+        $body[] = "Content-Type: text/html; {$charset}";
+        $body[] = 'Content-Transfer-Encoding: quoted-printable';
+        $body[] = '';
+        $body[] = Sanitizer::sanitizeBody($this->body);
+        $body[] = '';
         $body[] = "--{$this->uid}";
+
         foreach ($this->attachments as $attachment) {
             $body[] = $this->getAttachmentMimeTemplate($attachment);
         }
-        return implode(Stringify::break(), $body) . '--';
+
+        $body = implode(Stringify::break(), $body);
+        return "{$body}--";
     }
 
     /**
@@ -442,175 +457,24 @@ class Mail
      * @param array $attachment
      * @return string
      */
-    protected function getAttachmentMimeTemplate($attachment) : string
+    protected function getAttachmentMimeTemplate(array $attachment) : string
     {
-        $file = $attachment['file'];
-        $data = $attachment['data'];
-        $head = [];
-        $head[] = "Content-Type: application/octet-stream; name=\"{$file}\"";
-        $head[] = "Content-Transfer-Encoding: base64";
-        $head[] = "Content-Disposition: attachment; filename=\"{$file}\"";
-        $head[] = "";
-        $head[] = $data;
-        $head[] = "";
-        $head[] = "--{$this->uid}";
-        return implode(Stringify::break(), $head);
-    }
+        $file = $attachment['file'] ?? null;
+        $data = $attachment['data'] ?? null;
 
-    /**
-     * Format header.
-     *
-     * @access protected
-     * @param string $email
-     * @param string $name
-     * @return string
-     */
-    protected function formatHeader(string $email, string $name = '') : string
-    {
-        $email = $this->filterEmail($email);
-        if ( empty($name) ) {
-            return $email;
-        }
-        $name = $this->encodeUtf8($this->filterName($name));
-        return sprintf('"%s" <%s>', $name, $email);
-    }
+        $name = 'name="' . $file . '"';
+        $filename = 'filename="' . $file . '"';
 
-    /**
-     * Encode Utf8.
-     *
-     * @access protected
-     * @param string $value
-     * @return string
-     */
-    protected function encodeUtf8($value) : string
-    {
-        $value = trim($value);
-        if ( preg_match('/(\s)/', $value) ) {
-            return $this->encodeUtf8Words($value);
-        }
-        return $this->encodeUtf8Word($value);
-    }
+        $header = [];
+        $header[] = "Content-Type: application/octet-stream; {$name}";
+        $header[] = "Content-Transfer-Encoding: base64";
+        $header[] = "Content-Disposition: attachment; {$filename}";
+        $header[] = '';
+        $header[] = $data;
+        $header[] = '';
+        $header[] = "--{$this->uid}";
 
-    /**
-     * Encode Utf8 Word.
-     *
-     * @access protected
-     * @param string $value
-     * @return string
-     */
-    protected function encodeUtf8Word($value) : string
-    {
-        return sprintf('=?UTF-8?B?%s?=', Tokenizer::base64($value));
-    }
-
-    /**
-     * Encode Utf8 Words.
-     *
-     * @access protected
-     * @param string $value
-     * @return string
-     */
-    protected function encodeUtf8Words($value) : string
-    {
-        $words = explode(' ', $value);
-        $encoded = [];
-        foreach ($words as $word) {
-            $encoded[] = $this->encodeUtf8Word($word);
-        }
-        return join($this->encodeUtf8Word(' '), $encoded);
-    }
-
-    /**
-     * Filter email.
-     *
-     * @access protected
-     * @param string $email
-     * @return string
-     */
-    protected function filterEmail(string $email) : string
-    {
-        $rule = [
-            "\r" => '',
-            "\n" => '',
-            "\t" => '',
-            '"'  => '',
-            ','  => '',
-            '<'  => '',
-            '>'  => ''
-        ];
-        $email = trim(strtr($email, $rule));
-        return Stringify::filter($email, 'email');
-    }
-
-    /**
-     * Filter name.
-     *
-     * @access protected
-     * @param string $name
-     * @return string
-     */
-    protected function filterName($name) : string
-    {
-        $rule = [
-            "\r" => '',
-            "\n" => '',
-            "\t" => '',
-            '"'  => "'",
-            '<'  => '[',
-            '>'  => ']',
-        ];
-        $name = trim(strtr($name, $rule));
-        return Stringify::filter($name, 'name');
-    }
-
-    /**
-     * Filter subject.
-     *
-     * @access protected
-     * @param string $subject
-     * @return string
-     */
-    protected function filterSubject($subject) : string
-    {
-        return Stringify::filter($subject, 'subject');
-    }
-
-    /**
-     * Get headers for send.
-     *
-     * @access protected
-     * @return string
-     */
-    protected function getHeadersForSend() : string
-    {
-        if ( empty($this->headers) ) {
-            return '';
-        }
-        return join(Stringify::break(), $this->headers);
-    }
-
-    /**
-     * Get mail for send.
-     *
-     * @access protected
-     * @return string
-     */
-    protected function getMailForSend() : string
-    {
-        if ( empty($this->to) ) {
-            return '';
-        }
-        return join(', ', $this->to);
-    }
-
-    /**
-     * Get wrap message.
-     *
-     * @access protected
-     * @return string
-     */
-    protected function getWrapMessage() : string
-    {
-        return wordwrap($this->message, $this->wrap);
+        $header = implode(Stringify::break(), $header);
+        return $header;
     }
 }

@@ -16,8 +16,8 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Security;
 
 use FloatPHP\Classes\Filesystem\{TypeCheck, Stringify, Arrayify};
-use FloatPHP\Classes\Filesystem\Http\Server;
-use FloatPHP\Classes\Filesystem\Server\System;
+use FloatPHP\Classes\Http\Server;
+use FloatPHP\Classes\Server\System;
 
 /**
  * Built-in licensing class.
@@ -162,6 +162,7 @@ class License
 
         // Include server IP
         $data['server']['ip'] = $this->server['ip'];
+
         // Include server HOST
         $data['server']['host'] = $this->server['host'];
 

@@ -18,8 +18,8 @@ namespace FloatPHP\Classes\Html;
 use FloatPHP\Classes\Filesystem\{Arrayify, Stringify, TypeCheck};
 
 /**
- * Built-in Shortcode class,
- * @uses Inspired by WordPress kernel https://make.wordpress.org
+ * Built-in shortcode class.
+ * @see https://developer.wordpress.org/apis/shortcode/
  */
 final class Shortcode extends Hook
 {
@@ -216,16 +216,21 @@ final class Shortcode extends Hook
 			foreach ($match as $tag) {
 				if ( !empty($tag[1]) ) {
 					$atts[strtolower($tag[1])] = stripcslashes($tag[2]);
+
 				} elseif ( !empty($tag[3]) ) {
 					$atts[strtolower($tag[3])] = stripcslashes($tag[4]);
+
 				} elseif ( !empty($tag[5]) ) {
 					$atts[strtolower($tag[5])] = stripcslashes($tag[6]);
+
 				} elseif ( isset($tag[7]) && $tag[7] !== '' ) {
 					$atts[] = stripcslashes($tag[7]);
+
 				} elseif ( isset($tag[8]) ) {
 					$atts[] = stripcslashes($tag[8]);
 				}
 			}
+
 		} else {
 			$atts = ltrim($content);
 		}
@@ -254,16 +259,20 @@ final class Shortcode extends Hook
 	{
 		$atts = (array)$atts;
 		$out = [];
+
 		foreach ($pairs as $name => $default) {
 			if ( Arrayify::hasKey($name, $atts) ) {
 				$out[$name] = $atts[$name];
+
 			} else {
 				$out[$name] = $default;
 			}
 		}
+
 		if ( $shortcode ) {
 			$out = $this->applyFilter([$this, "shortcodeAtts-{$shortcode}"], $out, $pairs, $atts);
 		}
+
 		return $out;
 	}
 

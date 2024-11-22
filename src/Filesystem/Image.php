@@ -15,6 +15,9 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
+/**
+ * Advanced image manipulation.
+ */
 final class Image
 {
 	/**
@@ -114,5 +117,23 @@ final class Image
 
 		// Save (PNG)
 		return imagepng($image, Stringify::lowercase($path), quality: 0);
+	}
+
+	/**
+	 * Validate image mime.
+	 *
+	 * @access public
+	 * @param string $file
+	 * @return bool
+	 */
+	public static function isMime(string $file) : bool
+	{
+		return Validator::isMime($file, [
+			'jpg'  => 'image/jpeg',
+			'jpeg' => 'image/jpeg',
+			'bmp'  => 'image/bmp',
+			'png'  => 'image/png',
+			'gif'  => 'image/gif'
+		]);
 	}
 }

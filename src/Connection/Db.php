@@ -20,6 +20,9 @@ use FloatPHP\Classes\Filesystem\{TypeCheck, Stringify, Arrayify};
 use \PDOException;
 use \PDO;
 
+/**
+ * Advanced database manipulation.
+ */
 class Db
 {
     /**
@@ -71,7 +74,8 @@ class Db
      */
     public function bind(string $bind, $value = null) : void
     {
-        $this->parameters[sizeof($this->parameters)] = [":{$bind}", $value];
+        $count = sizeof($this->parameters);
+        $this->parameters[$count] = [":{$bind}", $value];
     }
 
     /**
@@ -357,7 +361,7 @@ class Db
      */
     protected function log(?string $message = null, string $sql = null) : string
     {
-        if ( empty($message) ) {
+        if ( !$message ) {
             $message = 'Unhandled Exception';
         }
 

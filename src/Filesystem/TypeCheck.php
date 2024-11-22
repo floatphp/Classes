@@ -15,6 +15,9 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
+/**
+ * Advanced types checker.
+ */
 final class TypeCheck
 {
 	/**
@@ -143,7 +146,7 @@ final class TypeCheck
 	 */
 	public static function isFalse($value) : bool
 	{
-		return ($value === false);
+		return $value === false;
 	}
 
 	/**
@@ -155,23 +158,27 @@ final class TypeCheck
 	 */
 	public static function isTrue($value) : bool
 	{
-		return ($value === true);
+		return $value === true;
 	}
 
 	/**
-	 * Check empty (string or array).
+	 * Check empty (string or array or null).
 	 *
 	 * @access public
 	 * @param mixed $value
+	 * @param bool $null
 	 * @return bool
 	 */
-	public static function isEmpty($value) : bool
+	public static function isEmpty($value, bool $null = false) : bool
 	{
 		if ( self::isString($value) ) {
-			return (trim($value) === '');
+			return trim($value) === '';
 		}
 		if ( self::isArray($value) ) {
 			return empty($value);
+		}
+		if ( $null ) {
+			return self::isNull($value);
 		}
 		return false;
 	}
@@ -339,6 +346,7 @@ final class TypeCheck
 
 	/**
 	 * Check dynamic type.
+	 * (Javascript).
 	 *
 	 * @access public
 	 * @param string $type

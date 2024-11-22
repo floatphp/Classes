@@ -17,6 +17,9 @@ namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\{Stringify, Arrayify, Json};
 
+/**
+ * Advanced HTTP client (cURL).
+ */
 class Client
 {
     /**
@@ -25,20 +28,23 @@ class Client
      * @var array $response
      * @var string $method
      * @var string $url
-     * @var int $timout
+     * @var int $timeout
      */
     private $request = [];
     private $response = [];
     private $method = 'GET';
-    private $url = '';
-    private $timout = 5;
+    private $url;
+    private $timeout = 5;
 
     /**
+     * @access public
      * @param string $url
+     * @param int $timeout
      */
-    public function __construct(string $url = '')
+    public function __construct(string $url = '', int $timeout = 5)
     {
-        $this->setUrl($url);
+        $this->url = $url;
+        $this->timeout = $timeout;
     }
 
     /**
@@ -51,7 +57,7 @@ class Client
      * @param string $url
      * @return object
      */
-    public function request(string $method = 'POST', array $body = [], array $header = [], string $url = '') : object
+    public function request(string $method, array $body = [], array $headers = [], string $url = '') : self
     {
         // Init client
         $this->init();
@@ -62,8 +68,8 @@ class Client
         // Set body
         $this->setBody($body);
 
-        // Set header
-        $this->setHeader($header);
+        // Set headers
+        $this->setHeaders($headers);
 
         // Set url
         $this->setUrl($url);
@@ -75,6 +81,20 @@ class Client
     }
 
     /**
+     * Make HTTP GET request.
+     *
+     * @access public
+     * @param array $body
+     * @param array $headers
+     * @param string $url
+     * @return string
+     */
+    public function get(array $body = [], array $headers = [], string $url = '') : string
+    {
+        return $this->request('GET', $body, $headers, $url)->getBody();
+    }
+
+    /**
      * Make HTTP POST request.
      *
      * @access public
@@ -83,59 +103,9 @@ class Client
      * @param string $url
      * @return string
      */
-    public function post(array $body = [], array $header = [], string $url = '') : string
+    public function post(array $body = [], array $headers = [], string $url = '') : string
     {
-        // Init client
-        $this->init();
-
-        // Set method
-        $this->method = 'POST';
-
-        // Set body
-        $this->setBody($body);
-
-        // Set header
-        $this->setHeader($header);
-
-        // Set url
-        $this->setUrl($url);
-
-        // Prepare request
-        $this->prepare();
-
-        return $this->getBody();
-    }
-
-    /**
-     * Make HTTP GET request.
-     *
-     * @access public
-     * @param array $body
-     * @param array $header
-     * @param string $url
-     * @return string
-     */
-    public function get(array $body = [], array $header = [], string $url = '') : string
-    {
-        // Init client
-        $this->init();
-
-        // Set method
-        $this->method = 'GET';
-
-        // Set body
-        $this->setBody($body);
-
-        // Set header
-        $this->setHeader($header);
-
-        // Set url
-        $this->setUrl($url);
-
-        // Prepare request
-        $this->prepare();
-
-        return $this->getBody();
+        return $this->request('POST', $body, $headers, $url)->getBody();
     }
 
     /**
@@ -196,7 +166,7 @@ class Client
      * @param array $header
      * @return void
      */
-    public function setHeader(array $header = [])
+    public function setHeaders(array $header = [])
     {
         $this->request['header'] = Arrayify::merge($this->request['header'], $header);
     }
@@ -228,15 +198,15 @@ class Client
     }
 
     /**
-     * Set request timout.
+     * Set request timeout.
      * 
      * @access public
-     * @param int $timout
+     * @param int $timeout
      * @return void
      */
-    public function setTimout(int $timout = 5)
+    public function setTimout(int $timeout = 5) : void
     {
-        $this->timout = $timout;
+        $this->timeout = $timeout;
     }
 
     /**
@@ -246,7 +216,7 @@ class Client
      * @param bool $json
      * @return mixed
      */
-    public function getBody($json = false)
+    public function getBody($json = false) : mixed
     {
         if ( $json ) {
             return Json::decode($this->response['body'], true);
@@ -312,7 +282,7 @@ class Client
      * @access private
      * @return void
      */
-    private function init()
+    private function init() : void
     {
         $this->request = [
             'header' => [],
@@ -344,13 +314,16 @@ class Client
         curl_setopt($handler, CURLOPT_WRITEFUNCTION, [$this, 'catchBody']);
 
         // Additional options
-        curl_setopt($handler, CURLOPT_TIMEOUT, $this->timout);
+        curl_setopt($handler, CURLOPT_TIMEOUT, $this->timeout);
+
         if ( $this->method == 'post' ) {
             curl_setopt($handler, CURLOPT_POST, true);
             curl_setopt($handler, CURLOPT_POSTFIELDS, $this->request['body']);
+
         } elseif ( $this->method == 'put' ) {
             curl_setopt($handler, CURLOPT_CUSTOMREQUEST, 'PUT');
             curl_setopt($handler, CURLOPT_POSTFIELDS, $this->request['body']);
+
         } else {
             curl_setopt($handler, CURLOPT_CUSTOMREQUEST, Stringify::uppercase($this->method));
         }

@@ -17,6 +17,9 @@ namespace FloatPHP\Classes\Security;
 
 use FloatPHP\Classes\Filesystem\Stringify;
 
+/**
+ * Advanced password manipulation.
+ */
 final class Password
 {
     /**

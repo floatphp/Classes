@@ -16,7 +16,7 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Filesystem;
 
 /**
- * Exception and error handler helper.
+ * Advanced exception manipulation.
  */
 final class Exception extends \Exception
 {

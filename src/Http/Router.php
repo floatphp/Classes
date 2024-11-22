@@ -15,16 +15,12 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
-use FloatPHP\Classes\Filesystem\{
-    TypeCheck,
-    Stringify,
-    Arrayify
-};
+use FloatPHP\Classes\Filesystem\{TypeCheck, Stringify, Arrayify};
 use FloatPHP\Interfaces\Classes\RouterInterface;
 use FloatPHP\Exceptions\Classes\RouterException;
 
 /**
- * Built-in HTTP router class,
+ * Built-in HTTP router class.
  * @see https://dannyvankooten.github.io/AltoRouter/
  */
 class Router implements RouterInterface

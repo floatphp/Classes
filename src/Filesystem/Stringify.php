@@ -15,6 +15,9 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
+/**
+ * Advanced I/O helper and string manipulation.
+ */
 final class Stringify
 {
 	/**
@@ -45,6 +48,21 @@ final class Stringify
 	public static function subReplace($search, $replace, $offset = 0, $length = null) : mixed
 	{
 		return substr_replace($search, $replace, $offset, $length);
+	}
+
+	/**
+	 * Count substring(s).
+	 *
+	 * @access public
+	 * @param string $haystack
+	 * @param string $needle
+	 * @param int $offset
+	 * @param int $length
+	 * @return int
+	 */
+	public static function subCount(string $haystack, string $needle, int $offset = 0, ?int $length = null) : int
+	{
+		return substr_count($haystack, $needle, $offset, $length);
 	}
 
 	/**
@@ -101,11 +119,11 @@ final class Stringify
 	 * @access public
 	 * @param mixed $string
 	 * @param mixed $subject
-	 * @return string
+	 * @return mixed
 	 */
-	public static function remove($string, $subject) : string
+	public static function remove($string, $subject) : mixed
 	{
-		return (string)self::replace($string, '', $subject);
+		return self::replace($string, '', $subject);
 	}
 
 	/**
@@ -291,6 +309,20 @@ final class Stringify
 		}
 		$length = $args['length'] ?? 1;
 		return str_split($string, $length);
+	}
+
+	/**
+	 * Split string to smaller chunks.
+	 *
+	 * @access public
+	 * @param string $string
+	 * @param int $length
+	 * @param string $sep, separator
+	 * @return string
+	 */
+	public static function chunk(string $string, int $length = 76, string $sep = "\r\n") : mixed
+	{
+		return chunk_split($string, $length, $sep);
 	}
 
 	/**
@@ -826,26 +858,13 @@ final class Stringify
 	 */
 	public static function filter($value, ?string $type = 'name', int $filter = 516, $options = 0) : mixed
 	{
-		switch (self::lowercase((string)$type)) {
-			case 'email':
-				return filter_var($value, FILTER_SANITIZE_EMAIL);
-				break;
-
-			case 'name':
-				return filter_var($value, FILTER_DEFAULT, FILTER_FLAG_NO_ENCODE_QUOTES);
-				break;
-
-			case 'subject':
-				return filter_var($value, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW);
-				break;
-
-			case 'url':
-			case 'link':
-				return filter_var($value, FILTER_SANITIZE_URL);
-				break;
-		}
-
-		return filter_var($value, $filter, $options);
+		return match (self::lowercase((string)$type)) {
+			'email' => filter_var($value, FILTER_SANITIZE_EMAIL),
+			'name'  => filter_var($value, FILTER_DEFAULT, FILTER_FLAG_NO_ENCODE_QUOTES),
+			'text'  => filter_var($value, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW),
+			'url'   => filter_var($value, FILTER_SANITIZE_URL),
+			default => filter_var($value, $filter, $options)
+		};
 	}
 
 	/**
@@ -950,11 +969,13 @@ final class Stringify
 			foreach ($value as $index => $item) {
 				$value[$index] = self::deepMap($item, $callback);
 			}
+
 		} elseif ( TypeCheck::isObject($value) ) {
 			$vars = get_object_vars($value);
 			foreach ($vars as $name => $content) {
 				$value->{$name} = self::deepMap($content, $callback);
 			}
+
 		} else {
 			$value = call_user_func($callback, $value);
 		}

@@ -17,6 +17,9 @@ namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\Json;
 
+/**
+ * Advanced HTTP response manipulation.
+ */
 final class Response extends Status
 {
 	/**

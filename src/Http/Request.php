@@ -15,6 +15,9 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
+/**
+ * Advanced HTTP REQUEST manipulation.
+ */
 final class Request
 {
 	/**

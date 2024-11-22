@@ -17,6 +17,9 @@ namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Server\Date;
 
+/**
+ * Advanced session manipulation.
+ */
 final class Session
 {
     /**
@@ -136,7 +139,7 @@ final class Session
      * @access public
      * @return void
      */
-    public static function renew()
+    public static function renew() : void
     {
         $time = self::get('--session-time');
         self::set('--session-start', Date::newTime(h: 0, m: 0, s: $time));

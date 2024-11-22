@@ -17,14 +17,17 @@ namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\Stringify;
 
+/**
+ * Advanced XML manipulation.
+ */
 final class Xml
 {
 	/**
 	 * Parse XML string.
 	 *
-	 * [NOCDATA: 16384].
-	 * [VERSION: 20908].
-	 * 
+	 * [NOCDATA : 16384].
+	 * [VERSION : 20908].
+	 *
 	 * @access public 
 	 * @param string $xml
 	 * @param int $args
@@ -37,7 +40,7 @@ final class Xml
 
 	/**
 	 * Parse XML file.
-	 * 
+	 *
 	 * @access public 
 	 * @param string $path
 	 * @param int $args
@@ -50,7 +53,7 @@ final class Xml
 
 	/**
 	 * Ignore XML errors.
-	 * 
+	 *
 	 * @access public 
 	 * @param bool $handling, User errors
 	 * @return mixed
@@ -62,7 +65,7 @@ final class Xml
 
 	/**
 	 * Format XML string.
-	 * 
+	 *
 	 * @access public 
 	 * @param string $xml
 	 * @return string

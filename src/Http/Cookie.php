@@ -17,6 +17,9 @@ namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Server\System;
 
+/**
+ * Advanced cookie manipulation.
+ */
 final class Cookie
 {
 	/**
@@ -88,7 +91,7 @@ final class Cookie
 	 */
 	public static function clear() : bool
 	{
-		if ( System::getIni(option: 'session.use_cookies') ) {
+		if ( System::getIni('session.use_cookies') ) {
 			$params = session_get_cookie_params();
 			self::set(Session::getName(), '', [
 				'expires'  => time() - 42000,

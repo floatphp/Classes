@@ -48,7 +48,7 @@ final class Date extends DateTime
 
     /**
      * Create date object from string.
-     * 
+     *
      * @access public
      * @param string $date
      * @param string $format
@@ -64,7 +64,7 @@ final class Date extends DateTime
 
     /**
      * Convert date format.
-     * 
+     *
      * @access public
      * @param string $date
      * @param string $format
@@ -78,7 +78,7 @@ final class Date extends DateTime
 
     /**
      * Convert date object to string.
-     * 
+     *
      * @access public
      * @param object $date
      * @param string $to
@@ -92,7 +92,7 @@ final class Date extends DateTime
     /**
      * Get date difference interval,
      * Returns -1 if invalid date or expire.
-     * 
+     *
      * @access public
      * @param mixed $date
      * @param mixed $expire
@@ -103,7 +103,7 @@ final class Date extends DateTime
     public static function difference($date, $expire, ?string $i = null, string $to = self::FORMAT) : int
     {
         // Check date
-        if ( !Validator::isValidDate($date) || !Validator::isValidDate($expire) ) {
+        if ( !Validator::isDate($date) || !Validator::isDate($expire) ) {
             return -1;
         }
 
@@ -128,7 +128,7 @@ final class Date extends DateTime
 
     /**
      * Order dates.
-     * 
+     *
      * @access public
      * @param array $dates
      * @param string $format
@@ -136,7 +136,7 @@ final class Date extends DateTime
      */
     public static function order(array $dates, $sort = 'asc', string $format = self::FORMAT) : array
     {
-        usort($dates, function ($a, $b) use ($sort, $format) : int {
+        usort($dates, function ($a, $b) use ($sort, $format) {
             if ( Stringify::lowercase($sort) == 'asc' ) {
                 return self::create($a, $format) <=> self::create($b, $format);
             }
@@ -155,19 +155,20 @@ final class Date extends DateTime
      */
     public static function timeNow() : int
     {
-        $currentHour = date('H');
-        $currentMin = date('i');
-        $currentSec = date('s');
-        $currentMon = date('m');
-        $currentDay = date('d');
-        $currentYear = date('y');
+        $h = date('H');
+        $m = date('i');
+        $s = date('s');
+        $mt = date('m');
+        $d = date('d');
+        $y = date('y');
+
         return mktime(
-            hour: (int)$currentHour,
-            minute: (int)$currentMin,
-            second: (int)$currentSec,
-            month: (int)$currentMon,
-            day: (int)$currentDay,
-            year: (int)$currentYear
+            hour: (int)$h,
+            minute: (int)$m,
+            second: (int)$s,
+            month: (int)$mt,
+            day: (int)$d,
+            year: (int)$y
         );
     }
 
@@ -186,20 +187,20 @@ final class Date extends DateTime
     public static function newTime($h = 0, $m = 0, $s = 0, $mt = 0, $d = 0, $y = 0) : int
     {
         // Get current
-        $currentHour = date('H');
-        $currentMin = date('i');
-        $currentSec = date('s');
-        $currentMon = date('m');
-        $currentDay = date('d');
-        $currentYear = date('y');
+        $ch = date('H');
+        $cm = date('i');
+        $cs = date('s');
+        $cmt = date('m');
+        $cd = date('d');
+        $cy = date('y');
 
         return mktime(
-            $currentHour + $h,
-            $currentMin + $m,
-            $currentSec + $s,
-            $currentMon + $mt,
-            $currentDay + $d,
-            $currentYear + $y
+            hour: $ch + $h,
+            minute: $cm + $m,
+            second: $cs + $s,
+            month: $cmt + $mt,
+            day: $cd + $d,
+            year: $cy + $y
         );
     }
 
@@ -218,7 +219,7 @@ final class Date extends DateTime
         // Check date
         if (
             !self::maybeDuration($duration)
-            || !Validator::isValidDate($date)
+            || !Validator::isDate($date)
         ) {
             return -1;
         }
@@ -254,7 +255,7 @@ final class Date extends DateTime
 
     /**
      * Check date object.
-     * 
+     *
      * @access public
      * @param mixed $date
      * @return bool
@@ -266,7 +267,7 @@ final class Date extends DateTime
 
     /**
      * Check date duration.
-     * 
+     *
      * @access public
      * @param string $duration
      * @return bool
@@ -279,7 +280,7 @@ final class Date extends DateTime
 
     /**
      * Set default date timezone.
-     * 
+     *
      * @access public
      * @param string $timezone
      * @return bool

@@ -24,6 +24,9 @@ use FloatPHP\Classes\Filesystem\{
 };
 use FloatPHP\Classes\Security\Tokenizer;
 
+/**
+ * Advanced upload manipulation.
+ */
 final class Upload
 {
 	/**
@@ -200,7 +203,7 @@ final class Upload
 				continue;
 			}
 
-			if ( !Validator::isValidMime($name, $types) ) {
+			if ( !Validator::isMime($name, $types) ) {
 				continue;
 			}
 

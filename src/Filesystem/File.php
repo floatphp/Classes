@@ -15,6 +15,9 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
+/**
+ * Advanced file manipulation.
+ */
 class File
 {
 	/**
@@ -24,7 +27,7 @@ class File
 	 * @param string $path
 	 * @return array
 	 */
-	public static function analyse($path) : array
+	public static function analyse(string $path) : array
 	{
 		return [
 			'parent'      => self::getParentDir($path),
@@ -540,6 +543,26 @@ class File
 	}
 
 	/**
+	 * Read file using stream.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return mixed
+	 */
+	public static function read(string $path) : mixed
+	{
+		if ( self::exists($path) ) {
+			if ( ($handler = fopen($path, 'r')) ) {
+				$size = self::getFileSize($path);
+				$content = fread($handler, $size);
+				fclose($handler);
+				return $content;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Scan directory,
 	 * [ASC: 0],
 	 * [DESC: 1],
@@ -635,8 +658,10 @@ class File
 	/**
 	 * Parse ini file.
 	 *
-	 * [Normal : 0]
-	 * 
+	 * [INI_SCANNER_NORMAL : 0].
+	 * [FILE_IGNORE_NEW_LINES : 2].
+	 * [FILE_SKIP_EMPTY_LINES : 4].
+	 *
 	 * @access public
 	 * @param string $path
 	 * @param bool $sections
@@ -645,11 +670,78 @@ class File
 	 */
 	public static function parseIni(string $path, bool $sections = false, int $mode = 0) : mixed
 	{
-		return parse_ini_file(
-			Stringify::formatPath($path),
-			$sections,
-			$mode
-		);
+		$path = Stringify::formatPath($path);
+
+		if ( TypeCheck::isFunction('parse_ini_file') ) {
+			return parse_ini_file($path, $sections, $mode);
+		}
+
+		if ( !self::exists($path) || !self::isReadable($path) ) {
+			throw new \RuntimeException("File not found or not readable: {$path}");
+		}
+
+		$lines = file($path, 2 | 4);
+		$data = [];
+		$section = null;
+
+		foreach ($lines as $line) {
+			$line = trim($line);
+
+			// Skip comments and empty lines
+			if ( $line === '' || $line[0] === ';' || $line[0] === '#' ) {
+				continue;
+			}
+
+			// Remove trailing semicolon
+			if ( substr($line, -1) === ';' ) {
+				$line = substr($line, 0, -1);
+			}
+
+			// Process sections
+			if ( $line[0] === '[' && substr($line, -1) === ']' ) {
+				if ( $sections ) {
+					$section = substr($line, 1, -1);
+					$data[$section] = [];
+				}
+				continue;
+			}
+
+			// Process key-value pairs
+			$keyValue = explode('=', $line, 2);
+			if ( count($keyValue) !== 2 ) {
+				throw new \RuntimeException("Invalid line in INI file: {$line}");
+			}
+
+			[$key, $value] = array_map('trim', $keyValue);
+
+			// Parse booleans, null, and numbers
+			if ( strtolower($value) === 'true' ) {
+				$value = true;
+
+			} elseif ( strtolower($value) === 'false' ) {
+				$value = false;
+
+			} elseif ( strtolower($value) === 'null' ) {
+				$value = null;
+
+			} elseif ( is_numeric($value) ) {
+				// Convert to int or float
+				$value = $value + 0;
+
+			} else {
+				// Remove quotes if present
+				$value = trim($value, '"\'');
+			}
+
+			if ( $sections && $section !== null ) {
+				$data[$section][$key] = $value;
+
+			} else {
+				$data[$key] = $value;
+			}
+		}
+
+		return $data;
 	}
 
 	/**

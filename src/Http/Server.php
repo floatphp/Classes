@@ -17,6 +17,9 @@ namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\{Stringify, Arrayify, TypeCheck, Validator};
 
+/**
+ * Advanced HTTP server manipulation.
+ */
 final class Server
 {
 	/**
@@ -75,10 +78,11 @@ final class Server
 	 * @param string $key
 	 * @return void
 	 */
-	public static function unset(?string $key = null)
+	public static function unset(?string $key = null) : void
 	{
 		if ( $key ) {
 			unset($_SERVER[$key]);
+
 		} else {
 			$_SERVER = [];
 		}
@@ -89,50 +93,56 @@ final class Server
 	 *
 	 * @access public
 	 * @param string $domain
-	 * @return mixed
+	 * @return string
 	 */
-	public static function getIp(?string $domain = null) : mixed
+	public static function getIp(?string $domain = null) : string
 	{
+		$default = '0.0.0.0';
+
 		if ( $domain ) {
 			$ip = gethostbyname($domain);
-			return Validator::isValidIp($ip);
+			return Validator::isIp($ip) ? $ip : $default;
 		}
 
 		if ( self::isSetted('http-x-real-ip') ) {
 			$ip = self::get('http-x-real-ip');
-			return Stringify::stripSlash($ip);
+			return Validator::isIp($ip) ? $ip : $default;
+		}
 
-		} elseif ( self::isSetted('http-x-forwarded-for') ) {
+		if ( self::isSetted('http-x-forwarded-for') ) {
 			$ip = self::get('http-x-forwarded-for');
 			$ip = Stringify::stripSlash($ip);
 			$ip = Stringify::split($ip, ['regex' => '/,/']);
 			$ip = (string)trim(current($ip));
-			return Validator::isValidIp($ip);
+			return Validator::isIp($ip) ? $ip : $default;
+		}
 
-		} elseif ( self::isSetted('http-cf-connecting-ip') ) {
+		if ( self::isSetted('http-cf-connecting-ip') ) {
 			$ip = self::get('http-cf-connecting-ip');
 			$ip = Stringify::stripSlash($ip);
 			$ip = Stringify::split($ip, ['regex' => '/,/']);
 			$ip = (string)trim(current($ip));
-			return Validator::isValidIp($ip);
-
-		} elseif ( self::isSetted('remote-addr') ) {
-			$ip = self::get('remote-addr');
-			return Stringify::stripSlash($ip);
+			return Validator::isIp($ip) ? $ip : $default;
 		}
 
-		return false;
+		if ( self::isSetted('remote-addr') ) {
+			$ip = self::get('remote-addr');
+			$ip = Stringify::stripSlash($ip);
+			return Validator::isIp($ip) ? $ip : $default;
+		}
+
+		return $default;
 	}
 
 	/**
-	 * Get protocol.
+	 * Get schema.
 	 *
 	 * @access public
 	 * @return string
 	 */
-	public static function getProtocol() : string
+	public static function getSchema() : string
 	{
-		return (self::isSsl()) ? 'https://' : 'http://';
+		return self::isSsl() ? 'https://' : 'http://';
 	}
 
 	/**
@@ -191,7 +201,7 @@ final class Server
 	public static function getBaseUrl() : string
 	{
 		$url = self::get('http-host');
-		$schema = (self::isSsl()) ? 'https://' : 'http://';
+		$schema = self::getSchema();
 		return "{$schema}{$url}";
 	}
 

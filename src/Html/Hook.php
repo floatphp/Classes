@@ -18,8 +18,8 @@ namespace FloatPHP\Classes\Html;
 use FloatPHP\Classes\Filesystem\{TypeCheck, Arrayify};
 
 /**
- * Built-in Hook class,
- * @uses Inspired by WordPress kernel https://make.wordpress.org
+ * Built-in hook class.
+ * @see https://developer.wordpress.org/apis/hooks/
  */
 class Hook
 {

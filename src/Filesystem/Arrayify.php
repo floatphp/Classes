@@ -15,32 +15,35 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
+/**
+ * Advanced array manipulation.
+ */
 final class Arrayify
 {
 	/**
-	 * Check array item.
+	 * Check array value.
 	 *
 	 * @access public
-	 * @param mixed $item
+	 * @param mixed $value
 	 * @param array $array
 	 * @return bool
 	 */
-	public static function inArray($item, array $array) : bool
+	public static function inArray($value, array $array) : bool
 	{
-		return in_array($item, $array, true);
+		return in_array($value, $array, strict: true);
 	}
 
 	/**
 	 * Search array key.
 	 *
 	 * @access public
-	 * @param mixed $item
+	 * @param mixed $value
 	 * @param array $array
 	 * @return mixed
 	 */
-	public static function search($item, array $array) : mixed
+	public static function search($value, array $array) : mixed
 	{
-		return array_search($item, $array, true);
+		return array_search($value, $array, strict: true);
 	}
 
 	/**
@@ -59,25 +62,31 @@ final class Arrayify
 	 * Merge multidimensional arrays.
 	 *
 	 * @access public
-	 * @param array $override
-	 * @param array $arrays
+	 * @param array $default
+	 * @param array $target
 	 * @return array
 	 */
-	public static function mergeAll(array $override, array &$array) : array
+	public static function mergeAll(array $default, array $target, bool $strict = false) : array
 	{
-		$merged = $override;
-		foreach ($array as $key => $value) {
-			if (
-				TypeCheck::isArray($value)
-				&& isset($merged[$key])
-				&& TypeCheck::isArray($merged[$key])
-			) {
-				$merged[$key] = self::mergeAll($merged[$key], $value);
+		foreach ($default as $key => $value) {
+
+			if ( TypeCheck::isArray($value) ) {
+				$temp = $target[$key] ?? [];
+				$target[$key] = self::mergeAll($value, $temp, $strict);
+
 			} else {
-				$merged[$key] = $value;
+				if ( !isset($target[$key]) ) {
+					$target[$key] = $value;
+
+				} else {
+					if ( $strict && TypeCheck::isEmpty($target[$key]) ) {
+						$target[$key] = $value;
+					}
+				}
 			}
 		}
-		return $merged;
+
+		return $target;
 	}
 
 	/**
@@ -351,12 +360,8 @@ final class Arrayify
 	 * @param bool $preserve (keys)
 	 * @return array
 	 */
-	public static function sort(array $array, $orderby = [], string $order = 'ASC', bool $preserve = false) : array
+	public static function sort(array $array, $orderby, string $order = 'ASC', bool $preserve = false) : array
 	{
-		if ( !$orderby ) {
-			return $array;
-		}
-
 		if ( TypeCheck::isString($orderby) ) {
 			$orderby = [$orderby => $order];
 		}
@@ -394,6 +399,7 @@ final class Arrayify
 
 		if ( $preserve ) {
 			uasort($array, $sort);
+
 		} else {
 			usort($array, $sort);
 		}

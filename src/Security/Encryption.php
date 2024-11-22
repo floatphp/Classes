@@ -18,7 +18,7 @@ namespace FloatPHP\Classes\Security;
 use FloatPHP\Classes\Filesystem\{Stringify, TypeCheck};
 
 /**
- * Built-in encryption class,
+ * Built-in cryptography class,
  * JWT is recommended for external use.
  */
 class Encryption

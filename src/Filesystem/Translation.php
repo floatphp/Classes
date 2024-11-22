@@ -16,8 +16,8 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Filesystem;
 
 /**
- * Built-in Translation class,
- * @uses Inspired by MoTranslator https://github.com/phpmyadmin/motranslator
+ * Built-in translation class.
+ * @see https://github.com/phpmyadmin/motranslator
  */
 class Translation
 {
@@ -50,12 +50,16 @@ class Translation
 	public function __construct(?string $locale = null, string $path = '/')
 	{
 		if ( $this->load($locale, $path) ) {
+
 			$magic = $this->read(4);
+
 			if ( $magic == "\x95\x04\x12\xde" ) {
 				$this->byteOrder = 1;
+
 			} elseif ( $magic == "\xde\x12\x04\x95" ) {
 				$this->byteOrder = 0;
 			}
+
 			$this->initCount();
 		}
 	}
@@ -268,17 +272,19 @@ class Translation
 	 */
 	protected function loadTables() : void
 	{
-		if (
-			TypeCheck::isArray($this->tableOriginals)
-			&& TypeCheck::isArray($this->tableTranslations)
-		) {
+		$isArrayOriginal = TypeCheck::isArray($this->tableOriginals);
+		$isArrayTranslation = TypeCheck::isArray($this->tableTranslations);
+
+		if ( $isArrayOriginal && $isArrayTranslation ) {
 			return;
 		}
-		if ( !TypeCheck::isArray($this->tableOriginals) ) {
+
+		if ( !$isArrayOriginal ) {
 			$this->setPosition($this->count['original']);
 			$this->tableOriginals = $this->readIntArray($this->count['total'] * 2);
 		}
-		if ( !TypeCheck::isArray($this->tableTranslations) ) {
+
+		if ( !$isArrayTranslation ) {
 			$this->setPosition($this->count['translation']);
 			$this->tableTranslations = $this->readIntArray($this->count['total'] * 2);
 		}

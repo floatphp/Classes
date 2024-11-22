@@ -19,7 +19,7 @@ use FloatPHP\Classes\Filesystem\{TypeCheck, Stringify, Arrayify};
 use FloatPHP\Classes\Http\Request;
 
 /**
- * Built-in Form generator class.
+ * Built-in form generator class.
  */
 class Form
 {

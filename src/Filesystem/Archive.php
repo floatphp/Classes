@@ -19,6 +19,9 @@ use \ZipArchive as ZIP;
 use \RecursiveIteratorIterator;
 use \RecursiveDirectoryIterator;
 
+/**
+ * Advanced archive manipulation.
+ */
 final class Archive extends File
 {
 	/**
@@ -60,9 +63,11 @@ final class Archive extends File
 							$zip->addFile($p, basename($name));
 						}
 					}
+
 				} elseif ( self::isFile($path) ) {
 					$zip->addFile($path, basename($path));
 				}
+
 				$zip->close();
 				return true;
 			}
@@ -101,6 +106,7 @@ final class Archive extends File
 					$zip->close();
 					$status = true;
 				}
+
 			} elseif ( self::isGzip($archive) ) {
 				$status = self::unGzip($archive);
 			}

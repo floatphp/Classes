@@ -15,6 +15,9 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
+/**
+ * Advanced JSON manipulation.
+ */
 final class Json extends File
 {
 	/**
@@ -58,9 +61,9 @@ final class Json extends File
 	/**
 	 * Encode JSON using flags.
 	 *
-	 * [SLASHES: 64].
-	 * [PRETTY: 128].
-	 * [UNICODE: 256].
+	 * [SLASHES : 64].
+	 * [PRETTY  : 128].
+	 * [UNICODE : 256].
 	 *
 	 * @access public
 	 * @param mixed $value

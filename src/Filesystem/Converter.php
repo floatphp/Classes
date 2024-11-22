@@ -17,6 +17,9 @@ namespace FloatPHP\Classes\Filesystem;
 
 use FloatPHP\Classes\Security\Tokenizer;
 
+/**
+ * Advanced types manipulation.
+ */
 final class Converter
 {
 	/**

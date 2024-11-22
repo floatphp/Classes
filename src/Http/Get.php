@@ -15,6 +15,9 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
+/**
+ * Advanced HTTP GET manipulation.
+ */
 final class Get
 {
 	/**
