@@ -197,7 +197,7 @@ final class Arrayify
 	}
 
 	/**
-	 * Get single array key.
+	 * Get array first key.
 	 *
 	 * @access public
 	 * @param array $array

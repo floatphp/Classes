@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Html;
 
 use FloatPHP\Classes\Filesystem\{Stringify, Arrayify, TypeCheck};
+use FloatPHP\Classes\Security\Sanitizer;
 
 /**
  * Built-in shortcode class.
@@ -25,7 +26,7 @@ final class Shortcode extends Hook
 {
 	/**
 	 * @access public
-	 * @var array SPIN, Spintax pattern
+	 * @var array SPIN, Spintax regex
 	 */
 	public const SPIN = '/\{(((?>[^\{\}]+)|(?R))*?)\}/x';
 
@@ -58,7 +59,7 @@ final class Shortcode extends Hook
 	 * @param callable $callback
 	 * @return bool
 	 */
-	public function addShortcode(string $name, $callback) : bool
+	public function add(string $name, $callback) : bool
 	{
 		if ( TypeCheck::isCallable($callback) ) {
 			$this->tags[$name] = $callback;
@@ -68,13 +69,13 @@ final class Shortcode extends Hook
 	}
 
 	/**
-	 * Remove shortcode.
+	 * Remove registered shortcode.
 	 *
 	 * @access public
 	 * @param string $name
 	 * @return bool
 	 */
-	public function removeShortcode(string $name) : bool
+	public function remove(string $name) : bool
 	{
 		if ( isset($this->tags[$name]) ) {
 			unset($this->tags[$name]);
@@ -84,43 +85,44 @@ final class Shortcode extends Hook
 	}
 
 	/**
-	 * Remove all shortcodes.
+	 * Remove all registered shortcodes.
 	 *
 	 * @access public
-	 * @return void
+	 * @return bool
 	 */
-	public function removeShortcodes() : void
+	public function removeAll() : bool
 	{
 		$this->tags = [];
+		return true;
 	}
 
 	/**
-	 * Check whether shortcode exists.
+	 * Check whether shortcode is registered.
 	 *
 	 * @access public
 	 * @param string $name
 	 * @return bool
 	 */
-	public function shortcodeExists(string $name) : bool
+	public function has(string $name) : bool
 	{
 		return Arrayify::hasKey($name, $this->tags);
 	}
 
 	/**
-	 * Check whether shortcode exists in content.
+	 * Check whether content contains shortcode.
 	 *
 	 * @access public
 	 * @param string $content
 	 * @param string $name
 	 * @return bool
 	 */
-	public function hasShortcode(string $content, string $name) : bool
+	public function contain(string $content, string $name) : bool
 	{
 		if ( strpos($content, '[') === false ) {
 			return false;
 		}
 
-		if ( $this->shortcodeExists($name) ) {
+		if ( $this->has($name) ) {
 
 			$regex = "/{$this->getShortcodeRegex()}/s";
 			Stringify::matchAll($regex, $content, $matches, 2);
@@ -132,7 +134,7 @@ final class Shortcode extends Hook
 				if ( $name === $shortcode[2] ) {
 					return true;
 				}
-				if ( !empty($shortcode[5]) && $this->hasShortcode($shortcode[5], $name) ) {
+				if ( !empty($shortcode[5]) && $this->contain($shortcode[5], $name) ) {
 					return true;
 				}
 			}
@@ -145,17 +147,24 @@ final class Shortcode extends Hook
 	 * Do shortcode hook.
 	 *
 	 * @access public
-	 * @param string $name
+	 * @param string $content
+	 * @param bool $escape
 	 * @return mixed
 	 */
-	public function doShortcode(string $name) : mixed
+	public function do(string $content, bool $escape = false) : mixed
 	{
-		if ( empty($this->tags) || !TypeCheck::isArray($this->tags) ) {
-			return $name;
+		if ( $escape ) {
+			$content = Sanitizer::escapeHTML($content);
 		}
-		$pattern = $this->getShortcodeRegex();
+
+		if ( empty($this->tags) || !TypeCheck::isArray($this->tags) ) {
+			return $content;
+		}
+
+		$regex = $this->getShortcodeRegex();
 		$callback = [$this, 'doShortcodeTag'];
-		return Stringify::replaceRegexCb("/{$pattern}/s", $callback, $name);
+
+		return Stringify::replaceRegexCb("/{$regex}/s", $callback, $content);
 	}
 
 	/**
@@ -210,10 +219,10 @@ final class Shortcode extends Hook
 	public function parseAtts($content) : mixed
 	{
 		$atts = [];
-		$pattern = '/(\w+)\s*=\s*"([^"]*)"(?:\s|$)|(\w+)\s*=\s*\'([^\']*)\'(?:\s|$)|(\w+)\s*=\s*([^\s\'"]+)(?:\s|$)|"([^"]*)"(?:\s|$)|(\S+)(?:\s|$)/';
-		$content = preg_replace("/[\x{00a0}\x{200b}]+/u", ' ', $content);
+		$regex = '/(\w+)\s*=\s*"([^"]*)"(?:\s|$)|(\w+)\s*=\s*\'([^\']*)\'(?:\s|$)|(\w+)\s*=\s*([^\s\'"]+)(?:\s|$)|"([^"]*)"(?:\s|$)|(\S+)(?:\s|$)/';
+		$content = Stringify::replaceRegex("/[\x{00a0}\x{200b}]+/u", ' ', $content);
 
-		if ( Stringify::matchAll($pattern, $content, $match, 2) ) {
+		if ( Stringify::matchAll($regex, $content, $match, 2) ) {
 			foreach ($match as $tag) {
 				if ( !empty($tag[1]) ) {
 					$atts[strtolower($tag[1])] = stripcslashes($tag[2]);
@@ -237,9 +246,9 @@ final class Shortcode extends Hook
 		}
 
 		// Format atts
-		if ( is_array($atts) && count($atts) == 1 ) {
-			$key = array_key_first($atts);
-			if ( is_int($key) ) {
+		if ( TypeCheck::isArray($atts) && count($atts) == 1 ) {
+			$key = Arrayify::key($atts);
+			if ( TypeCheck::isInt($key) ) {
 				$atts = $atts[$key];
 			}
 		}
@@ -248,30 +257,31 @@ final class Shortcode extends Hook
 	}
 
 	/**
-	 * Set default shortcode attributes.
+	 * Get default shortcode attributes.
 	 *
 	 * @access public
-	 * @param array $pairs
-	 * @param mixed $atts
-	 * @param string $shortcode
+	 * @param array $default
+	 * @param array $atts
+	 * @param string $name
 	 * @return mixed
 	 */
-	public function shortcodeAtts($pairs, $atts, string $shortcode = '') : mixed
+	public function getAtts(array $default, array $atts, string $name = '') : mixed
 	{
 		$atts = (array)$atts;
 		$out = [];
 
-		foreach ($pairs as $name => $default) {
-			if ( Arrayify::hasKey($name, $atts) ) {
-				$out[$name] = $atts[$name];
+		foreach ($default as $key => $default) {
+			if ( Arrayify::hasKey($key, $atts) ) {
+				$out[$key] = $atts[$key];
 
 			} else {
-				$out[$name] = $default;
+				$out[$key] = $default;
 			}
 		}
 
-		if ( $shortcode ) {
-			$out = $this->applyFilter([$this, "shortcodeAtts-{$shortcode}"], $out, $pairs, $atts);
+		if ( $name ) {
+			$callback = [$this, "shortcode-atts-{$name}"];
+			$out = $this->applyFilter($callback, $out, $default, $atts);
 		}
 
 		return $out;
@@ -281,18 +291,18 @@ final class Shortcode extends Hook
 	 * Remove all shortcodes from content.
 	 *
 	 * @access public
-	 * @param string $content
+	 * @param mixed $content
 	 * @return mixed
 	 */
-	public function stripShortcodes(string $content) : mixed
+	public function strip($content) : mixed
 	{
 		if ( empty($this->tags) || !TypeCheck::isArray($this->tags) ) {
 			return $content;
 		}
 
-		$pattern = $this->getShortcodeRegex();
+		$regex = $this->getShortcodeRegex();
 		$callback = [static::class, 'stripShortcodeTag'];
-		return Stringify::replaceRegexCb("/$pattern/s", $callback, $content);
+		return Stringify::replaceRegexCb("/$regex/s", $callback, $content);
 	}
 
 	/**

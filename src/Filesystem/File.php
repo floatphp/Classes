@@ -658,7 +658,7 @@ class File
 	/**
 	 * Parse ini file.
 	 *
-	 * [INI_SCANNER_NORMAL : 0].
+	 * [INI_SCANNER_NORMAL    : 0].
 	 * [FILE_IGNORE_NEW_LINES : 2].
 	 * [FILE_SKIP_EMPTY_LINES : 4].
 	 *
@@ -672,7 +672,7 @@ class File
 	{
 		$path = Stringify::formatPath($path);
 
-		if ( TypeCheck::isFunction('parse_ini_file') ) {
+		if ( TypeCheck::isFunction('parse-ini-file') ) {
 			return parse_ini_file($path, $sections, $mode);
 		}
 

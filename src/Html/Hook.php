@@ -36,12 +36,12 @@ class Hook
 	protected $currentFilter = [];
 
 	/**
-	 * @access private
+	 * @access public
 	 * @var int const PRIORITY
 	 * @var int const COUNT
 	 */
-	private const PRIORITY = 10;
-	private const COUNT    = 1;
+	public const PRIORITY = 10;
+	public const COUNT    = 1;
 
 	/**
 	 * Get singleton hook instance.
@@ -74,7 +74,7 @@ class Hook
 		$id = $this->filterUniqueId($callback);
 		$this->filters[$name][$priority][$id] = [
 			'callable' => $callback,
-			'args'     => $args
+			'count'    => $args
 		];
 
 		unset($this->mergedFilters[$name]);
@@ -457,13 +457,10 @@ class Hook
 	 */
 	public function didAction(string $name) : int
 	{
-		if (
-			!TypeCheck::isArray($this->actions)
-			|| !isset($this->actions[$name])
-		) {
-			return 0;
-		}
-		return $this->actions[$name];
+		$did = TypeCheck::isArray($this->actions)
+			&& isset($this->actions[$name]);
+
+		return $did ? $this->actions[$name] : 0;
 	}
 
 	/**
@@ -582,21 +579,21 @@ class Hook
 			return $callback;
 		}
 
+		// Closures are currently implemented as objects
 		if ( TypeCheck::isObject($callback) ) {
-			// Closures are currently implemented as objects
 			$callback = [$callback, ''];
 
 		} else {
 			$callback = (array)$callback;
 		}
 
+		// Object class calling
 		if ( TypeCheck::isObject($callback[0]) ) {
-			// Object Class Calling
 			return spl_object_hash($callback[0]) . $callback[1];
 		}
 
+		// Static calling
 		if ( TypeCheck::isString($callback[0]) ) {
-			// Static Calling
 			return "{$callback[0]}{$callback[1]}";
 		}
 
