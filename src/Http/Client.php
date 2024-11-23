@@ -74,8 +74,8 @@ class Client
         // Set url
         $this->setUrl($url);
 
-        // Prepare request
-        $this->prepare();
+        // Execute request
+        $this->execute();
 
         return $this;
     }
@@ -87,11 +87,11 @@ class Client
      * @param array $body
      * @param array $headers
      * @param string $url
-     * @return string
+     * @return object
      */
-    public function get(array $body = [], array $headers = [], string $url = '') : string
+    public function get(array $body = [], array $headers = [], string $url = '') : self
     {
-        return $this->request('GET', $body, $headers, $url)->getBody();
+        return $this->request('GET', $body, $headers, $url);
     }
 
     /**
@@ -101,11 +101,11 @@ class Client
      * @param array $body
      * @param array $header
      * @param string $url
-     * @return string
+     * @return object
      */
-    public function post(array $body = [], array $headers = [], string $url = '') : string
+    public function post(array $body = [], array $headers = [], string $url = '') : self
     {
-        return $this->request('POST', $body, $headers, $url)->getBody();
+        return $this->request('POST', $body, $headers, $url);
     }
 
     /**
@@ -211,17 +211,15 @@ class Client
 
     /**
      * Get response body.
-     * 
+     *
      * @access public
-     * @param bool $json
+     * @param bool $decode
      * @return mixed
      */
-    public function getBody($json = false) : mixed
+    public function getBody(bool $decode = false) : mixed
     {
-        if ( $json ) {
-            return Json::decode($this->response['body'], true);
-        }
-        return $this->response['body'];
+        $body = $this->response['body'] ?? '';
+        return $decode ? Json::decode($body, true) : $body;
     }
 
     /**
@@ -296,12 +294,12 @@ class Client
     }
 
     /**
-     * Prepare request.
+     * Execute request.
      * 
      * @access private
      * @return void
      */
-    private function prepare()
+    private function execute()
     {
         // Init curl
         $handler = curl_init();
