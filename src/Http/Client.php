@@ -18,23 +18,23 @@ namespace FloatPHP\Classes\Http;
 use FloatPHP\Classes\Filesystem\{Stringify, Arrayify, Json};
 
 /**
- * Advanced HTTP client (cURL).
+ * Advanced HTTP client (cURL or Steam).
  */
 class Client
 {
     /**
-     * @access private
+     * @access protected
      * @var array $request
      * @var array $response
      * @var string $method
      * @var string $url
      * @var int $timeout
      */
-    private $request = [];
-    private $response = [];
-    private $method = 'GET';
-    private $url;
-    private $timeout = 5;
+    protected $request = [];
+    protected $response = [];
+    protected $method = 'GET';
+    protected $url;
+    protected $timeout = 5;
 
     /**
      * @access public
@@ -140,7 +140,7 @@ class Client
      * @access public
      * @return mixed
      */
-    public function getStatusCode()
+    public function getStatusCode() : mixed
     {
         if ( isset($this->response['status']['statusCode']) ) {
             return intval($this->response['status']['statusCode']);
@@ -166,7 +166,7 @@ class Client
      * @param array $header
      * @return void
      */
-    public function setHeaders(array $header = [])
+    public function setHeaders(array $header = []) : void
     {
         $this->request['header'] = Arrayify::merge($this->request['header'], $header);
     }
@@ -178,7 +178,7 @@ class Client
      * @param array $body
      * @return void
      */
-    public function setBody(array $body = [])
+    public function setBody(array $body = []) : void
     {
         $this->request['body'] = $body;
     }
@@ -190,7 +190,7 @@ class Client
      * @param string $url
      * @return void
      */
-    public function setUrl(string $url = '')
+    public function setUrl(string $url = '') : void
     {
         if ( !empty($url) ) {
             $this->url = $url;
@@ -219,7 +219,7 @@ class Client
     public function getBody(bool $decode = false) : mixed
     {
         $body = $this->response['body'] ?? '';
-        return $decode ? Json::decode($body, true) : $body;
+        return $decode ? Json::decode($body, isArray: true) : $body;
     }
 
     /**
@@ -277,10 +277,10 @@ class Client
     /**
      * Init client.
      * 
-     * @access private
+     * @access protected
      * @return void
      */
-    private function init() : void
+    protected function init() : void
     {
         $this->request = [
             'header' => [],
@@ -296,10 +296,10 @@ class Client
     /**
      * Execute request.
      * 
-     * @access private
+     * @access protected
      * @return void
      */
-    private function execute()
+    protected function execute()
     {
         // Init curl
         $handler = curl_init();
@@ -339,12 +339,12 @@ class Client
     /**
      * Process incoming response header.
      * 
-     * @access private
+     * @access protected
      * @param object $handler
      * @param string $header
      * @return int
      */
-    private function catchHeader($handler, string $header) : int
+    protected function catchHeader($handler, string $header) : int
     {
         // Parse HTTP status
         if ( $this->response['status'] == null ) {
@@ -368,12 +368,12 @@ class Client
     /**
      * Process incoming response body.
      *
-     * @access private
+     * @access protected
      * @param object $handler
      * @param string $body
      * @return int
      */
-    private function catchBody($handler, string $body) : int
+    protected function catchBody($handler, string $body) : int
     {
         $this->response['body'] .= $body;
         return strlen($body);
