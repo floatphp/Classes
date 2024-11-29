@@ -98,6 +98,31 @@ final class TypeCheck
 	}
 
 	/**
+	 * Check zero int.
+	 *
+	 * @access public
+	 * @param mixed $value
+	 * @return bool
+	 */
+	public static function isZero($value) : bool
+	{
+		return $value === 0;
+	}
+
+	/**
+	 * Check negative number.
+	 *
+	 * @access public
+	 * @param mixed $value
+	 * @return bool
+	 */
+	public static function isNegative($value) : bool
+	{
+		return (self::isFloat($value) || self::isInt($value))
+			&& $value < 0;
+	}
+
+	/**
 	 * Check float.
 	 *
 	 * @access public
