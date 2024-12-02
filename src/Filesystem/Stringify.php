@@ -868,8 +868,8 @@ final class Stringify
 	}
 
 	/**
-	 * Parse string (URL toolkit).
-	 * 
+	 * Parse string.
+	 *
 	 * @access public
 	 * @param string $string
 	 * @param array $result
@@ -901,10 +901,10 @@ final class Stringify
 
 	/**
 	 * Build query args from string (URL toolkit).
-	 * 
-	 * [PHP_QUERY_RFC1738: 1]
-	 * [PHP_QUERY_RFC3986: 2]
-	 * 
+	 *
+	 * [RFC1738: 1]
+	 * [RFC3986: 2]
+	 *
 	 * @access public
 	 * @param mixed $args
 	 * @param string $prefix, Numeric index for args (array)
@@ -912,7 +912,7 @@ final class Stringify
 	 * @param int $enc, Encoding type
 	 * @return string
 	 */
-	public static function buildQuery($args, string $prefix = '', ?string $sep = '&', int $enc = 1) : string
+	public static function buildQuery(mixed $args, string $prefix = '', ?string $sep = '&', int $enc = 1) : string
 	{
 		return http_build_query($args, $prefix, $sep, $enc);
 	}

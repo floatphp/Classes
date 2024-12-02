@@ -110,50 +110,43 @@ final class Converter
 	 */
 	public static function toType($value) : mixed
 	{
+		if ( TypeCheck::isArray($value) ) {
+			if ( TypeCheck::isArray($value) ) {
+				return Arrayify::map([self::class, 'toType'], $value);
+			}
+		}
+
 		if ( ($match = TypeCheck::isDynamicType('bool', $value)) ) {
 			return ($match === '1') ? true : false;
 		}
+
 		if ( ($match = TypeCheck::isDynamicType('int', $value)) ) {
 			return ($match !== 'NaN') ? intval($match) : '';
 		}
+
 		if ( ($match = TypeCheck::isDynamicType('float', $value)) ) {
 			return ($match !== 'NaN') ? floatval($match) : '';
 		}
+
 		return $value;
 	}
 
 	/**
-	 * Convert dynamic types.
-	 *
-	 * @access public
-	 * @param mixed $values
-	 * @return mixed
-	 * @internal
-	 */
-	public static function toTypes($value) : mixed
-	{
-		if ( TypeCheck::isArray($value) ) {
-			return Arrayify::map([static::class, 'toTypes'], $value);
-		}
-		return Converter::toType($value);
-	}
-
-	/**
-	 * Convert data to text (DB).
+	 * Convert data to text (database).
 	 *
 	 * @access public
 	 * @param mixed $values
 	 * @return string
 	 * @internal
 	 */
-	public static function toText($value) : string
+	public static function toText(mixed $value) : string
 	{
 		$value = Json::format($value, 256);
 		return (string)Stringify::serialize($value);
 	}
 
 	/**
-	 * Convert data from text (DB).
+	 * Convert data from text (database).
 	 *
 	 * @access public
 	 * @param string $values
@@ -167,5 +160,26 @@ final class Converter
 			$value = Json::decode($value, true);
 		}
 		return $value;
+	}
+
+	/**
+	 * Convert types to string.
+	 *
+	 * @access public
+	 * @param mixed $value
+	 * @param bool $null Nullable
+	 * @return string
+	 * @internal
+	 */
+	public static function toString(mixed $value, bool $null = false) : string
+	{
+		return match (true) {
+			TypeCheck::isFalse($value)         => 'false',
+			TypeCheck::isTrue($value)          => 'true',
+			TypeCheck::isArray($value)         => self::toText($value),
+			TypeCheck::isObject($value)        => self::toText($value),
+			TypeCheck::isNull($value) && $null => 'null',
+			default                            => (string)$value
+		};
 	}
 }

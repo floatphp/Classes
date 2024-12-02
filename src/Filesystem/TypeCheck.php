@@ -370,8 +370,7 @@ final class TypeCheck
 	}
 
 	/**
-	 * Check dynamic type.
-	 * (Javascript).
+	 * Check dynamic type (Javascript).
 	 *
 	 * @access public
 	 * @param string $type

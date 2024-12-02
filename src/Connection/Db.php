@@ -265,8 +265,9 @@ class Db
             $this->isConnected = true;
 
         } catch (PDOException $e) {
-            echo $this->log($e->getMessage());
-            die();
+            $message = $e->getMessage();
+            $this->log($message);
+            exit($message);
         }
     }
 
@@ -318,8 +319,9 @@ class Db
 
         } catch (PDOException $e) {
             // Write into log and display exception
-            echo $this->log($e->getMessage(), $sql);
-            die();
+            $message = $e->getMessage();
+            $this->log($message, $sql);
+            exit($message);
         }
 
         // Reset bind parameters

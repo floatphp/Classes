@@ -180,7 +180,7 @@ final class Server
 	 * @access public
 	 * @param string $location
 	 * @param int $status
-	 * @return void
+	 * @return never
 	 */
 	public static function redirect(string $location, int $status = 301) : never
 	{

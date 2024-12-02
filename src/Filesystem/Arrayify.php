@@ -262,6 +262,20 @@ final class Arrayify
 	}
 
 	/**
+	 * Get array chunk.
+	 *
+	 * @access public
+	 * @param array $array
+	 * @param int $length
+	 * @param bool $preserve
+	 * @return array
+	 */
+	public static function chunk(array $array, ?int $length = null, bool $preserve = false) : array
+	{
+		return array_chunk($array, $length, $preserve);
+	}
+
+	/**
 	 * Filter array.
 	 *
 	 * @access public

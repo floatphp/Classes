@@ -35,18 +35,18 @@ final class Response extends Status
 	 * @param mixed $content
 	 * @param string $status
 	 * @param int $code
-	 * @return void
+	 * @return never
 	 */
 	public static function set(string $message, $content = [], string $status = 'success', int $code = 200) : never
 	{
-		self::setHttpHeaders($code);
+		self::setHttpHeader($code);
 		echo Json::encode([
 			'status'  => $status,
 			'code'    => $code,
 			'message' => $message,
 			'content' => $content
 		]);
-		die();
+		exit();
 	}
 
 	/**
@@ -57,7 +57,7 @@ final class Response extends Status
 	 * @param string $type
 	 * @return void
 	 */
-	public static function setHttpHeaders(int $code, string $type = self::TYPE) : void
+	public static function setHttpHeader(int $code, string $type = self::TYPE) : void
 	{
 		$status = self::getMessage($code);
 		$protocol = Server::get('server-protocol');

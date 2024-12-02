@@ -778,7 +778,7 @@ class File
 			header('Content-type: application/force-download');
 			header("Content-Disposition: attachment; filename={$filename};");
 			echo $file;
-			die();
+			exit();
 		}
 		return false;
 	}

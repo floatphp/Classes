@@ -15,63 +15,93 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
-use FloatPHP\Classes\Filesystem\{Stringify, Arrayify, Json};
+use FloatPHP\Classes\Filesystem\{Stringify, Arrayify, Converter, TypeCheck, Json};
+use FloatPHP\Classes\Server\System;
+use FloatPHP\Exceptions\Classes\ClientException;
 
 /**
- * Advanced HTTP client (cURL or Steam).
+ * Advanced Http request client (cURL|Stream).
  */
 class Client
 {
     /**
-     * @access protected
-     * @var array $request
-     * @var array $response
-     * @var string $method
-     * @var string $url
-     * @var int $timeout
+     * @access public
      */
-    protected $request = [];
-    protected $response = [];
-    protected $method = 'GET';
-    protected $url;
-    protected $timeout = 5;
+    public const GET      = 'GET';
+    public const POST     = 'POST';
+    public const HEAD     = 'HEAD';
+    public const PUT      = 'PUT';
+    public const PATCH    = 'PATCH';
+    public const OPTIONS  = 'OPTIONS';
+    public const DELETE   = 'DELETE';
+    public const TIMEOUT  = 10;
+    public const REDIRECT = 3;
+    public const PATTERN  = [
+        'status'    => '/^\s*HTTP\/\d+(\.\d+)?\s+(?P<code>\d+)\s*(?P<message>.*)?\r?\n?$/',
+        'attribute' => '/^\s*(?P<name>[a-zA-Z0-9\-]+)\s*:\s*(?P<value>.*?)\s*(?:\r?\n|$)/',
+        'location'  => "/Location:\s*(.+)/i"
+    ];
 
     /**
-     * @access public
-     * @param string $url
-     * @param int $timeout
+     * @access protected
      */
-    public function __construct(string $url = '', int $timeout = 5)
+    protected $method;
+    protected $params = [];
+    protected $header = [];
+    protected $body = [];
+    protected $response = [];
+    protected $baseUrl;
+    protected $url;
+    protected $gateway;
+    protected const CURL   = 'Curl';
+    protected const STREAM = 'Stream';
+
+    /**
+     * @access protected
+     * @var array $pattern Parser pattern
+     */
+    private static $pattern = [];
+
+    /**
+     * Init client.
+     *
+     * @access public
+     * @param ?string $baseUrl
+     * @param array $params
+     */
+    public function __construct(?string $baseUrl = null, array $params = [])
     {
-        $this->url = $url;
-        $this->timeout = $timeout;
+        $this->baseUrl = $baseUrl;
+        $this->params = self::getParams($params);
+        $this->setGateway();
+        self::setPattern();
     }
 
     /**
-     * Make HTTP request.
+     * Make Http request.
      *
      * @access public
      * @param string $method
      * @param array $body
      * @param array $header
-     * @param string $url
+     * @param ?string $url
      * @return object
      */
-    public function request(string $method, array $body = [], array $headers = [], string $url = '') : self
+    public function request(string $method, array $body = [], array $header = [], ?string $url = null) : self
     {
-        // Init client
-        $this->init();
+        // Reset client
+        $this->reset();
 
         // Set method
-        $this->method = Stringify::lowercase($method);
+        $this->setMethod($method);
 
         // Set body
         $this->setBody($body);
 
-        // Set headers
-        $this->setHeaders($headers);
+        // Set header
+        $this->setHeader($header);
 
-        // Set url
+        // Set URL
         $this->setUrl($url);
 
         // Execute request
@@ -81,301 +111,536 @@ class Client
     }
 
     /**
-     * Make HTTP GET request.
+     * Make Http GET request.
      *
      * @access public
-     * @param array $body
-     * @param array $headers
-     * @param string $url
-     * @return object
-     */
-    public function get(array $body = [], array $headers = [], string $url = '') : self
-    {
-        return $this->request('GET', $body, $headers, $url);
-    }
-
-    /**
-     * Make HTTP POST request.
-     *
-     * @access public
+     * @param ?string $url
      * @param array $body
      * @param array $header
-     * @param string $url
      * @return object
      */
-    public function post(array $body = [], array $headers = [], string $url = '') : self
+    public function get(?string $url = null, array $body = [], array $header = []) : self
     {
-        return $this->request('POST', $body, $headers, $url);
+        return $this->request(self::GET, $body, $header, $url);
     }
 
     /**
-     * Get response.
-     * 
+     * Make Http POST request.
+     *
+     * @access public
+     * @param ?string $url
+     * @param array $body
+     * @param array $header
+     * @return object
+     */
+    public function post(?string $url = null, array $body = [], array $header = []) : self
+    {
+        return $this->request(self::POST, $body, $header, $url);
+    }
+
+    /**
+     * Make Http HEAD request.
+     *
+     * @access public
+     * @param ?string $url
+     * @param array $body
+     * @param array $header
+     * @return object
+     */
+    public function head(?string $url = null, array $body = [], array $header = []) : self
+    {
+        return $this->request(self::HEAD, $body, $header, $url);
+    }
+
+    /**
+     * Make Http PUT request.
+     *
+     * @access public
+     * @param ?string $url
+     * @param array $body
+     * @param array $header
+     * @return object
+     */
+    public function put(?string $url = null, array $body = [], array $header = []) : self
+    {
+        return $this->request(self::PUT, $body, $header, $url);
+    }
+
+    /**
+     * Make Http PATCH request.
+     *
+     * @access public
+     * @param ?string $url
+     * @param array $body
+     * @param array $header
+     * @return object
+     */
+    public function patch(?string $url = null, array $body = [], array $header = []) : self
+    {
+        return $this->request(self::PATCH, $body, $header, $url);
+    }
+
+    /**
+     * Make Http DELETE request.
+     *
+     * @access public
+     * @param ?string $url
+     * @param array $body
+     * @param array $header
+     * @return object
+     */
+    public function delete(?string $url = null, array $body = [], array $header = []) : self
+    {
+        return $this->request(self::DELETE, $body, $header, $url);
+    }
+
+    /**
+     * Set request method.
+     *
+     * @access public
+     * @param string $method
+     * @return object
+     */
+    public function setMethod(string $method) : self
+    {
+        $this->method = Stringify::uppercase($method);
+        return $this;
+    }
+
+    /**
+     * Set request header.
+     *
+     * @access public
+     * @param array $header
+     * @return object
+     */
+    public function setHeader(array $header = []) : self
+    {
+        $this->header = Arrayify::merge(
+            $this->header,
+            $header
+        );
+        return $this;
+    }
+
+    /**
+     * Set request body (Data).
+     *
+     * @access public
+     * @param array $body
+     * @return object
+     */
+    public function setBody(array $body = []) : self
+    {
+        $this->body = Arrayify::merge(
+            $this->body,
+            $body
+        );
+        return $this;
+    }
+
+    /**
+     * Set request URL (Append to base URL).
+     *
+     * @access public
+     * @param ?string $url
+     * @return object
+     */
+    public function setUrl(?string $url = null) : self
+    {
+        $url = (string)$url;
+        $baseUrl = (string)$this->baseUrl;
+        $this->url = Stringify::formatPath("{$baseUrl}/{$url}");
+        return $this;
+    }
+
+    /**
+     * Set request timeout.
+     *
+     * @access public
+     * @param int $timeout
+     * @return object
+     */
+    public function setTimeout(int $timeout) : self
+    {
+        $this->params['timeout'] = $timeout;
+        return $this;
+    }
+
+    /**
+     * Set request max redirections.
+     *
+     * @access public
+     * @param int $redirect
+     * @return object
+     */
+    public function setRedirect(int $redirect) : self
+    {
+        $this->params['redirect'] = $redirect;
+        return $this;
+    }
+
+    /**
+     * Set request encoding.
+     *
+     * @access public
+     * @param ?string $encoding
+     * @return object
+     */
+    public function setEncoding(?string $encoding) : self
+    {
+        $this->params['encoding'] = $encoding;
+        return $this;
+    }
+
+    /**
+     * Allow cURL transfer return.
+     *
+     * @access public
+     * @return object
+     */
+    public function return() : self
+    {
+        $this->params['return'] = true;
+        return $this;
+    }
+
+    /**
+     * Allow cURL redirection follow.
+     *
+     * @access public
+     * @return object
+     */
+    public function follow() : self
+    {
+        $this->params['follow'] = true;
+        return $this;
+    }
+
+    /**
+     * Allow cURL header in reponse.
+     *
+     * @access public
+     * @return object
+     */
+    public function headerIn() : self
+    {
+        $this->params['headerIn'] = true;
+        return $this;
+    }
+
+    /**
+     * Get response data.
+     *
      * @access public
      * @return array
      */
     public function getResponse() : array
     {
-        return [
-            'status' => $this->response['status'],
-            'header' => $this->response['header'],
-            'body'   => $this->response['body']
-        ];
+        return $this->response;
     }
 
     /**
-     * Get response status.
-     * 
+     * Get response status (code, message).
+     *
      * @access public
      * @return array
      */
     public function getStatus() : array
     {
-        return $this->response['status'];
+        return $this->getResponse()['status'] ?? [];
     }
 
     /**
      * Get response status code.
-     * 
+     *
      * @access public
-     * @return mixed
+     * @return int
      */
-    public function getStatusCode() : mixed
+    public function getStatusCode() : int
     {
-        if ( isset($this->response['status']['statusCode']) ) {
-            return intval($this->response['status']['statusCode']);
-        }
-        return false;
+        return $this->getStatus()['code'] ?? -1;
+    }
+
+    /**
+     * Get response status message.
+     *
+     * @access public
+     * @return string
+     */
+    public function getStatusMessage() : string
+    {
+        return $this->getStatus()['message'] ?? '';
     }
 
     /**
      * Get response header.
-     * 
+     *
      * @access public
      * @return array
      */
     public function getHeader() : array
     {
-        return $this->response['header'];
-    }
-
-    /**
-     * Set request header.
-     * 
-     * @access public
-     * @param array $header
-     * @return void
-     */
-    public function setHeaders(array $header = []) : void
-    {
-        $this->request['header'] = Arrayify::merge($this->request['header'], $header);
-    }
-
-    /**
-     * Set request body.
-     * 
-     * @access public
-     * @param array $body
-     * @return void
-     */
-    public function setBody(array $body = []) : void
-    {
-        $this->request['body'] = $body;
-    }
-
-    /**
-     * Set request url.
-     * 
-     * @access public
-     * @param string $url
-     * @return void
-     */
-    public function setUrl(string $url = '') : void
-    {
-        if ( !empty($url) ) {
-            $this->url = $url;
-        }
-    }
-
-    /**
-     * Set request timeout.
-     * 
-     * @access public
-     * @param int $timeout
-     * @return void
-     */
-    public function setTimout(int $timeout = 5) : void
-    {
-        $this->timeout = $timeout;
+        return $this->getResponse()['header'] ?? [];
     }
 
     /**
      * Get response body.
      *
      * @access public
-     * @param bool $decode
+     * @param bool $decode JSON
      * @return mixed
      */
-    public function getBody(bool $decode = false) : mixed
+    public function getBody(bool $decode = true) : mixed
     {
-        $body = $this->response['body'] ?? '';
-        return $decode ? Json::decode($body, isArray: true) : $body;
+        $body = $this->getResponse()['body'] ?? '';
+        if ( $decode ) {
+            return Json::decode($body, isArray: true) ?: [];
+        }
+        return $body;
     }
 
     /**
-     * Track url.
-     * 
+     * Check client error (Http|Gateway).
+     *
      * @access public
-     * @param string $url
+     * @param int $httpCode
+     * @return bool
+     */
+    public function hasError(int $httpCode = 400) : bool
+    {
+        // Check for Gateway error
+        $error = $this->getResponse()['error'] ?? false;
+        if ( $error ) return true;
+
+        // Check for Http error
+        return $this->getStatusCode() >= $httpCode;
+    }
+
+    /**
+     * Check curl gateway.
+     *
+     * @access public
+     * @return bool
+     */
+    public function isCurl() : bool
+    {
+        return $this->gateway == self::CURL;
+    }
+
+    /**
+     * Check stream gateway.
+     *
+     * @access public
+     * @return bool
+     */
+    public function isStream() : bool
+    {
+        return $this->gateway == self::STREAM;
+    }
+
+    /**
+     * Get effective URL.
+     *
+     * @access public
+     * @param ?string $url
      * @param bool $parse
      * @return string
      */
-    public function trackUrl(string $url, bool $parse = true) : string
+    public function getLocation(?string $url = null, bool $parse = true) : string
     {
         // Set url
-        if ( empty($url) ) {
-            $url = $this->url;
-        }
+        $this->setUrl($url);
 
-        // Init handler
-        $handler = curl_init();
-        curl_setopt_array($handler, [
-            "CURLOPT_URL"            => $url,
-            "CURLOPT_HEADER"         => true,
-            "CURLOPT_RETURNTRANSFER" => true,
-            "CURLOPT_FOLLOWLOCATION" => true,
-            "CURLOPT_SSL_VERIFYHOST" => false,
-            "CURLOPT_SSL_VERIFYPEER" => false,
-            "CURLOPT_MAXREDIRS"      => 5,
-            "CURLOPT_TIMEOUT"        => 0,
-            "CURLOPT_CUSTOMREQUEST"  => 'GET',
-            "CURLOPT_HTTPHEADER"     => []
+        // Get location
+        $location = $this->gateway::getLocation($this->url, [
+            'header'   => $this->header,
+            'body'     => $this->body,
+            'method'   => $this->method,
+            'timeout'  => $this->params['timeout'],
+            'redirect' => $this->params['redirect'],
+            'encoding' => $this->params['encoding'],
+            'ssl'      => Server::isSsl()
         ]);
 
-        // Get response
-        $response = curl_exec($handler);
-        $track = curl_getinfo($handler, CURLINFO_EFFECTIVE_URL);
-        if ( $track == $url ) {
-            if ( preg_match("/^window.location.href='(.+)$/im", $response, $matches) ) {
-                $track = trim($matches[1]);
-            }
-        }
-        curl_close($handler);
-
-        // Parse url
-        if ( $parse ) {
-            $parts = Stringify::parseUrl($track);
-            if ( isset($parts['query']) ) {
-                unset($parts['query']);
-            }
-            $track = "{$parts['scheme']}://{$parts['host']}{$parts['path']}";
-        }
-
-        return (string)$track;
+        return $parse ? self::parseUrl($location) : $location;
     }
 
     /**
-     * Init client.
-     * 
-     * @access protected
+     * Parse URL (clean).
+     *
+     * @access public
+     * @param string $url
+     * @return string
+     */
+    public static function parseUrl(string $url) : string
+    {
+        $scheme = Stringify::parseUrl($url, 0);
+        $host = Stringify::parseUrl($url, 1);
+        $path = Stringify::parseUrl($url, 5);
+        return Stringify::formatPath("{$scheme}://{$host}/{$path}");
+    }
+
+    /**
+     * Check cURL status.
+     *
+     * @access public
+     * @return bool
+     */
+    public static function hasCurl() : bool
+    {
+        return TypeCheck::isFunction('curl-init');
+    }
+
+    /**
+     * Check stream status.
+     *
+     * @access public
+     * @return bool
+     */
+    public static function hasStream() : bool
+    {
+        $val = intval(System::getIni('allow-url-fopen'));
+        return (bool)$val;
+    }
+
+    /**
+     * Set Http parser patterns.
+     *
+     * @access public
+     * @param array $pattern
      * @return void
      */
-    protected function init() : void
+    public static function setPattern(array $pattern = []) : void
     {
-        $this->request = [
-            'header' => [],
-            'body'   => []
-        ];
-        $this->response = [
-            'header' => [],
-            'status' => [],
-            'body'   => null
-        ];
+        self::$pattern = Arrayify::merge(self::PATTERN, $pattern);
+    }
+
+    /**
+     * Get Http parser patterns.
+     *
+     * @access public
+     * @param string $name
+     * @return string
+     */
+    public static function getPattern(string $name) : string
+    {
+        return self::$pattern[$name] ?? '';
+    }
+
+    /**
+     * Get request body data (query).
+     *
+     * @access public
+     * @param array $body
+     * @param string $url
+     * @return string
+     */
+    public static function getQuery(array $body, ?string $url = null) : string
+    {
+        $query = [];
+        foreach ($body as $key => $value) {
+            $value = Converter::toString($value);
+            if ( TypeCheck::isInt($key) ) {
+                $query[$value] = '';
+
+            } else {
+                $query[$key] = $value;
+            }
+        }
+
+        $query = Stringify::buildQuery($query, '', '$', 2);
+        $query = Stringify::replace('=&', '&', $query);
+        $query = rtrim($query, '=');
+
+        if ( $url && $query ) {
+            $query = "{$url}?{$query}";
+        }
+
+        return $query;
+    }
+
+    /**
+     * Get default Http client parameters.
+     *
+     * @access public
+     * @param array $params
+     * @return array
+     */
+    public static function getParams(array $params = []) : array
+    {
+        return Arrayify::merge([
+            'header'   => [],
+            'body'     => [],
+            'method'   => null,
+            'timeout'  => self::TIMEOUT,
+            'redirect' => self::REDIRECT,
+            'ssl'      => true,
+            'encoding' => null,
+            'return'   => false,
+            'follow'   => false,
+            'headerIn' => false
+        ], $params);
     }
 
     /**
      * Execute request.
-     * 
+     *
      * @access protected
      * @return void
      */
-    protected function execute()
+    protected function execute() : void
     {
-        // Init curl
-        $handler = curl_init();
-
-        curl_setopt($handler, CURLOPT_URL, $this->url);
-        if ( $this->request['header'] ) {
-            curl_setopt($handler, CURLOPT_HTTPHEADER, $this->request['header']);
-        }
-        curl_setopt($handler, CURLOPT_HEADERFUNCTION, [$this, 'catchHeader']);
-        curl_setopt($handler, CURLOPT_WRITEFUNCTION, [$this, 'catchBody']);
-
-        // Additional options
-        curl_setopt($handler, CURLOPT_TIMEOUT, $this->timeout);
-
-        if ( $this->method == 'post' ) {
-            curl_setopt($handler, CURLOPT_POST, true);
-            curl_setopt($handler, CURLOPT_POSTFIELDS, $this->request['body']);
-
-        } elseif ( $this->method == 'put' ) {
-            curl_setopt($handler, CURLOPT_CUSTOMREQUEST, 'PUT');
-            curl_setopt($handler, CURLOPT_POSTFIELDS, $this->request['body']);
-
-        } else {
-            curl_setopt($handler, CURLOPT_CUSTOMREQUEST, Stringify::uppercase($this->method));
-        }
-
-        if ( !Server::isSsl() ) {
-            curl_setopt($handler, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($handler, CURLOPT_SSL_VERIFYPEER, false);
-        }
-
-        // Execute request
-        curl_exec($handler);
-        curl_close($handler);
+        $this->response = $this->gateway::request($this->url, [
+            'header'   => $this->header,
+            'body'     => $this->body,
+            'method'   => $this->method,
+            'timeout'  => $this->params['timeout'],
+            'redirect' => $this->params['redirect'],
+            'encoding' => $this->params['encoding'],
+            'return'   => $this->params['return'],
+            'follow'   => $this->params['follow'],
+            'headerIn' => $this->params['headerIn'],
+            'ssl'      => Server::isSsl()
+        ]);
     }
 
     /**
-     * Process incoming response header.
-     * 
-     * @access protected
-     * @param object $handler
-     * @param string $header
-     * @return int
-     */
-    protected function catchHeader($handler, string $header) : int
-    {
-        // Parse HTTP status
-        if ( $this->response['status'] == null ) {
-            $regex = '/^\s*HTTP\s*\/\s*(?P<protocolVersion>\d*\.\d*)\s*(?P<statusCode>\d*)\s(?P<reasonPhrase>.*)\r\n/';
-            preg_match($regex, $header, $matches);
-            foreach (['protocolVersion', 'statusCode', 'reasonPhrase'] as $part) {
-                if ( isset($matches[$part]) ) {
-                    $this->response['status'][$part] = $matches[$part];
-                }
-            }
-        }
-        // Digest HTTP header attributes
-        $regex = '/^\s*(?P<attributeName>[a-zA-Z0-9-]*):\s*(?P<attributeValue>.*)\r\n/';
-        preg_match($regex, $header, $matches);
-        if ( isset($matches['attributeName']) ) {
-            $this->response['header'][$matches['attributeName']] = $matches['attributeValue'] ?? null;
-        }
-        return strlen($header);
-    }
-
-    /**
-     * Process incoming response body.
+     * Set gateway.
      *
      * @access protected
-     * @param object $handler
-     * @param string $body
-     * @return int
+     * @return void
+     * @throws ClientException
      */
-    protected function catchBody($handler, string $body) : int
+    protected function setGateway() : void
     {
-        $this->response['body'] .= $body;
-        return strlen($body);
+        $this->gateway = match (true) {
+            self::hasCurl()   => self::CURL,
+            self::hasStream() => self::STREAM,
+            default           => 'undefined'
+        };
+
+        if ( $this->gateway == 'undefined' ) {
+            throw new ClientException(
+                ClientException::invalidGateway()
+            );
+        }
+
+        $ns = __NAMESPACE__;
+        $gateway = "{$ns}\\{$this->gateway}";
+        $this->gateway = new $gateway;
+    }
+
+    /**
+     * Reset client.
+     *
+     * @access protected
+     * @return void
+     */
+    protected function reset() : void
+    {
+        $this->header = [];
+        $this->body = [];
+        $this->response = [];
     }
 }

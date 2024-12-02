@@ -78,6 +78,6 @@ class Status
 	 */
 	public static function getMessage(int $code = 500) : string
 	{
-		return self::TYPES[$code] ?? self::TYPES[500];
+		return self::TYPES[$code] ?? 'Undefined';
 	}
 }

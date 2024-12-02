@@ -87,7 +87,7 @@ final class Exception extends \Exception
 	}
 
 	/**
-	 * Throw error with die.
+	 * Throw error with exit.
 	 * 
 	 * @access public
 	 * @param string $error
@@ -95,6 +95,6 @@ final class Exception extends \Exception
 	 */
 	public static function throw(string $error) : never
 	{
-		die($error);
+		exit($error);
 	}
 }

@@ -301,7 +301,7 @@ final class Shortcode extends Hook
 		}
 
 		$regex = $this->getShortcodeRegex();
-		$callback = [static::class, 'stripShortcodeTag'];
+		$callback = [self::class, 'stripShortcodeTag'];
 		return Stringify::replaceRegexCb("/$regex/s", $callback, $content);
 	}
 
