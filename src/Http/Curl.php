@@ -44,6 +44,7 @@ final class Curl
     public const FOLLOWLOCATION = CURLOPT_FOLLOWLOCATION;
     public const MAXREDIRS      = CURLOPT_MAXREDIRS;
     public const ENCODING       = CURLOPT_ENCODING;
+    public const USERAGENT      = CURLOPT_USERAGENT;
     public const FILE           = CURLOPT_FILE;
 
     /**
@@ -79,7 +80,6 @@ final class Curl
      */
     public static function init(?string $url = null) : CurlHandle|false
     {
-        self::reset();
         return curl_init($url);
     }
 
@@ -135,7 +135,10 @@ final class Curl
      */
     public static function setOption(CurlHandle $handle, string $option, mixed $value) : bool
     {
-        return self::setOpt($handle, $option, $value);
+        $option = Stringify::uppercase($option);
+        $class = self::class;
+        $const = "{$class}::{$option}";
+        return self::setOpt($handle, $const, $value);
     }
 
     /**
@@ -188,6 +191,19 @@ final class Curl
     public static function setEncoding(CurlHandle $handle, string $encoding) : bool
     {
         return self::setOpt($handle, self::TIMEOUT, $encoding);
+    }
+
+    /**
+     * Set User-Agent.
+     *
+     * @access public
+     * @param CurlHandle $handle
+     * @param string $ua
+     * @return bool
+     */
+    public static function setUserAgent(CurlHandle $handle, string $ua) : bool
+    {
+        return self::setOpt($handle, self::USERAGENT, $ua);
     }
 
     /**
@@ -415,6 +431,9 @@ final class Curl
      */
     public static function getLocation(string $url, array $params = []) : string
     {
+        // Rest cUrl
+        self::reset();
+
         // Extract params
         $params = Client::getParams($params);
         extract($params);
@@ -433,15 +452,16 @@ final class Curl
         // Set options
         self::setOptions($handle, [
             self::HEADER         => true,
-            self::RETURNTRANSFER => true,
             self::NOBODY         => true,
             self::FOLLOWLOCATION => true,
-            self::VERIFYHOST     => $ssl == true ? 2 : false,
-            self::VERIFYPEER     => $ssl,
+            self::RETURNTRANSFER => true,
             self::MAXREDIRS      => $redirect,
             self::TIMEOUT        => $timeout,
             self::HTTPHEADER     => $header,
-            self::CUSTOMREQUEST  => $method
+            self::CUSTOMREQUEST  => $method,
+            self::VERIFYHOST     => $ssl == true ? 2 : false,
+            self::VERIFYPEER     => $ssl,
+            self::USERAGENT      => $ua
         ]);
 
         // Get header
@@ -487,33 +507,23 @@ final class Curl
      * @param int $active Running
      * @return int
      */
-    public static function execMultiple(CurlMultiHandle $multi, int &$active) : int
+    public static function execMultiple(CurlMultiHandle $multi, &$active) : int
     {
         return curl_multi_exec($multi, $active);
     }
 
     /**
-     * Execute multiple cURL (Alias).
-     * Return error.
+     * Execute multiple cURL (Alias with loop).
      *
      * @access public
      * @param CurlMultiHandle $multi
-     * @param bool $ignore, Ignore error
-     * @return mixed
+     * @return int
      */
-    public static function executeMultiple(CurlMultiHandle $multi, bool $ignore = false) : mixed
+    public static function executeMultiple(CurlMultiHandle $multi) : int
     {
         do {
-
             $status = self::execMultiple($multi, $active);
-            if ( $status > 0 ) {
-                if ( !$ignore ) {
-                    return self::getMultipleError($status);
-                }
-                break;
-            }
             self::selectMultiple($multi);
-
         } while ($active && $status == self::OK);
 
         return $status;
@@ -604,6 +614,9 @@ final class Curl
      */
     public static function request(string $url, array $params = []) : array
     {
+        // Rest cUrl
+        self::reset();
+
         // Extract params
         $params = Client::getParams($params);
         extract($params);
@@ -622,6 +635,10 @@ final class Curl
 
         if ( $encoding ) {
             self::setEncoding($handle, $encoding);
+        }
+
+        if ( $ua ) {
+            self::setUserAgent($handle, $ua);
         }
 
         if ( $ssl === false ) {
@@ -688,6 +705,19 @@ final class Curl
             'header' => $header,
             'body'   => $body
         ];
+    }
+
+    /**
+     * Advanced multiple cURL HTTP request.
+     *
+     * @access public
+     * @param string $url
+     * @param array $params
+     * @return array
+     */
+    public static function requestMultiple(string $url, array $params = []) : array
+    {
+
     }
 
     /**

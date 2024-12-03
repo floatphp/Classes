@@ -526,16 +526,17 @@ class File
 	 * @param string $path
 	 * @param mixed $input
 	 * @param bool $append
+	 * @param ?resource $c Context
 	 * @return bool
 	 */
-	public static function w(string $path, $input = '', bool $append = false) : bool
+	public static function w(string $path, $input = '', bool $append = false, $c = null) : bool
 	{
 		$flag = 0;
 		if ( $append ) {
 			$flag = FILE_APPEND;
 			$input .= Stringify::break();
 		}
-		return (bool)@file_put_contents($path, $input, $flag);
+		return (bool)@file_put_contents($path, $input, $flag, $c);
 	}
 
 	/**

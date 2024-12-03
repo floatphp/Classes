@@ -18,7 +18,7 @@ namespace FloatPHP\Classes\Http;
 use FloatPHP\Classes\Filesystem\{Stringify, Arrayify, File, Json, Exception};
 
 /**
- * Advanced stream manipulation.
+ * Advanced HTTP stream manipulation.
  */
 final class Stream
 {
@@ -165,6 +165,11 @@ final class Stream
         // Set body
         $body = Client::getQuery($body);
 
+        // Set User-Agent
+        if ( $ua ) {
+            $header['User-Agent'] = $ua;
+        }
+
         // Set header
         $header = Client::formatHeader($header);
 
@@ -228,6 +233,11 @@ final class Stream
 
         // Set body
         $url = $body ? Client::getQuery($body, $url) : $url;
+
+        // Set User-Agent
+        if ( $ua ) {
+            $header['User-Agent'] = $ua;
+        }
 
         // Set options
         $options = [

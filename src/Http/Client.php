@@ -20,26 +20,34 @@ use FloatPHP\Classes\Server\System;
 use FloatPHP\Exceptions\Classes\ClientException;
 
 /**
- * Advanced Http request client (cURL|Stream).
+ * Advanced HTTP request client (cURL|Stream).
  */
 class Client
 {
     /**
      * @access public
      */
-    public const GET      = 'GET';
-    public const POST     = 'POST';
-    public const HEAD     = 'HEAD';
-    public const PUT      = 'PUT';
-    public const PATCH    = 'PATCH';
-    public const OPTIONS  = 'OPTIONS';
-    public const DELETE   = 'DELETE';
-    public const TIMEOUT  = 10;
-    public const REDIRECT = 3;
-    public const PATTERN  = [
+    public const GET       = 'GET';
+    public const POST      = 'POST';
+    public const HEAD      = 'HEAD';
+    public const PUT       = 'PUT';
+    public const PATCH     = 'PATCH';
+    public const OPTIONS   = 'OPTIONS';
+    public const DELETE    = 'DELETE';
+    public const TIMEOUT   = 10;
+    public const REDIRECT  = 3;
+    public const PATTERN   = [
         'status'    => '/^\s*HTTP\/\d+(\.\d+)?\s+(?P<code>\d+)\s*(?P<message>.*)?\r?\n?$/',
         'attribute' => '/^\s*(?P<name>[a-zA-Z0-9\-]+)\s*:\s*(?P<value>.*?)\s*(?:\r?\n|$)/',
         'location'  => "/Location:\s*(.+)/i"
+    ];
+    public const USERAGENT = [
+        'Mozilla/5.0',
+        '(X11; Linux x86_64)',
+        'AppleWebKit/537.36',
+        '(KHTML, like Gecko)',
+        'Chrome/114.0.5735.199',
+        'Safari/537.36'
     ];
 
     /**
@@ -284,12 +292,25 @@ class Client
      * Set request encoding.
      *
      * @access public
-     * @param ?string $encoding
+     * @param string $encoding
      * @return object
      */
-    public function setEncoding(?string $encoding) : self
+    public function setEncoding(string $encoding) : self
     {
         $this->params['encoding'] = $encoding;
+        return $this;
+    }
+
+    /**
+     * Set User-Agent.
+     *
+     * @access public
+     * @param ?string $ua
+     * @return object
+     */
+    public function setUserAgent(?string $ua = null) : self
+    {
+        $this->params['ua'] = $ua;
         return $this;
     }
 
@@ -577,6 +598,17 @@ class Client
     }
 
     /**
+     * Get default User-Agent.
+     *
+     * @access public
+     * @return string
+     */
+    public static function getUserAgent() : string
+    {
+        return implode(', ', static::USERAGENT);
+    }
+
+    /**
      * Get default Http client parameters.
      *
      * @access public
@@ -591,6 +623,7 @@ class Client
             'method'   => null,
             'timeout'  => self::TIMEOUT,
             'redirect' => self::REDIRECT,
+            'ua'       => self::getUserAgent(),
             'ssl'      => true,
             'encoding' => null,
             'return'   => false,
@@ -617,6 +650,7 @@ class Client
             'return'   => $this->params['return'],
             'follow'   => $this->params['follow'],
             'headerIn' => $this->params['headerIn'],
+            'ua'       => $this->params['ua'],
             'ssl'      => Server::isSsl()
         ]);
     }
