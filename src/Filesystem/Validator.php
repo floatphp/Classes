@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Filesystem;
 
-use FloatPHP\Classes\Http\Server;
+use FloatPHP\Classes\Http\{Server, Stream};
 use FloatPHP\Classes\Server\System;
 
 /**
@@ -106,6 +106,18 @@ class Validator
 	{
 		$pattern = "/^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$/i";
 		return Stringify::match($pattern, $address, $matches);
+	}
+
+	/**
+	 * Check stream (path).
+	 *
+	 * @access public
+	 * @param string $path
+	 * @return bool
+	 */
+	public static function isStream(string $path) : bool
+	{
+		return Stream::isValid($path);
 	}
 
 	/**

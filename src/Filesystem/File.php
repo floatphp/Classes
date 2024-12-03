@@ -435,12 +435,12 @@ class File
 			return false;
 		}
 
-		$handler = @opendir($path);
-		if ( !TypeCheck::isResource($handler) ) {
+		$handle = @opendir($path);
+		if ( !TypeCheck::isResource($handle) ) {
 			return false;
 		}
 
-		while ($file = readdir($handler)) {
+		while ($file = readdir($handle)) {
 			if ( $file !== '.' && $file !== '..' ) {
 				if ( !self::isDir("{$path}/{$file}") ) {
 					self::remove("{$path}/{$file}");
@@ -461,7 +461,7 @@ class File
 			}
 		}
 
-		closedir($handler);
+		closedir($handle);
 		return true;
 	}
 
@@ -509,18 +509,14 @@ class File
 	 * @access public
 	 * @param string $path
 	 * @param bool $i Include path
-	 * @param mixed $c Context
+	 * @param ?resource $c Context
 	 * @param int $o Offset
+	 * @param ?int $l Length
 	 * @return mixed
 	 */
-	public static function r(string $path, bool $i = false, $c = null, int $o = 0) : mixed
+	public static function r(string $path, bool $i = false, $c = null, int $o = 0, ?int $l = null) : mixed
 	{
-		if ( TypeCheck::isStream($path) ) {
-			if ( TypeCheck::isArray($c) ) {
-				$c = stream_context_create($c);
-			}
-		}
-		return @file_get_contents($path, $i, $c, $o);
+		return @file_get_contents($path, $i, $c, $o, $l);
 	}
 
 	/**
@@ -552,10 +548,10 @@ class File
 	public static function read(string $path) : mixed
 	{
 		if ( self::exists($path) ) {
-			if ( ($handler = fopen($path, 'r')) ) {
+			if ( ($handle = fopen($path, 'r')) ) {
 				$size = self::getFileSize($path);
-				$content = fread($handler, $size);
-				fclose($handler);
+				$content = fread($handle, $size);
+				fclose($handle);
 				return $content;
 			}
 		}

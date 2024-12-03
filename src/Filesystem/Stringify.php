@@ -409,7 +409,7 @@ final class Stringify
 		$prefix = '';
 
 		// Stream format
-		if ( TypeCheck::isStream($path) ) {
+		if ( Validator::isStream($path) ) {
 			list($prefix, $path) = explode('://', $path, 2);
 			$prefix .= '://';
 		}
@@ -987,28 +987,23 @@ final class Stringify
 	 * Format dash (hyphen) into underscore.
 	 *
 	 * @access public
-	 * @param string $string
-	 * @param bool $isGlobal
-	 * @return string
-	 */
-	public static function undash(string $string, bool $isGlobal = false) : string
-	{
-		if ( $isGlobal ) {
-			$string = self::uppercase($string);
-		}
-		return self::replace('-', '_', $string);
-	}
-
-	/**
-	 * Format dash (Alias).
-	 *
-	 * @access public
 	 * @param mixed $value
+	 * @param bool $isGlobal
 	 * @param array $except
 	 * @return mixed
 	 */
-	public static function underscore($value, array $except = []) : mixed
+	public static function undash(mixed $value, bool $isGlobal = false, array $except = []) : mixed
 	{
+		if ( TypeCheck::isString($value) ) {
+			if ( !Arrayify::inArray($value, $except) ) {
+				if ( $isGlobal ) {
+					$value = self::uppercase($value);
+				}
+				return self::replace('-', '_', $value);
+			}
+			return $value;
+		}
+
 		if ( TypeCheck::isArray($value) ) {
 			foreach ($value as $k => $v) {
 				if ( !TypeCheck::isString($k) || Arrayify::inArray($k, $except) ) {
@@ -1017,13 +1012,13 @@ final class Stringify
 				if ( self::contains($k, '-') ) {
 					unset($value[$k]);
 					$k = self::undash($k);
-					$value[$k] = $v;
 				}
+				// Recursively process the value
+				$value[$k] = self::undash($v, $isGlobal, $except);
 			}
+
 		}
-		if ( TypeCheck::isString($value) && !Arrayify::inArray($value, $except) ) {
-			$value = self::undash($value);
-		}
+
 		return $value;
 	}
 

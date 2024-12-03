@@ -561,6 +561,22 @@ class Client
     }
 
     /**
+     * Format inline Http header.
+     *
+     * @access public
+     * @param array $header
+     * @return string
+     */
+    public static function formatHeader(array $header) : string
+    {
+        $format = '';
+        foreach ($header as $key => $value) {
+            $format .= "{$key}: {$value}\r\n";
+        }
+        return $format;
+    }
+
+    /**
      * Get default Http client parameters.
      *
      * @access public

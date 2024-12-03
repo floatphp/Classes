@@ -353,23 +353,6 @@ final class TypeCheck
 	}
 
 	/**
-	 * Check stream.
-	 *
-	 * @access public
-	 * @param string $path
-	 * @return bool
-	 */
-	public static function isStream(string $path) : bool
-	{
-		$scheme = strpos($path, '://');
-		if ( false === $scheme ) {
-			return false;
-		}
-		$stream = substr($path, 0, $scheme);
-		return Arrayify::inArray($stream, stream_get_wrappers());
-	}
-
-	/**
 	 * Check dynamic type (Javascript).
 	 *
 	 * @access public

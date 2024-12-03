@@ -319,7 +319,7 @@ final class Curl
     public static function setHeaderCallback(CurlHandle $handle, $callback = null) : bool
     {
         if ( !$callback ) {
-            $callback = [self::class, 'catchHeader'];
+            $callback = [self::class, 'parseHeader'];
         }
         return self::setOpt($handle, self::HEADERFUNC, $callback);
     }
@@ -335,7 +335,7 @@ final class Curl
     public static function setBodyCallback(CurlHandle $handle, $callback = null) : bool
     {
         if ( !$callback ) {
-            $callback = [self::class, 'catchBody'];
+            $callback = [self::class, 'parseBody'];
         }
         return self::setOpt($handle, self::WRITEFUNC, $callback);
     }
@@ -409,8 +409,8 @@ final class Curl
      * Get cURL effective URL (Location).
      *
      * @access public
-     * @param CurlHandle $handle
      * @param string $url
+     * @param array $params
      * @return string
      */
     public static function getLocation(string $url, array $params = []) : string
@@ -673,8 +673,8 @@ final class Curl
             $error = true;
 
         } else {
-            $status = self::getResponseStatus();
             $header = self::getResponseHeader();
+            $status = self::getResponseStatus();
             $body = $return ? (string)$response : self::getResponseBody();
         }
 
@@ -748,16 +748,16 @@ final class Curl
     }
 
     /**
-     * Catch response header.
+     * Parse response header.
      *
      * @access public
      * @param CurlHandle $handle
      * @param string $header
      * @return int
      */
-    public static function catchHeader(CurlHandle $handle, string $header) : int
+    public static function parseHeader(CurlHandle $handle, string $header) : int
     {
-        // Parse HTTP status
+        // Parse status
         $regex = Client::getPattern('status');
         if ( Stringify::match($regex, $header, $matches) ) {
             $code = $matches['code'] ?? -1;
@@ -788,14 +788,14 @@ final class Curl
     }
 
     /**
-     * Catch response body.
+     * Parse response body.
      *
      * @access public
      * @param CurlHandle $handle
      * @param string $body
      * @return int
      */
-    public static function catchBody(CurlHandle $handle, string $body) : int
+    public static function parseBody(CurlHandle $handle, string $body) : int
     {
         self::$responseBody .= $body;
         return strlen($body);

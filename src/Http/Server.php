@@ -33,7 +33,7 @@ final class Server
 	public static function get(?string $key = null, $format = true) : mixed
 	{
 		if ( $key ) {
-			if ( $format ) $key = Stringify::undash($key, isGlobal: true);
+			if ( $format ) $key = Stringify::undash($key, true);
 			return self::isSetted($key) ? $_SERVER[$key] : null;
 		}
 		return self::isSetted() ? $_SERVER : null;
@@ -50,7 +50,7 @@ final class Server
 	 */
 	public static function set(string $key, $value = null, $format = true) : void
 	{
-		if ( $format ) $value = Stringify::undash($key, isGlobal: true);
+		if ( $format ) $value = Stringify::undash($key, true);
 		$_SERVER[$key] = $value;
 	}
 
@@ -65,7 +65,7 @@ final class Server
 	public static function isSetted(?string $key = null, $format = true) : bool
 	{
 		if ( $key ) {
-			if ( $format ) $key = Stringify::undash($key, isGlobal: true);
+			if ( $format ) $key = Stringify::undash($key, true);
 			return isset($_SERVER[$key]);
 		}
 		return isset($_SERVER) && !empty($_SERVER);
