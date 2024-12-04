@@ -18,6 +18,8 @@ namespace FloatPHP\Classes\Http;
 use FloatPHP\Classes\Filesystem\Stringify;
 use \CurlHandle;
 use \CurlMultiHandle;
+use FloatPHP\Classes\Filesystem\Arrayify;
+use FloatPHP\Classes\Filesystem\File;
 
 /**
  * Advanced cURL manipulation.
@@ -35,6 +37,7 @@ final class Curl
     public const HEADERFUNC     = CURLOPT_HEADERFUNCTION;
     public const WRITEFUNC      = CURLOPT_WRITEFUNCTION;
     public const TIMEOUT        = CURLOPT_TIMEOUT;
+    public const CONNECTTIMEOUT = CURLOPT_CONNECTTIMEOUT;
     public const POST           = CURLOPT_POST;
     public const POSTFIELDS     = CURLOPT_POSTFIELDS;
     public const CUSTOMREQUEST  = CURLOPT_CUSTOMREQUEST;
@@ -489,7 +492,7 @@ final class Curl
     }
 
     /**
-     * Init multiple cURL handle.
+     * Init multiple cURL handles.
      *
      * @access public
      * @return CurlMultiHandle
@@ -711,13 +714,85 @@ final class Curl
      * Advanced multiple cURL HTTP request.
      *
      * @access public
-     * @param string $url
-     * @param array $params
+     * @param array $urls
+     * @param array $params cURL params
+     * @param array $extra Extra params (Crawl)
      * @return array
      */
-    public static function requestMultiple(string $url, array $params = []) : array
+    public static function requestMultiple(array $urls, array $params = [], array $extra = []) : array
     {
+        $response = [];
 
+        // Init multiple
+        $multiple = self::initMultiple();
+        $handles = [];
+
+        // Extract params
+        $params = Client::getParams($params);
+        extract($params);
+        unset($params);
+
+        foreach ($urls as $url) {
+
+            // Init
+            $handle = self::init($url);
+
+            // Set options
+            self::setOptions($handle, [
+                self::RETURNTRANSFER => $return,
+                self::FOLLOWLOCATION => $follow,
+                self::HEADER         => $headerIn,
+                self::MAXREDIRS      => $redirect,
+                self::TIMEOUT        => $timeout,
+                self::HTTPHEADER     => $header,
+                self::CUSTOMREQUEST  => $method,
+                self::VERIFYHOST     => $ssl == true ? 2 : false,
+                self::VERIFYPEER     => $ssl,
+                self::USERAGENT      => $ua
+            ]);
+
+            self::addHandle($multiple, $handle);
+            $handles[$url] = $handle;
+        }
+
+        // Execute multiple handles
+        self::executeMultiple($multiple);
+
+        // Extract extra params
+        $extra = Client::getExtra($extra);
+        extract($extra);
+        unset($extra);
+
+        foreach ($handles as $url => $handle) {
+
+            // Add to response on success
+            if ( $content = (string)self::getMultipleContent($handle) ) {
+                $response[] = $url;
+            }
+
+            // Save to file
+            if ( $path && File::isDir($path) ) {
+
+                $name = Client::parseUrl($url);
+                $name = Stringify::slugify($name);
+                $temp = Stringify::formatPath("{$path}/{$name}{$ext}");
+
+                if ( $signature ) {
+                    $break = Stringify::break();
+                    $content .= "{$break}{$signature}";
+                }
+
+                File::w($temp, $content);
+            }
+
+            self::removeHandle($multiple, $handle);
+            self::close($handle);
+        }
+
+        self::closeMultiple($multiple);
+        unset($handles);
+
+        return $response;
     }
 
     /**

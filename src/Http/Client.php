@@ -633,6 +633,22 @@ class Client
     }
 
     /**
+     * Get default extra params (crawler).
+     *
+     * @access public
+     * @param array $params
+     * @return array
+     */
+    public static function getExtra(array $params = []) : array
+    {
+        return Arrayify::merge([
+            'path'      => null,
+            'signature' => null,
+            'ext'       => null
+        ], $params);
+    }
+
+    /**
      * Execute request.
      *
      * @access protected
