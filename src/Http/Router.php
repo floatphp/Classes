@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\{TypeCheck, Stringify, Arrayify};
+use FloatPHP\Classes\Html\Hook;
 use FloatPHP\Interfaces\Classes\RouterInterface;
 use FloatPHP\Exceptions\Classes\RouterException;
 
@@ -86,7 +87,7 @@ class Router implements RouterInterface
         }
 
         foreach ($routes as $route) {
-            call_user_func_array([$this, 'map'], $route);
+            Hook::callUserFunctionArray([$this, 'map'], $route);
         }
     }
 
