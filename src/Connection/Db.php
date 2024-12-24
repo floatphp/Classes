@@ -357,11 +357,11 @@ class Db
      * Log error.
      *
      * @access protected
-     * @param string $message
-     * @param string $sql
+     * @param ?string $message
+     * @param ?string $sql
      * @return string
      */
-    protected function log(?string $message = null, string $sql = null) : string
+    protected function log(?string $message = null, ?string $sql = null) : string
     {
         if ( !$message ) {
             $message = 'Unhandled Exception';
