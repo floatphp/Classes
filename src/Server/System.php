@@ -888,10 +888,10 @@ final class System
      * Get GLOBALS item value.
      *
      * @access public
-     * @param string $key
+     * @param ?string $key
      * @return mixed
      */
-    public static function getGlobal(string $key = null) : mixed
+    public static function getGlobal(?string $key = null) : mixed
     {
         return self::hasGlobal($key) ? $GLOBALS[$key] : null;
     }
