@@ -258,7 +258,7 @@ class Client
     {
         $url = (string)$url;
         $baseUrl = (string)$this->baseUrl;
-        $this->url = Stringify::formatPath("{$baseUrl}/{$url}");
+        $this->url = Stringify::formatPath("{$baseUrl}/{$url}", true);
         return $this;
     }
 
