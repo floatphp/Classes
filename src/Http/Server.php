@@ -340,11 +340,19 @@ final class Server
 	 */
 	public static function isSsl() : bool
 	{
-		if ( self::isSetted('https') && !empty(self::get('https')) ) {
-			if ( self::get('https') !== 'off' ) {
-				return true;
-			}
-		}
+		if ( self::isSetted('https') ) {
+
+            $isOn = strtolower(self::get('https')) === 'on';
+            $isOne = self::get('https') === '1';
+
+            if ( $isOn || $isOne ) {
+                return true;
+            }
+
+		} elseif ( self::isSetted('server-port') ) {
+            return self::get('server-port') === '443';
+        }
+
 		return false;
 	}
 
