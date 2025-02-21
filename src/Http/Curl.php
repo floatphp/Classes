@@ -16,8 +16,7 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\{Stringify, File};
-use \CurlHandle;
-use \CurlMultiHandle;
+use \CurlHandle, \CurlMultiHandle;
 
 /**
  * Advanced cURL manipulation.
