@@ -1,15 +1,22 @@
 {
   "name": "floatphp/classes",
-  "version" : "1.4.2",
+  "version": "1.5.0",
   "type": "library",
   "description": "FloatPHP Classes Components",
-  "keywords": ["floatphp","micro-framework","framework","PSR","ORM","jakiboy"],
+  "keywords": [
+    "floatphp",
+    "micro-framework",
+    "framework",
+    "PSR",
+    "ORM",
+    "jakiboy"
+  ],
   "homepage": "https://www.floatphp.com/",
   "license": "MIT",
   "authors": [
     {
       "name": "Jihad Sinnaour",
-      "email": "mail@jihadsinnaour.com",
+      "email": "me@jihadsinnaour.com",
       "role": "Founder"
     }
   ],
@@ -18,8 +25,8 @@
     "floatphp/interfaces": "^1.4.0"
   },
   "autoload": {
-    "psr-4" : {
-      "FloatPHP\\Classes\\" : "src/"
+    "psr-4": {
+      "FloatPHP\\Classes\\": "src/"
     }
   }
 }

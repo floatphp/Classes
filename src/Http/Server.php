@@ -3,8 +3,8 @@
  * @author     : Jakiboy
  * @package    : FloatPHP
  * @subpackage : Classes Http Component
- * @version    : 1.4.x
- * @copyright  : (c) 2018 - 2024 Jihad Sinnaour <mail@jihadsinnaour.com>
+ * @version    : 1.5.x
+ * @copyright  : (c) 2018 - 2025 Jihad Sinnaour <me@jihadsinnaour.com>
  * @link       : https://floatphp.com
  * @license    : MIT
  *
@@ -342,16 +342,16 @@ final class Server
 	{
 		if ( self::isSetted('https') ) {
 
-            $isOn = strtolower(self::get('https')) === 'on';
-            $isOne = self::get('https') === '1';
+			$isOn = strtolower(self::get('https')) === 'on';
+			$isOne = self::get('https') === '1';
 
-            if ( $isOn || $isOne ) {
-                return true;
-            }
+			if ( $isOn || $isOne ) {
+				return true;
+			}
 
 		} elseif ( self::isSetted('server-port') ) {
-            return self::get('server-port') === '443';
-        }
+			return self::get('server-port') === '443';
+		}
 
 		return false;
 	}
