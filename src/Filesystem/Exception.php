@@ -30,7 +30,8 @@ final class Exception extends \Exception
 	 */
 	public static function handle(callable $callback, ?array $args = null) : bool
 	{
-		return (bool)register_shutdown_function($callback, $args);
+		register_shutdown_function($callback, $args);
+		return true;
 	}
 
 	/**
