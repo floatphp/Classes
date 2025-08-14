@@ -22,7 +22,7 @@
   ],
   "require": {
     "php": ">=8.2",
-    "floatphp/interfaces": "^1.4.0"
+    "floatphp/interfaces": "^1.5.0"
   },
   "autoload": {
     "psr-4": {
