@@ -8,7 +8,7 @@
  * @link       : https://floatphp.com
  * @license    : MIT
  *
- * This file if a part of FloatPHP Framework.
+ * This file is a part of FloatPHP Framework.
  */
 
 declare(strict_types=1);
@@ -316,7 +316,7 @@ final class Stringify
 	 * @param string $sep, separator
 	 * @return string
 	 */
-	public static function chunk(string $string, int $length = 76, string $sep = "\r\n") : mixed
+	public static function chunk(string $string, int $length = 76, string $sep = "\r\n") : string
 	{
 		return chunk_split($string, $length, $sep);
 	}
@@ -326,13 +326,13 @@ final class Stringify
 	 *
 	 * @access public
 	 * @param string $string
-	 * @param string $to
 	 * @param string $from
+	 * @param string $to
 	 * @return string
 	 */
 	public static function encode(string $string, string $from = 'ISO-8859-1', string $to = 'UTF-8') : string
 	{
-		if ( self::getEncoding($string, $to, true) !== self::uppercase($to) ) {
+		if ( self::getEncoding($string, $to) !== self::uppercase($to) ) {
 			if ( ($encoded = @iconv($from, $to, $string)) ) {
 				$string = $encoded;
 			}
