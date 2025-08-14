@@ -377,7 +377,7 @@ class Translation
 	protected function sanitizePluralExpression(string $exp) : string
 	{
 		$reg = '@[^a-zA-Z0-9_:;\(\)\?\|\&=!<>+*/\%-]@';
-		$exp = Stringify::replaceRegex(regex: $reg, replace: '', subject: $exp) . ';';
+		$exp = Stringify::replaceRegex($reg, '', $exp) . ';';
 		$res = '';
 		$p = 0;
 		for ($i = 0; $i < strlen($exp); $i++) {
