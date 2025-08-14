@@ -24,13 +24,13 @@ final class Stringify
 	 * Search replace string(s).
 	 * 
 	 * @access public
-	 * @param mixed $search
-	 * @param mixed $replace
-	 * @param mixed $subject
-	 * @param int $count
-	 * @return mixed
+	 * @param string|array $search
+	 * @param string|array $replace
+	 * @param string|array $subject
+	 * @param int|null $count
+	 * @return string|array
 	 */
-	public static function replace($search, $replace, $subject, ?int &$count = null) : mixed
+	public static function replace(string|array $search, string|array $replace, string|array $subject, ?int &$count = null) : string|array
 	{
 		return str_replace($search, $replace, $subject, $count);
 	}
@@ -39,15 +39,15 @@ final class Stringify
 	 * Search replace substring(s).
 	 *
 	 * @access public
-	 * @param mixed $search
-	 * @param mixed $replace
-	 * @param mixed $offset
-	 * @param mixed $length
-	 * @return mixed
+	 * @param string $string
+	 * @param string $replacement
+	 * @param int $offset
+	 * @param int|null $length
+	 * @return string
 	 */
-	public static function subReplace($search, $replace, $offset = 0, $length = null) : mixed
+	public static function subReplace(string $string, string $replacement, int $offset = 0, ?int $length = null) : string
 	{
-		return substr_replace($search, $replace, $offset, $length);
+		return substr_replace($string, $replacement, $offset, $length);
 	}
 
 	/**
@@ -85,43 +85,45 @@ final class Stringify
 	 * Search replace string(s) using regex.
 	 *
 	 * @access public
-	 * @param mixed $regex
-	 * @param mixed $replace
-	 * @param mixed $subject
+	 * @param string|array $pattern
+	 * @param string|array $replacement
+	 * @param string|array $subject
 	 * @param int $limit
-	 * @param int $count
-	 * @return mixed
+	 * @param int|null $count
+	 * @return string|array|null
 	 */
-	public static function replaceRegex($regex, $replace, $subject, $limit = -1, &$count = null) : mixed
+	public static function replaceRegex(string|array $pattern, string|array $replacement, string|array $subject, int $limit = -1, ?int &$count = null) : string|array|null
 	{
-		return preg_replace($regex, $replace, $subject, $limit, $count);
+		$result = preg_replace($pattern, $replacement, $subject, $limit, $count);
+		return $result;
 	}
 
 	/**
 	 * Search replace string(s) using regex callback.
 	 *
 	 * @access public
-	 * @param mixed $regex
-	 * @param mixed $callback
-	 * @param mixed $subject
+	 * @param string|array $pattern
+	 * @param callable $callback
+	 * @param string|array $subject
 	 * @param int $limit
-	 * @param int $count
-	 * @return mixed
+	 * @param int|null $count
+	 * @return string|array|null
 	 */
-	public static function replaceRegexCb($regex, $callback, $subject, int $limit = -1, ?int &$count = null) : mixed
+	public static function replaceRegexCb(string|array $pattern, callable $callback, string|array $subject, int $limit = -1, ?int &$count = null) : string|array|null
 	{
-		return preg_replace_callback($regex, $callback, $subject, $limit, $count);
+		$result = preg_replace_callback($pattern, $callback, $subject, $limit, $count);
+		return $result;
 	}
 
 	/**
 	 * Remove string from other string.
 	 *
 	 * @access public
-	 * @param mixed $string
-	 * @param mixed $subject
-	 * @return mixed
+	 * @param string|array $string
+	 * @param string|array $subject
+	 * @return string|array
 	 */
-	public static function remove($string, $subject) : mixed
+	public static function remove(string|array $string, string|array $subject) : string|array
 	{
 		return self::replace($string, '', $subject);
 	}
@@ -131,13 +133,13 @@ final class Stringify
 	 * 
 	 * @access public
 	 * @param string $string
-	 * @param mixed $offset
-	 * @param mixed $length
+	 * @param int $offset
+	 * @param int|null $length
 	 * @return string
 	 */
-	public static function subRemove(string $string, $offset = 0, $length = null) : string
+	public static function subRemove(string $string, int $offset = 0, ?int $length = null) : string
 	{
-		if ( !$length ) {
+		if ( $length === null ) {
 			$length = strlen($string);
 		}
 		return self::subReplace($string, '', $offset, $length);
@@ -277,19 +279,13 @@ final class Stringify
 	 * Search string.
 	 *
 	 * @access public
-	 * @param mixed $string
-	 * @param string $search
+	 * @param string $haystack
+	 * @param string $needle
 	 * @return bool
 	 */
-	public static function contains($string, string $search) : bool
+	public static function contains(string $haystack, string $needle) : bool
 	{
-		if ( TypeCheck::isArray($string) ) {
-			return Arrayify::inArray($search, $string);
-		}
-		if ( strpos(haystack: (string)$string, needle: $search) !== false ) {
-			return true;
-		}
-		return false;
+		return str_contains($haystack, $needle);
 	}
 
 	/**
@@ -334,10 +330,10 @@ final class Stringify
 	 * @param string $from
 	 * @return string
 	 */
-	public static function encode($string, $from = 'ISO-8859-1', $to = 'UTF-8') : string
+	public static function encode(string $string, string $from = 'ISO-8859-1', string $to = 'UTF-8') : string
 	{
 		if ( self::getEncoding($string, $to, true) !== self::uppercase($to) ) {
-			if ( ($encoded = @iconv($to, $from, $string)) ) {
+			if ( ($encoded = @iconv($from, $to, $string)) ) {
 				$string = $encoded;
 			}
 		}
