@@ -85,7 +85,7 @@ final class Session
      * @param mixed $value
      * @return void
      */
-    public static function set($key, $value = null) : void
+    public static function set(mixed $key, mixed $value = null) : void
     {
         $_SESSION[$key] = $value;
     }
