@@ -8,7 +8,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}===========================================${NC}"
-echo -e "${BLUE}      FloatPHP Classes - All Tests        ${NC}"
+echo -e "${BLUE}      FloatPHP Classes Tests               ${NC}"
 echo -e "${BLUE}===========================================${NC}"
 echo ""
 
@@ -70,7 +70,7 @@ fi
 echo ""
 echo -e "${YELLOW}Running All Tests with Coverage...${NC}"
 echo -e "${YELLOW}----------------------------------${NC}"
-../../../vendor/bin/phpunit --configuration phpunit.xml --coverage-text --testdox
+../../vendor/bin/phpunit --configuration phpunit.xml --coverage-text --testdox
 
 # Final results
 echo ""
