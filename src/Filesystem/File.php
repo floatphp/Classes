@@ -85,7 +85,7 @@ class File
 	public static function getName(string $path) : string
 	{
 		$path = Stringify::basename($path);
-		return Stringify::replaceRegex(regex: '/\.[^.]+$/', replace: '', subject: $path);
+		return Stringify::replaceRegex('/\.[^.]+$/', '', $path);
 	}
 
 	/**
