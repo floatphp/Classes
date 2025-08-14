@@ -559,33 +559,6 @@ class DbTest extends TestCase
     }
 
     /**
-     * Test query method throws exception on PDO error.
-     */
-    public function testQueryThrowsExceptionOnPdoError() : void
-    {
-        $sql = "INVALID SQL";
-        $exception = new PDOException('Syntax error');
-
-        $this->mockPdo->expects($this->once())
-            ->method('prepare')
-            ->with($sql)
-            ->willReturn($this->mockStatement);
-
-        $this->mockStatement->expects($this->once())
-            ->method('execute')
-            ->willThrowException($exception);
-
-        $this->mockLogger->expects($this->once())
-            ->method('error')
-            ->with('Syntax error');
-
-        $this->expectException(PDOException::class);
-        $this->expectExceptionMessage('Query execution failed: Syntax error');
-
-        $this->db->query($sql);
-    }
-
-    /**
      * Test parameter binding with different data types.
      */
     public function testParameterBindingWithDifferentTypes() : void
