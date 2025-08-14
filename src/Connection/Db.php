@@ -361,10 +361,51 @@ class Db
      */
     protected function getStatementType(string $sql = '') : string|false
     {
-        $sql = Stringify::replaceRegex(regex: "/\s+|\t+|\n+/", replace: ' ', subject: $sql);
-        $raw = explode(' ', $sql);
-        $header = $raw[0] ?? '';
-        $st = strtolower($header);
+        if ( empty($sql) ) {
+            return false;
+        }
+
+        // Clean up whitespace
+        $sql = Stringify::replace(["\r\n", "\r", "\n", "\t"], ' ', $sql);
+
+        // Replace multiple spaces with single space iteratively
+        while (Stringify::contains($sql, '  ')) {
+            $sql = Stringify::replace('  ', ' ', $sql);
+        }
+
+        // Remove leading/trailing spaces by removing common space patterns
+        while (Stringify::contains($sql, ' ') && ($sql[0] ?? '') === ' ') {
+            $sql = Stringify::subReplace($sql, '', 0, 1);
+        }
+        while (Stringify::contains($sql, ' ') && ($sql[strlen($sql) - 1] ?? '') === ' ') {
+            $sql = Stringify::subReplace($sql, '', strlen($sql) - 1, 1);
+        }
+
+        if ( empty($sql) ) {
+            return false;
+        }
+
+        // Extract first word
+        $header = $sql;
+
+        if ( Stringify::contains($sql, ' ') ) {
+            // Find first space position
+            $chars = Stringify::split($sql, ['length' => 1]);
+            $spacePos = -1;
+            if ( is_array($chars) ) {
+                foreach ($chars as $index => $char) {
+                    if ( $char === ' ' ) {
+                        $spacePos = $index;
+                        break;
+                    }
+                }
+            }
+            if ( $spacePos >= 0 ) {
+                $header = Stringify::subReplace($sql, '', $spacePos);
+            }
+        }
+
+        $st = Stringify::lowercase($header);
 
         if ( $st == 'select' || $st == 'show' ) {
             return 'read';
