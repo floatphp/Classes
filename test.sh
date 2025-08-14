@@ -28,7 +28,7 @@ ARCHIVE_TESTS_PASSED=0
 
 echo -e "${YELLOW}Running Database Unit Tests (Simplified)...${NC}"
 echo -e "${YELLOW}--------------------------------------------${NC}"
-../../../vendor/bin/phpunit --bootstrap ../../../test.php DbSimpleTest.php --testdox
+../../../../App/vendor/bin/phpunit --bootstrap ../../../../test.php DbSimpleTest.php --testdox
 
 # Check if tests passed
 if [ $? -eq 0 ]; then
@@ -42,7 +42,7 @@ fi
 echo ""
 echo -e "${YELLOW}Running Database Integration Tests...${NC}"
 echo -e "${YELLOW}-------------------------------------${NC}"
-../../../vendor/bin/phpunit --bootstrap ../../../test.php DbIntegrationTest.php --testdox
+../../../../App/vendor/bin/phpunit --bootstrap ../../../../test.php DbIntegrationTest.php --testdox
 
 # Check if tests passed
 if [ $? -eq 0 ]; then
@@ -56,7 +56,7 @@ fi
 echo ""
 echo -e "${YELLOW}Running Archive Tests...${NC}"
 echo -e "${YELLOW}------------------------${NC}"
-../../../vendor/bin/phpunit --bootstrap ../../../test.php ArchiveTest.php --testdox
+../../../../App/vendor/bin/phpunit --bootstrap ../../../../test.php ArchiveTest.php --testdox
 
 # Check if tests passed
 if [ $? -eq 0 ]; then
@@ -70,7 +70,8 @@ fi
 echo ""
 echo -e "${YELLOW}Running All Tests with Coverage...${NC}"
 echo -e "${YELLOW}----------------------------------${NC}"
-../../vendor/bin/phpunit --configuration phpunit.xml --coverage-text --testdox
+cd "$SCRIPT_DIR"
+../../../../App/vendor/bin/phpunit --configuration phpunit.xml --coverage-text --testdox
 
 # Final results
 echo ""
