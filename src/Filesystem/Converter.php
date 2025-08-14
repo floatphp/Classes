@@ -74,6 +74,21 @@ final class Converter
 	}
 
 	/**
+	 * Convert number to formatted string.
+	 *
+	 * @access public
+	 * @param mixed $number
+	 * @param int $decimals
+	 * @param string $dSep Decimals Separator
+	 * @param string $tSep Thousands Separator
+	 * @return string
+	 */
+	public static function toNumber(mixed $number, int $decimals = 0, string $dSep = '.', string $tSep = ',') : string
+	{
+		return number_format($number, $decimals, $dSep, $tSep);
+	}
+	
+	/**
 	 * Convert number to float.
 	 * 
 	 * @access public
@@ -85,7 +100,7 @@ final class Converter
 	 */
 	public static function toFloat($number, int $decimals = 0, string $dSep = '.', string $tSep = '') : float
 	{
-		return (float)number_format($number, $decimals, $dSep, $tSep);
+		return (float)self::toNumber($number, $decimals, $dSep, $tSep);
 	}
 
 	/**
@@ -100,7 +115,7 @@ final class Converter
 	 */
 	public static function toMoney(mixed $number, int $decimals = 2, string $dSep = '.', string $tSep = ',') : string
 	{
-		return (string)self::toFloat($number, $decimals, $dSep, $tSep);
+		return self::toNumber($number, $decimals, $dSep, $tSep);
 	}
 
 	/**
