@@ -611,4 +611,216 @@ class ArrayifyTest extends TestCase
         
         $this->assertEquals([5, 10, 15, 20, 25], $values);
     }
+
+    /**
+     * Test pluck method with arrays.
+     */
+    public function testPluckArrays() : void
+    {
+        $array = [
+            ['name' => 'John', 'age' => 30, 'id' => 1],
+            ['name' => 'Jane', 'age' => 25, 'id' => 2],
+            ['name' => 'Bob', 'age' => 35, 'id' => 3]
+        ];
+
+        $result = Arrayify::pluck($array, 'name');
+        $expected = ['John', 'Jane', 'Bob'];
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * Test pluck method with index key.
+     */
+    public function testPluckWithIndexKey() : void
+    {
+        $array = [
+            ['name' => 'John', 'age' => 30, 'id' => 1],
+            ['name' => 'Jane', 'age' => 25, 'id' => 2],
+            ['name' => 'Bob', 'age' => 35, 'id' => 3]
+        ];
+
+        $result = Arrayify::pluck($array, 'name', 'id');
+        $expected = [1 => 'John', 2 => 'Jane', 3 => 'Bob'];
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * Test pluck method with objects.
+     */
+    public function testPluckObjects() : void
+    {
+        $obj1 = new \stdClass();
+        $obj1->name = 'John';
+        $obj1->age = 30;
+
+        $obj2 = new \stdClass();
+        $obj2->name = 'Jane';
+        $obj2->age = 25;
+
+        $array = [$obj1, $obj2];
+
+        $result = Arrayify::pluck($array, 'name');
+        $expected = ['John', 'Jane'];
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * Test pluck method with missing keys.
+     */
+    public function testPluckMissingKeys() : void
+    {
+        $array = [
+            ['name' => 'John', 'age' => 30],
+            ['name' => 'Jane'], // Missing age
+            ['age' => 35] // Missing name
+        ];
+
+        $result = Arrayify::pluck($array, 'name');
+        $expected = ['John', 'Jane'];
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * Test groupBy method with arrays.
+     */
+    public function testGroupByArrays() : void
+    {
+        $array = [
+            ['name' => 'John', 'department' => 'IT', 'salary' => 5000],
+            ['name' => 'Jane', 'department' => 'HR', 'salary' => 4500],
+            ['name' => 'Bob', 'department' => 'IT', 'salary' => 5500],
+            ['name' => 'Alice', 'department' => 'HR', 'salary' => 4800]
+        ];
+
+        $result = Arrayify::groupBy($array, 'department');
+
+        $this->assertArrayHasKey('IT', $result);
+        $this->assertArrayHasKey('HR', $result);
+        $this->assertCount(2, $result['IT']);
+        $this->assertCount(2, $result['HR']);
+        $this->assertEquals('John', $result['IT'][0]['name']);
+        $this->assertEquals('Bob', $result['IT'][1]['name']);
+        $this->assertEquals('Jane', $result['HR'][0]['name']);
+        $this->assertEquals('Alice', $result['HR'][1]['name']);
+    }
+
+    /**
+     * Test groupBy method with objects.
+     */
+    public function testGroupByObjects() : void
+    {
+        $obj1 = new \stdClass();
+        $obj1->name = 'John';
+        $obj1->status = 'active';
+
+        $obj2 = new \stdClass();
+        $obj2->name = 'Jane';
+        $obj2->status = 'inactive';
+
+        $obj3 = new \stdClass();
+        $obj3->name = 'Bob';
+        $obj3->status = 'active';
+
+        $array = [$obj1, $obj2, $obj3];
+
+        $result = Arrayify::groupBy($array, 'status');
+
+        $this->assertArrayHasKey('active', $result);
+        $this->assertArrayHasKey('inactive', $result);
+        $this->assertCount(2, $result['active']);
+        $this->assertCount(1, $result['inactive']);
+    }
+
+    /**
+     * Test groupBy method with missing keys.
+     */
+    public function testGroupByMissingKeys() : void
+    {
+        $array = [
+            ['name' => 'John', 'department' => 'IT'],
+            ['name' => 'Jane'], // Missing department
+            ['name' => 'Bob', 'department' => 'IT']
+        ];
+
+        $result = Arrayify::groupBy($array, 'department');
+
+        $this->assertArrayHasKey('IT', $result);
+        $this->assertCount(2, $result['IT']);
+        $this->assertEquals('John', $result['IT'][0]['name']);
+        $this->assertEquals('Bob', $result['IT'][1]['name']);
+    }
+
+    /**
+     * Test flatten method with basic nested arrays.
+     */
+    public function testFlattenBasic() : void
+    {
+        $array = [1, [2, 3], [4, [5, 6]], 7];
+
+        $result = Arrayify::flatten($array, 1);
+        $expected = [1, 2, 3, 4, [5, 6], 7];
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * Test flatten method with deep nesting.
+     */
+    public function testFlattenDeep() : void
+    {
+        $array = [1, [2, [3, [4, 5]]], 6];
+
+        $result = Arrayify::flatten($array, 2);
+        $expected = [1, 2, 3, [4, 5], 6];
+
+        $this->assertEquals($expected, $result);
+
+        $result = Arrayify::flatten($array, 3);
+        $expected = [1, 2, 3, 4, 5, 6];
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * Test flatten method with zero depth.
+     */
+    public function testFlattenZeroDepth() : void
+    {
+        $array = [1, [2, 3], [4, 5]];
+
+        $result = Arrayify::flatten($array, 0);
+        $expected = [1, [2, 3], [4, 5]]; // No flattening
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * Test flatten method with empty arrays.
+     */
+    public function testFlattenEmpty() : void
+    {
+        $array = [1, [], [2, []], 3];
+
+        $result = Arrayify::flatten($array, 1);
+        $expected = [1, 2, 3];
+
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * Test flatten method with mixed data types.
+     */
+    public function testFlattenMixed() : void
+    {
+        $array = [1, ['hello', 2.5], [true, [null, 'world']], false];
+
+        $result = Arrayify::flatten($array, 2);
+        $expected = [1, 'hello', 2.5, true, null, 'world', false];
+
+        $this->assertEquals($expected, $result);
+    }
 }
