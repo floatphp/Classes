@@ -165,6 +165,25 @@ final class Archive extends File
 			return false;
 		}
 
+		// Check gzip magic number (1f 8b)
+		$file = @fopen($archive, 'rb');
+		if ( !$file ) {
+			return false;
+		}
+
+		$header = @fread($file, 2);
+		@fclose($file);
+
+		if ( strlen($header) !== 2 ) {
+			return false;
+		}
+
+		// Gzip files start with 0x1f 0x8b
+		if ( ord($header[0]) !== 0x1f || ord($header[1]) !== 0x8b ) {
+			return false;
+		}
+
+		// Additional validation: try to open with gzopen
 		$gz = @gzopen($archive, 'r');
 		if ( !$gz ) {
 			return false;
