@@ -2,9 +2,9 @@
 
 <img src="https://avatars.githubusercontent.com/u/33136510" width="100" alt="Micro PHP framework">
 
-FloatPHP **Classes Components** Without 3th-parties.
-This components tweaks build-in (Native) PHP functions to customize its behavior.
-In the majority of cases, the most used build-in function with underscore are redefined.
+**FloatPHP Class Components** — No Third-Party Dependencies.
+These components extend and adapt native PHP functions to provide customized behavior.
+In most cases, commonly used built-in functions (especially those with underscores) are redefined for enhanced functionality.
 
 ## ⚡ Installing:
 
