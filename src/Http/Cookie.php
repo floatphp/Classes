@@ -46,7 +46,7 @@ final class Cookie
 	 * @param mixed $options
 	 * @return bool
 	 */
-	public static function set(string $key, $value = '', $options = []) : bool
+	public static function set(string $key, mixed $value = '', mixed $options = []) : bool
 	{
 		return setcookie($key, $value, $options);
 	}
