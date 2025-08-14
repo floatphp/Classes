@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
+         bootstrap="../../test.php"
+         colors="true"
+         executionOrder="depends,defects"
+         forceCoversAnnotation="false"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutTodoAnnotatedTests="true"
+         convertDeprecationsToExceptions="true"
+         failOnRisky="true"
+         failOnWarning="true"
+         verbose="true">
+    <testsuites>
+        <testsuite name="FloatPHP Classes Tests">
+            <directory>.</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory suffix=".php">../src</directory>
+        </include>
+        <exclude>
+            <directory>../vendor</directory>
+        </exclude>
+    </source>
+
+    <logging>
+        <junit outputFile="test-results.xml"/>
+        <testdoxHtml outputFile="testdox.html"/>
+        <testdoxText outputFile="testdox.txt"/>
+    </logging>
+
+    <coverage>
+        <report>
+            <html outputDirectory="coverage-html"/>
+            <clover outputFile="coverage.xml"/>
+            <text outputFile="coverage.txt"/>
+        </report>
+    </coverage>
+</phpunit>

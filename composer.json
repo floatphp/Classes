@@ -24,9 +24,17 @@
     "php": ">=8.2",
     "floatphp/interfaces": "^1.5.0"
   },
+  "require-dev": {
+    "phpunit/phpunit": "^11.5"
+  },
   "autoload": {
     "psr-4": {
       "FloatPHP\\Classes\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "FloatPHP\\Tests\\Classes\\": "tests/"
     }
   }
 }

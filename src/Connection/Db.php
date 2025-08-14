@@ -27,17 +27,17 @@ class Db
 {
     /**
      * @access protected
-     * @var object $pdo
-     * @var object $query
+     * @var ?PDO $pdo
+     * @var ?\PDOStatement $query
      * @var bool $isConnected
      * @var array $parameters
-     * @var object $logger
+     * @var ?LoggerInterface $logger
      */
-    protected $pdo;
-    protected $query;
-    protected $isConnected = false;
-    protected $parameters = [];
-    protected $logger;
+    protected ?PDO $pdo = null;
+    protected ?\PDOStatement $query = null;
+    protected bool $isConnected = false;
+    protected array $parameters = [];
+    protected ?LoggerInterface $logger = null;
 
     /**
      * Connect to database.
@@ -54,6 +54,17 @@ class Db
     }
 
     /**
+     * Destructor - Close connection automatically.
+     *
+     * @access public
+     * @return void
+     */
+    public function __destruct()
+    {
+        $this->close();
+    }
+
+    /**
      * Close connection.
      *
      * @access public
@@ -62,6 +73,7 @@ class Db
     public function close() : void
     {
         $this->pdo = null;
+        $this->query = null;
     }
 
     /**
@@ -87,12 +99,10 @@ class Db
      */
     public function bindMore(array $bind) : void
     {
-        if ( empty($this->parameters) ) {
-            if ( TypeCheck::isArray($bind) ) {
-                $columns = Arrayify::keys($bind);
-                foreach ($columns as $i => &$column) {
-                    $this->bind($column, $bind[$column]);
-                }
+        if ( TypeCheck::isArray($bind) && !empty($bind) ) {
+            $columns = Arrayify::keys($bind);
+            foreach ($columns as $column) {
+                $this->bind($column, $bind[$column]);
             }
         }
     }
@@ -133,11 +143,14 @@ class Db
      * Get last inserted Id.
      *
      * @access public
-     * @return mixed
+     * @return int|false
      */
-    public function lastInsertId() : mixed
+    public function lastInsertId() : int|false
     {
-        return $this->pdo->lastInsertId();
+        if ( !$this->pdo ) {
+            return false;
+        }
+        return (int)$this->pdo->lastInsertId();
     }
 
     /**
@@ -148,6 +161,9 @@ class Db
      */
     public function beginTransaction() : bool
     {
+        if ( !$this->pdo ) {
+            return false;
+        }
         return $this->pdo->beginTransaction();
     }
 
@@ -159,6 +175,9 @@ class Db
      */
     public function executeTransaction() : bool
     {
+        if ( !$this->pdo ) {
+            return false;
+        }
         return $this->pdo->commit();
     }
 
@@ -170,6 +189,9 @@ class Db
      */
     public function rollBack() : bool
     {
+        if ( !$this->pdo ) {
+            return false;
+        }
         return $this->pdo->rollBack();
     }
 
@@ -267,7 +289,7 @@ class Db
         } catch (PDOException $e) {
             $message = $e->getMessage();
             $this->log($message);
-            exit($message);
+            throw new PDOException("Database connection failed: " . $message, 0, $e);
         }
     }
 
@@ -276,10 +298,10 @@ class Db
      *
      * @access protected
      * @param string $sql
-     * @param array $params
+     * @param ?array $params
      * @return void
      */
-    protected function init(string $sql, array $params = []) : void
+    protected function init(string $sql, ?array $params = null) : void
     {
         // Connect to database
         if ( !$this->isConnected ) {
@@ -292,7 +314,9 @@ class Db
             $this->query = $this->pdo->prepare($sql);
 
             // Add bind parameters
-            $this->bindMore($params);
+            if ( $params !== null ) {
+                $this->bindMore($params);
+            }
 
             // Bind parameters
             if ( !empty($this->parameters) ) {
@@ -321,7 +345,7 @@ class Db
             // Write into log and display exception
             $message = $e->getMessage();
             $this->log($message, $sql);
-            exit($message);
+            throw new PDOException("Query execution failed: " . $message, 0, $e);
         }
 
         // Reset bind parameters
@@ -333,9 +357,9 @@ class Db
      *
      * @access protected
      * @param string $sql
-     * @return mixed
+     * @return string|false
      */
-    protected function getStatementType(string $sql = '') : mixed
+    protected function getStatementType(string $sql = '') : string|false
     {
         $sql = Stringify::replaceRegex(regex: "/\s+|\t+|\n+/", replace: ' ', subject: $sql);
         $raw = explode(' ', $sql);
