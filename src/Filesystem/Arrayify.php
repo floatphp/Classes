@@ -8,7 +8,7 @@
  * @link       : https://floatphp.com
  * @license    : MIT
  *
- * This file if a part of FloatPHP Framework.
+ * This file is a part of FloatPHP Framework.
  */
 
 declare(strict_types=1);
@@ -270,7 +270,7 @@ final class Arrayify
 	 * @param bool $preserve
 	 * @return array
 	 */
-	public static function chunk(array $array, ?int $length = null, bool $preserve = false) : array
+	public static function chunk(array $array, int $length, bool $preserve = false) : array
 	{
 		return array_chunk($array, $length, $preserve);
 	}
@@ -419,5 +419,106 @@ final class Arrayify
 		}
 
 		return $array;
+	}
+
+	/**
+	 * Pluck values from array of arrays/objects by key.
+	 *
+	 * @access public
+	 * @param array $array
+	 * @param string $key
+	 * @param string|null $indexKey
+	 * @return array
+	 */
+	public static function pluck(array $array, string $key, ?string $indexKey = null) : array
+	{
+		$result = [];
+
+		foreach ($array as $index => $item) {
+			$value = null;
+			
+			if ( TypeCheck::isArray($item) && isset($item[$key]) ) {
+				$value = $item[$key];
+			} elseif ( TypeCheck::isObject($item) && property_exists($item, $key) ) {
+				$value = $item->{$key};
+			}
+
+			if ( $value !== null ) {
+				if ( $indexKey !== null ) {
+					$itemKey = null;
+					if ( TypeCheck::isArray($item) && isset($item[$indexKey]) ) {
+						$itemKey = $item[$indexKey];
+					} elseif ( TypeCheck::isObject($item) && property_exists($item, $indexKey) ) {
+						$itemKey = $item->{$indexKey};
+					}
+					
+					if ( $itemKey !== null ) {
+						$result[$itemKey] = $value;
+					} else {
+						$result[] = $value;
+					}
+				} else {
+					$result[] = $value;
+				}
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Group array elements by key value.
+	 *
+	 * @access public
+	 * @param array $array
+	 * @param string $key
+	 * @return array
+	 */
+	public static function groupBy(array $array, string $key) : array
+	{
+		$result = [];
+
+		foreach ($array as $item) {
+			$groupKey = null;
+			
+			if ( TypeCheck::isArray($item) && isset($item[$key]) ) {
+				$groupKey = $item[$key];
+			} elseif ( TypeCheck::isObject($item) && property_exists($item, $key) ) {
+				$groupKey = $item->{$key};
+			}
+
+			if ( $groupKey !== null ) {
+				if ( !isset($result[$groupKey]) ) {
+					$result[$groupKey] = [];
+				}
+				$result[$groupKey][] = $item;
+			}
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Flatten multidimensional array to specified depth.
+	 *
+	 * @access public
+	 * @param array $array
+	 * @param int $depth
+	 * @return array
+	 */
+	public static function flatten(array $array, int $depth = 1) : array
+	{
+		$result = [];
+
+		foreach ($array as $key => $value) {
+			if ( TypeCheck::isArray($value) && $depth > 0 ) {
+				$flattened = self::flatten($value, $depth - 1);
+				$result = self::merge($result, $flattened);
+			} else {
+				$result[] = $value;
+			}
+		}
+
+		return $result;
 	}
 }
