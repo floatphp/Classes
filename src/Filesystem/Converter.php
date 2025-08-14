@@ -30,7 +30,7 @@ final class Converter
 	 * @param bool $strict
 	 * @return object
 	 */
-	public static function toObject(array $array, $strict = false) : object
+	public static function toObject(array $array, bool $strict = false) : object
 	{
 		if ( $strict ) {
 			return (object)Json::decode(
@@ -87,7 +87,7 @@ final class Converter
 	{
 		return number_format($number, $decimals, $dSep, $tSep);
 	}
-	
+
 	/**
 	 * Convert number to float.
 	 * 
