@@ -156,7 +156,7 @@ class File
 	 * @param int $decimals
 	 * @return string
 	 */
-	public static function getSize($path, int $decimals = 2) : string
+	public static function getSize(string $path, int $decimals = 2) : string
 	{
 		$format = ['B', 'KB', 'MB', 'GB', 'TB'];
 		$size = self::getFileSize($path);

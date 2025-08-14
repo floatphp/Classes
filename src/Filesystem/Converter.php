@@ -8,7 +8,7 @@
  * @link       : https://floatphp.com
  * @license    : MIT
  *
- * This file if a part of FloatPHP Framework.
+ * This file is a part of FloatPHP Framework.
  */
 
 declare(strict_types=1);
@@ -92,10 +92,13 @@ final class Converter
 	 * Convert number to money.
 	 *
 	 * @access public
-	 * @inheritdoc
+	 * @param mixed $number
+	 * @param int $decimals
+	 * @param string $dSep
+	 * @param string $tSep
 	 * @return string
 	 */
-	public static function toMoney($number, int $decimals = 2, string $dSep = '.', string $tSep = ',') : string
+	public static function toMoney(mixed $number, int $decimals = 2, string $dSep = '.', string $tSep = ',') : string
 	{
 		return (string)self::toFloat($number, $decimals, $dSep, $tSep);
 	}
@@ -111,9 +114,7 @@ final class Converter
 	public static function toType($value) : mixed
 	{
 		if ( TypeCheck::isArray($value) ) {
-			if ( TypeCheck::isArray($value) ) {
-				return Arrayify::map([self::class, 'toType'], $value);
-			}
+			return Arrayify::map([self::class, 'toType'], $value);
 		}
 
 		if ( ($match = TypeCheck::isDynamicType('bool', $value)) ) {
@@ -135,7 +136,7 @@ final class Converter
 	 * Convert data to text (database).
 	 *
 	 * @access public
-	 * @param mixed $values
+	 * @param mixed $value
 	 * @return string
 	 * @internal
 	 */
@@ -149,7 +150,7 @@ final class Converter
 	 * Convert data from text (database).
 	 *
 	 * @access public
-	 * @param string $values
+	 * @param string $value
 	 * @return mixed
 	 * @internal
 	 */

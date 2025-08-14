@@ -75,12 +75,12 @@ final class Exception extends \Exception
 	 *
 	 * @access public
 	 * @param string $error
-	 * @param string $type
-	 * @param string $path
-	 * @param array $headers
+	 * @param mixed $type
+	 * @param mixed $path
+	 * @param mixed $headers
 	 * @return void
 	 */
-	public static function log(string $error, $type = 0, $path = null, $headers = null) : void
+	public static function log(string $error, mixed $type = 0, mixed $path = null, mixed $headers = null) : void
 	{
 		$logger = new Logger();
 		$logger->log($error, $type, $path, $headers);
