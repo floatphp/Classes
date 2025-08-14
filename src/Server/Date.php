@@ -8,7 +8,7 @@
  * @link       : https://floatphp.com
  * @license    : MIT
  *
- * This file if a part of FloatPHP Framework.
+ * This file is a part of FloatPHP Framework.
  */
 
 declare(strict_types=1);
