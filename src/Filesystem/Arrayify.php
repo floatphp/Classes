@@ -511,9 +511,16 @@ final class Arrayify
 		$result = [];
 
 		foreach ($array as $key => $value) {
-			if ( TypeCheck::isArray($value) && $depth > 0 ) {
-				$flattened = self::flatten($value, $depth - 1);
-				$result = self::merge($result, $flattened);
+			if ( TypeCheck::isArray($value) ) {
+				if ( $depth > 0 ) {
+					$flattened = self::flatten($value, $depth - 1);
+					$result = self::merge($result, $flattened);
+				} else {
+					// When depth is reached, only add non-empty arrays
+					if ( !empty($value) ) {
+						$result[] = $value;
+					}
+				}
 			} else {
 				$result[] = $value;
 			}
