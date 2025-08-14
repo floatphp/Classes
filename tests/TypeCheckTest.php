@@ -190,10 +190,12 @@ final class TypeCheckTest extends TestCase
     public function testIsEmpty(): void
     {
         $this->assertTrue(TypeCheck::isEmpty(''));
+        $this->assertTrue(TypeCheck::isEmpty('   ')); // Whitespace gets trimmed
         $this->assertTrue(TypeCheck::isEmpty([]));
-        $this->assertTrue(TypeCheck::isEmpty(null));
-        $this->assertTrue(TypeCheck::isEmpty(false));
-        $this->assertTrue(TypeCheck::isEmpty(0));
+        $this->assertTrue(TypeCheck::isEmpty(null, true)); // Only with null flag
+        $this->assertFalse(TypeCheck::isEmpty(null)); // Without null flag
+        $this->assertFalse(TypeCheck::isEmpty(false));
+        $this->assertFalse(TypeCheck::isEmpty(0));
         $this->assertFalse(TypeCheck::isEmpty('hello'));
         $this->assertFalse(TypeCheck::isEmpty([1, 2, 3]));
         $this->assertFalse(TypeCheck::isEmpty(true));
@@ -209,7 +211,15 @@ final class TypeCheckTest extends TestCase
         $this->assertTrue(TypeCheck::isFunction('array_map'));
         $this->assertFalse(TypeCheck::isFunction('nonexistent_function'));
         $this->assertFalse(TypeCheck::isFunction(''));
-        $this->assertFalse(TypeCheck::isFunction(123));
+    }
+
+    /**
+     * Test function checking with invalid input.
+     */
+    public function testIsFunctionWithInvalidInput(): void
+    {
+        $this->expectException(\TypeError::class);
+        TypeCheck::isFunction(123);
     }
 
     /**
@@ -221,7 +231,15 @@ final class TypeCheckTest extends TestCase
         $this->assertTrue(TypeCheck::isClass(\Exception::class));
         $this->assertFalse(TypeCheck::isClass('NonExistentClass'));
         $this->assertFalse(TypeCheck::isClass(''));
-        $this->assertFalse(TypeCheck::isClass(123));
+    }
+
+    /**
+     * Test class checking with invalid input.
+     */
+    public function testIsClassWithInvalidInput(): void
+    {
+        $this->expectException(\TypeError::class);
+        TypeCheck::isClass(123);
     }
 
     /**

@@ -91,8 +91,27 @@ final class ConverterTest extends TestCase
         $result = Converter::toFloat(1234.567, 2);
         $this->assertEquals(1234.57, $result);
 
-        $result = Converter::toFloat(1234.567, 0, ',', '.');
+        $result = Converter::toFloat(1234.567, 0);
         $this->assertEquals(1235.0, $result);
+    }
+
+    /**
+     * Test number formatting.
+     */
+    public function testToNumber(): void
+    {
+        $result = Converter::toNumber(1234.567);
+        $this->assertIsString($result);
+        $this->assertEquals('1,235', $result);
+
+        $result = Converter::toNumber(1234.567, 2);
+        $this->assertEquals('1,234.57', $result);
+
+        $result = Converter::toNumber(1234.567, 1, ',', '.');
+        $this->assertEquals('1.234,6', $result);
+
+        $result = Converter::toNumber(1000000, 0, '.', ' ');
+        $this->assertEquals('1 000 000', $result);
     }
 
     /**
@@ -102,13 +121,13 @@ final class ConverterTest extends TestCase
     {
         $result = Converter::toMoney(1234.567);
         $this->assertIsString($result);
-        $this->assertEquals('1234.57', $result);
+        $this->assertEquals('1,234.57', $result);
 
         $result = Converter::toMoney(1234.567, 0);
-        $this->assertEquals('1235', $result);
+        $this->assertEquals('1,235', $result);
 
         $result = Converter::toMoney(1234.567, 2, ',', '.');
-        $this->assertEquals('1234,57', $result);
+        $this->assertEquals('1.234,57', $result);
     }
 
     /**

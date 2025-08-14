@@ -135,7 +135,7 @@ final class ExceptionTest extends TestCase
     public function testLogWithHeaders(): void
     {
         $this->expectNotToPerformAssertions();
-        Exception::log('Test log message', 0, null, ['Content-Type: text/plain']);
+        Exception::log('Test log message', 0, null, 'Content-Type: text/plain');
     }
 
     /**

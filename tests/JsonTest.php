@@ -229,8 +229,9 @@ final class JsonTest extends TestCase
      */
     public function testParseNonExistentFile(): void
     {
-        $result = Json::parse('/non/existent/file.json');
-        // Should return null for invalid JSON (empty string)
-        $this->assertNull($result);
+        // This should trigger an error due to File::r() returning false for non-existent files
+        // and Json::decode() expecting a string
+        $this->expectException(\TypeError::class);
+        Json::parse('/non/existent/file.json');
     }
 }
