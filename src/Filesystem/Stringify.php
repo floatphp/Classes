@@ -20,6 +20,73 @@ namespace FloatPHP\Classes\Filesystem;
  */
 final class Stringify
 {
+	private const SPECIALCHARS = [
+		"Š" => "S",
+		"š" => "s",
+		"Ž" => "Z",
+		"ž" => "z",
+		"À" => "A",
+		"Á" => "A",
+		"Â" => "A",
+		"Ã" => "A",
+		"Ä" => "A",
+		"Å" => "A",
+		"Æ" => "A",
+		"Ç" => "C",
+		"È" => "E",
+		"É" => "E",
+		"Ê" => "E",
+		"Ë" => "E",
+		"Ì" => "I",
+		"Í" => "I",
+		"Î" => "I",
+		"Ï" => "I",
+		"Ñ" => "N",
+		"Ò" => "O",
+		"Ó" => "O",
+		"Ô" => "O",
+		"Õ" => "O",
+		"Ö" => "O",
+		"Ø" => "O",
+		"Ù" => "U",
+		"Ú" => "U",
+		"Û" => "U",
+		"Ü" => "U",
+		"Ý" => "Y",
+		"Þ" => "B",
+		"ß" => "Ss",
+		"à" => "a",
+		"á" => "a",
+		"â" => "a",
+		"ã" => "a",
+		"ä" => "a",
+		"å" => "a",
+		"æ" => "a",
+		"ç" => "c",
+		"è" => "e",
+		"é" => "e",
+		"ê" => "e",
+		"ë" => "e",
+		"ì" => "i",
+		"í" => "i",
+		"î" => "i",
+		"ï" => "i",
+		"ð" => "o",
+		"ñ" => "n",
+		"ò" => "o",
+		"ó" => "o",
+		"ô" => "o",
+		"õ" => "o",
+		"ö" => "o",
+		"ø" => "o",
+		"ù" => "u",
+		"ú" => "u",
+		"û" => "u",
+		"ý" => "y",
+		"þ" => "b",
+		"ÿ" => "y"
+	];
+
 	/**
 	 * Search replace string(s).
 	 * 
@@ -91,10 +158,25 @@ final class Stringify
 	 * @param int $limit
 	 * @param int|null $count
 	 * @return string|array|null
+	 * @throws \InvalidArgumentException When regex pattern is invalid
+	 * @throws \RuntimeException When regex execution fails
 	 */
 	public static function replaceRegex(string|array $pattern, string|array $replacement, string|array $subject, int $limit = -1, ?int &$count = null) : string|array|null
 	{
+		// Input validation
+		if ( is_string($pattern) && empty($pattern) ) {
+			throw new \InvalidArgumentException('Regex pattern cannot be empty');
+		}
+
 		$result = preg_replace($pattern, $replacement, $subject, $limit, $count);
+
+		// Check for regex errors
+		if ( $result === null ) {
+			$error = preg_last_error();
+			$errorMessage = self::getPregErrorMessage($error);
+			throw new \RuntimeException("Regex execution failed: {$errorMessage}");
+		}
+
 		return $result;
 	}
 
@@ -108,10 +190,29 @@ final class Stringify
 	 * @param int $limit
 	 * @param int|null $count
 	 * @return string|array|null
+	 * @throws \InvalidArgumentException When pattern or callback is invalid
+	 * @throws \RuntimeException When regex execution fails
 	 */
 	public static function replaceRegexCb(string|array $pattern, callable $callback, string|array $subject, int $limit = -1, ?int &$count = null) : string|array|null
 	{
+		// Input validation
+		if ( is_string($pattern) && empty($pattern) ) {
+			throw new \InvalidArgumentException('Regex pattern cannot be empty');
+		}
+
+		if ( !is_callable($callback) ) {
+			throw new \InvalidArgumentException('Callback must be callable');
+		}
+
 		$result = preg_replace_callback($pattern, $callback, $subject, $limit, $count);
+
+		// Check for regex errors
+		if ( $result === null ) {
+			$error = preg_last_error();
+			$errorMessage = self::getPregErrorMessage($error);
+			throw new \RuntimeException("Regex callback execution failed: {$errorMessage}");
+		}
+
 		return $result;
 	}
 
@@ -235,30 +336,46 @@ final class Stringify
 	/**
 	 * Slugify string.
 	 * 
+	 * Converts a string to a URL-friendly slug by:
+	 * 1. Replacing non-alphanumeric characters with hyphens
+	 * 2. Transliterating special characters 
+	 * 3. Converting to ASCII
+	 * 4. Removing unwanted characters
+	 * 5. Converting to lowercase
+	 * 
 	 * @access public
 	 * @param string $string
 	 * @return string
+	 * @throws \RuntimeException When transliteration fails
 	 */
 	public static function slugify(string $string) : string
 	{
-		// Replace non letter or digits by -
-		$slug = self::replaceRegex('~[^\pL\d]+~u', '-', (string)$string);
+		try {
+			// Replace non letter or digits by -
+			$slug = self::replaceRegex('~[^\pL\d]+~u', '-', (string)$string);
 
-		// Transliterate
-		$slug = strtr($slug, self::getSpecialChars());
-		$slug = self::encode($slug, 'ASCII//TRANSLIT//IGNORE');
+			// Transliterate special characters
+			$slug = strtr($slug, static::SPECIALCHARS);
+			$slug = self::encode($slug, 'ASCII//TRANSLIT//IGNORE');
 
-		// Remove unwanted characters
-		$slug = self::replaceRegex('~[^-\w]+~', '', $slug);
+			// Remove unwanted characters
+			$slug = self::replaceRegex('~[^-\w]+~', '', $slug);
 
-		// Trim
-		$slug = trim($slug, '-');
+			// Trim hyphens
+			$slug = trim($slug, '-');
 
-		// Remove duplicate -
-		$slug = self::replaceRegex('~-+~', '-', $slug);
+			// Remove duplicate hyphens
+			$slug = self::replaceRegex('~-+~', '-', $slug);
 
-		// Lowercase
-		return strtolower($slug);
+			// Convert to lowercase
+			return strtolower($slug);
+
+		} catch (\Exception $e) {
+			// Fallback: basic slugification
+			$slug = preg_replace('/[^a-zA-Z0-9\-_]/', '-', $string);
+			$slug = preg_replace('/-+/', '-', $slug);
+			return strtolower(trim($slug, '-'));
+		}
 	}
 
 	/**
@@ -266,13 +383,56 @@ final class Stringify
 	 * 
 	 * @access public
 	 * @return array
+	 * @throws \RuntimeException When special chars file cannot be loaded
 	 */
 	public static function getSpecialChars() : array
 	{
-		return (array)Json::parse(
-			file: dirname(__FILE__) . '/bin/special.json',
-			isArray: true
-		);
+		try {
+			$file = dirname(__FILE__) . '/bin/special.json';
+
+			// Validate file exists and is readable
+			if ( !file_exists($file) || !is_readable($file) ) {
+				throw new \RuntimeException("Special characters file not found or not readable: {$file}");
+			}
+
+			$result = Json::parse(file: $file, isArray: true);
+
+			if ( !is_array($result) ) {
+				throw new \RuntimeException('Special characters file must contain a valid JSON array');
+			}
+
+			return $result;
+
+		} catch (\Exception $e) {
+			// Fallback to basic special characters if file loading fails
+			return [
+				'à' => 'a',
+				'á' => 'a',
+				'â' => 'a',
+				'ã' => 'a',
+				'ä' => 'a',
+				'å' => 'a',
+				'è' => 'e',
+				'é' => 'e',
+				'ê' => 'e',
+				'ë' => 'e',
+				'ì' => 'i',
+				'í' => 'i',
+				'î' => 'i',
+				'ï' => 'i',
+				'ò' => 'o',
+				'ó' => 'o',
+				'ô' => 'o',
+				'õ' => 'o',
+				'ö' => 'o',
+				'ù' => 'u',
+				'ú' => 'u',
+				'û' => 'u',
+				'ü' => 'u',
+				'ñ' => 'n',
+				'ç' => 'c'
+			];
+		}
 	}
 
 	/**
@@ -293,17 +453,49 @@ final class Stringify
 	 *
 	 * @access public
 	 * @param string $string
-	 * @param array $args, [regex, limit, flags, length]
+	 * @param array $args [regex, limit, flags, length]
 	 * @return mixed
+	 * @throws \InvalidArgumentException When parameters are invalid
+	 * @throws \RuntimeException When regex split fails
 	 */
 	public static function split(string $string, array $args = []) : mixed
 	{
 		if ( isset($args['regex']) ) {
+			// Input validation for regex split
+			if ( empty($args['regex']) ) {
+				throw new \InvalidArgumentException('Regex pattern cannot be empty');
+			}
+
 			$limit = $args['limit'] ?? -1;
 			$flags = $args['flags'] ?? 0;
-			return preg_split($args['regex'], $string, $limit, $flags);
+
+			// Validate parameters
+			if ( !is_int($limit) ) {
+				throw new \InvalidArgumentException('Limit must be an integer');
+			}
+
+			if ( !is_int($flags) || $flags < 0 ) {
+				throw new \InvalidArgumentException('Flags must be a non-negative integer');
+			}
+
+			$result = preg_split($args['regex'], $string, $limit, $flags);
+
+			// Check for regex errors
+			if ( $result === false ) {
+				$error = preg_last_error();
+				$errorMessage = self::getPregErrorMessage($error);
+				throw new \RuntimeException("Regex split failed: {$errorMessage}");
+			}
+
+			return $result;
 		}
+
+		// Regular string split
 		$length = $args['length'] ?? 1;
+		if ( !is_int($length) || $length < 1 ) {
+			throw new \InvalidArgumentException('Split length must be a positive integer');
+		}
+
 		return str_split($string, $length);
 	}
 
@@ -329,11 +521,31 @@ final class Stringify
 	 * @param string $from
 	 * @param string $to
 	 * @return string
+	 * @throws \InvalidArgumentException When encoding parameters are invalid
+	 * @throws \RuntimeException When encoding conversion fails
 	 */
 	public static function encode(string $string, string $from = 'ISO-8859-1', string $to = 'UTF-8') : string
 	{
+		// Input validation
+		if ( empty($string) ) {
+			return $string;
+		}
+
+		if ( empty($from) || empty($to) ) {
+			throw new \InvalidArgumentException('Encoding parameters cannot be empty');
+		}
+
+		// Validate encoding names
+		if ( !self::isValidEncoding($from) || !self::isValidEncoding($to) ) {
+			throw new \InvalidArgumentException("Invalid encoding specified: from '{$from}' to '{$to}'");
+		}
+
 		if ( self::getEncoding($string, $to) !== self::uppercase($to) ) {
-			if ( ($encoded = @iconv($from, $to, $string)) ) {
+			$encoded = @iconv($from, $to, $string);
+			if ( $encoded === false ) {
+				throw new \RuntimeException("Failed to convert encoding from '{$from}' to '{$to}'");
+			}
+			if ( $encoded !== false ) {
 				$string = $encoded;
 			}
 		}
@@ -668,59 +880,30 @@ final class Stringify
 	 */
 	public static function isSerialized($value, bool $strict = true) : bool
 	{
+		// Basic type validation
 		if ( !TypeCheck::isString($value) ) {
 			return false;
 		}
+
 		$value = trim($value);
+
+		// Handle null serialization
 		if ( $value === 'N;' ) {
 			return true;
 		}
+
+		// Minimum length check
 		if ( strlen($value) < 4 ) {
 			return false;
 		}
-		if ( $value[1] !== ':' ) {
+
+		// Format validation
+		if ( !self::validateSerializedFormat($value, $strict) ) {
 			return false;
 		}
-		if ( $strict ) {
-			$lastc = substr($value, -1);
-			if ( $lastc !== ';' && $lastc !== '}' ) {
-				return false;
-			}
-		} else {
-			$semicolon = strpos($value, ';');
-			$brace = strpos($value, '}');
-			if ( $semicolon === false && $brace === false ) {
-				return false;
-			}
-			if ( $semicolon !== false && $semicolon < 3 ) {
-				return false;
-			}
-			if ( $brace !== false && $brace < 4 ) {
-				return false;
-			}
-		}
-		$token = $value[0];
-		switch ($token) {
-			case 's':
-				if ( $strict ) {
-					if ( substr($value, -2, 1) !== '"' ) {
-						return false;
-					}
-				} elseif ( strpos($value, '"') === false ) {
-					return false;
-				}
-			case 'a':
-			case 'O':
-				self::match("/^{$token}:[0-9]+:/s", $value, $matches);
-				return (bool)$matches;
-			case 'b':
-			case 'i':
-			case 'd':
-				$end = $strict ? '$' : '';
-				self::match("/^{$token}:[0-9.E+-]+;$end/", $value, $matches);
-				return (bool)$matches;
-		}
-		return false;
+
+		// Token-specific validation
+		return self::validateSerializedToken($value[0], $value, $strict);
 	}
 
 	/**
@@ -733,13 +916,31 @@ final class Stringify
 	 * @param int $flags
 	 * @param int $offset
 	 * @return bool
+	 * @throws \InvalidArgumentException When regex or parameters are invalid
+	 * @throws \RuntimeException When regex execution fails
 	 */
 	public static function match(string $regex, string $string, &$matches = null, int $flags = 0, int $offset = 0) : bool
 	{
+		// Input validation
+		if ( empty($regex) ) {
+			throw new \InvalidArgumentException('Regex pattern cannot be empty');
+		}
+
+		if ( $offset < 0 || $offset > strlen($string) ) {
+			throw new \InvalidArgumentException('Offset must be within string bounds');
+		}
+
 		$shift = ($flags === -1) ? true : false;
 		$flags = ($flags !== -1) ? $flags : 0;
 
-		$matched = (bool)preg_match($regex, $string, $matches, $flags, $offset);
+		$matched = preg_match($regex, $string, $matches, $flags, $offset);
+
+		// Check for regex errors
+		if ( $matched === false ) {
+			$error = preg_last_error();
+			$errorMessage = self::getPregErrorMessage($error);
+			throw new \RuntimeException("Regex match failed: {$errorMessage}");
+		}
 
 		if ( $shift && $matches ) {
 			$matches = $matches[0] ?? [];
@@ -803,38 +1004,68 @@ final class Stringify
 	 * 
 	 * @access public
 	 * @param string $string
-	 * @param int $length
-	 * @param int $offset
-	 * @param string $suffix
+	 * @param int $length Maximum length
+	 * @param int $offset Starting position
+	 * @param string|null $suffix Suffix for truncated strings
 	 * @return string
+	 * @throws \InvalidArgumentException When parameters are invalid
 	 */
 	public static function limit(string $string, int $length = 128, int $offset = 0, ?string $suffix = '...') : string
 	{
-		$limit = $string;
-		$words = self::split($string, [
-			'regex' => '/([\s\n\r]+)/u',
-			'limit' => 0,
-			'flags' => 2 // PREG_SPLIT_DELIM_CAPTURE
-		]);
+		// Input validation
+		if ( $length < 0 ) {
+			throw new \InvalidArgumentException('Length must be non-negative');
+		}
 
-		if ( ($count = count($words)) ) {
-			$strlen = 0;
-			$last = $offset;
-			for (; $last < $count; ++$last) {
-				$strlen += strlen($words[$last]);
-				if ( $strlen > $length ) {
-					break;
+		if ( $offset < 0 || $offset > strlen($string) ) {
+			throw new \InvalidArgumentException('Offset must be within string bounds');
+		}
+
+		if ( $length === 0 ) {
+			return '';
+		}
+
+		$limit = $string;
+
+		try {
+			$words = self::split($string, [
+				'regex' => '/([\s\n\r]+)/u',
+				'limit' => 0,
+				'flags' => 2 // PREG_SPLIT_DELIM_CAPTURE
+			]);
+
+			if ( ($count = count($words)) ) {
+				$strlen = 0;
+				$last = $offset;
+				for (; $last < $count; ++$last) {
+					$strlen += strlen($words[$last]);
+					if ( $strlen > $length ) {
+						break;
+					}
+				}
+
+				if ( class_exists('Arrayify') && method_exists('Arrayify', 'slice') ) {
+					$limit = implode(Arrayify::slice($words, $offset, $last));
+				} else {
+					// Fallback if Arrayify is not available
+					$limit = implode(array_slice($words, $offset, $last - $offset));
 				}
 			}
-			$limit = implode(Arrayify::slice($words, $offset, $last));
-		}
 
-		if ( empty($limit) ) {
+			if ( empty($limit) ) {
+				$limit = substr($string, $offset, $length);
+			}
+
+			if ( strlen($string) > $length && $suffix !== null ) {
+				$limit .= " {$suffix}";
+			}
+
+		} catch (\Exception $e) {
+			// Fallback to simple substr if word-boundary logic fails
 			$limit = substr($string, $offset, $length);
-		}
-
-		if ( strlen($string) > $length ) {
-			$limit .= " {$suffix}";
+			if ( strlen($string) > $length && $suffix !== null ) {
+				$limit .= $suffix;
+			}
 		}
 
 		return trim($limit);
@@ -843,18 +1074,32 @@ final class Stringify
 	/**
 	 * Filter string (Validation toolkit).
 	 *
-	 * [DEFAULT: 516].
+	 * Predefined filters:
+	 * - 'email': Sanitize email address
+	 * - 'name': Default sanitization without encoding quotes
+	 * - 'text': Remove low ASCII characters
+	 * - 'url': Sanitize URL
+	 * 
+	 * Default filter constant: FILTER_DEFAULT (516)
 	 *
 	 * @access public
 	 * @param mixed $value
-	 * @param string $type
-	 * @param int $filter
-	 * @param mixed $options
+	 * @param string|null $type
+	 * @param int $filter Filter constant (default: 516 = FILTER_DEFAULT)
+	 * @param mixed $options Filter options
 	 * @return mixed
+	 * @throws \InvalidArgumentException When filter type is invalid
 	 */
 	public static function filter($value, ?string $type = 'name', int $filter = 516, $options = 0) : mixed
 	{
-		return match (self::lowercase((string)$type)) {
+		// Input validation
+		if ( $type !== null && !is_string($type) ) {
+			throw new \InvalidArgumentException('Filter type must be a string or null');
+		}
+
+		$type = self::lowercase((string)$type);
+
+		return match ($type) {
 			'email' => filter_var($value, FILTER_SANITIZE_EMAIL),
 			'name'  => filter_var($value, FILTER_DEFAULT, FILTER_FLAG_NO_ENCODE_QUOTES),
 			'text'  => filter_var($value, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW),
@@ -1073,5 +1318,187 @@ final class Stringify
 	public static function decodeHtml(string $string, int $flags = 3, ?string $to = 'UTF-8') : string
 	{
 		return html_entity_decode($string, $flags, $to);
+	}
+
+	/**
+	 * Get PREG error message.
+	 *
+	 * @access private
+	 * @param int $error
+	 * @return string
+	 */
+	private static function getPregErrorMessage(int $error) : string
+	{
+		return match ($error) {
+			PREG_NO_ERROR              => 'No error',
+			PREG_INTERNAL_ERROR        => 'Internal PCRE error',
+			PREG_BACKTRACK_LIMIT_ERROR => 'Backtrack limit exhausted',
+			PREG_RECURSION_LIMIT_ERROR => 'Recursion limit exhausted',
+			PREG_BAD_UTF8_ERROR        => 'Malformed UTF-8 data',
+			PREG_BAD_UTF8_OFFSET_ERROR => 'Bad UTF-8 offset',
+			PREG_JIT_STACKLIMIT_ERROR  => 'JIT stack limit exhausted',
+			default                    => "Unknown PREG error (code: {$error})"
+		};
+	}
+
+	/**
+	 * Validate encoding name.
+	 *
+	 * @access private
+	 * @param string $encoding
+	 * @return bool
+	 */
+	private static function isValidEncoding(string $encoding) : bool
+	{
+		// Common encoding names validation
+		$validEncodings = [
+			'UTF-8',
+			'ISO-8859-1',
+			'ASCII',
+			'UTF-16',
+			'UTF-16LE',
+			'UTF-16BE',
+			'UTF-32',
+			'UTF-32LE',
+			'UTF-32BE',
+			'Windows-1252',
+			'ISO-8859-15',
+			'ASCII//TRANSLIT//IGNORE',
+			'UTF-8//TRANSLIT//IGNORE'
+		];
+
+		// Direct match or iconv availability check
+		if ( in_array($encoding, $validEncodings, true) ) {
+			return true;
+		}
+
+		// Use iconv to test if encoding is supported
+		if ( function_exists('iconv') ) {
+			$test = @iconv($encoding, 'UTF-8', 'test');
+			return $test !== false;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Validate serialized format.
+	 *
+	 * @access private
+	 * @param string $value
+	 * @param bool $strict
+	 * @return bool
+	 */
+	private static function validateSerializedFormat(string $value, bool $strict) : bool
+	{
+		// Check basic format
+		if ( $value[1] !== ':' ) {
+			return false;
+		}
+
+		if ( $strict ) {
+			$lastc = substr($value, -1);
+			if ( $lastc !== ';' && $lastc !== '}' ) {
+				return false;
+			}
+		} else {
+			$semicolon = strpos($value, ';');
+			$brace = strpos($value, '}');
+			if ( $semicolon === false && $brace === false ) {
+				return false;
+			}
+			if ( $semicolon !== false && $semicolon < 3 ) {
+				return false;
+			}
+			if ( $brace !== false && $brace < 4 ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Validate serialized token.
+	 *
+	 * @access private
+	 * @param string $token
+	 * @param string $value
+	 * @param bool $strict
+	 * @return bool
+	 */
+	private static function validateSerializedToken(string $token, string $value, bool $strict) : bool
+	{
+		switch ($token) {
+			case 's':
+				return self::validateStringToken($value, $strict);
+			case 'a':
+			case 'O':
+				return self::validateComplexToken($token, $value);
+			case 'b':
+			case 'i':
+			case 'd':
+				return self::validateScalarToken($token, $value, $strict);
+			default:
+				return false;
+		}
+	}
+
+	/**
+	 * Validate string token in serialized data.
+	 *
+	 * @access private
+	 * @param string $value
+	 * @param bool $strict
+	 * @return bool
+	 */
+	private static function validateStringToken(string $value, bool $strict) : bool
+	{
+		if ( $strict ) {
+			if ( substr($value, -2, 1) !== '"' ) {
+				return false;
+			}
+		} elseif ( strpos($value, '"') === false ) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Validate complex token (array/object) in serialized data.
+	 *
+	 * @access private
+	 * @param string $token
+	 * @param string $value
+	 * @return bool
+	 */
+	private static function validateComplexToken(string $token, string $value) : bool
+	{
+		try {
+			self::match("/^{$token}:[0-9]+:/s", $value, $matches);
+			return (bool)$matches;
+		} catch (\RuntimeException $e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Validate scalar token in serialized data.
+	 *
+	 * @access private
+	 * @param string $token
+	 * @param string $value
+	 * @param bool $strict
+	 * @return bool
+	 */
+	private static function validateScalarToken(string $token, string $value, bool $strict) : bool
+	{
+		try {
+			$end = $strict ? '$' : '';
+			self::match("/^{$token}:[0-9.E+-]+;$end/", $value, $matches);
+			return (bool)$matches;
+		} catch (\RuntimeException $e) {
+			return false;
+		}
 	}
 }
