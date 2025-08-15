@@ -67,11 +67,28 @@ class Hook
 	 * @param int $priority
 	 * @param int $args
 	 * @return bool
-	 * @todo $args
 	 */
 	public function addFilter(string $name, $callback, int $priority = self::PRIORITY, int $args = self::COUNT) : bool
 	{
+		// Validate parameters
+		if ( empty($name) || !is_callable($callback) ) {
+			return false;
+		}
+
+		if ( $priority < 0 ) {
+			$priority = self::PRIORITY;
+		}
+
+		if ( $args < 1 ) {
+			$args = self::COUNT;
+		}
+
 		$id = $this->filterUniqueId($callback);
+
+		if ( $id === false ) {
+			return false;
+		}
+
 		$this->filters[$name][$priority][$id] = [
 			'callable' => $callback,
 			'count'    => $args
@@ -92,12 +109,18 @@ class Hook
 	 */
 	public function removeFilter(string $name, $callback, int $priority = self::PRIORITY) : bool
 	{
-		$callback = $this->filterUniqueId($callback);
-		if ( !isset($this->filters[$name][$priority][$callback]) ) {
+		// Validate parameters
+		if ( empty($name) ) {
 			return false;
 		}
 
-		unset($this->filters[$name][$priority][$callback]);
+		$id = $this->filterUniqueId($callback);
+
+		if ( $id === false || !isset($this->filters[$name][$priority][$id]) ) {
+			return false;
+		}
+
+		unset($this->filters[$name][$priority][$id]);
 		if ( empty($this->filters[$name][$priority]) ) {
 			unset($this->filters[$name][$priority]);
 		}
@@ -144,11 +167,17 @@ class Hook
 	 */
 	public function hasFilter(string $name, $callback = false) : mixed
 	{
-		if ( !isset($this->filters[$name]) ) {
+		if ( empty($name) || !isset($this->filters[$name]) ) {
 			return false;
 		}
 
-		if ( !($id = $this->filterUniqueId($callback)) ) {
+		if ( $callback === false ) {
+			return !empty($this->filters[$name]);
+		}
+
+		$id = $this->filterUniqueId($callback);
+
+		if ( $id === false ) {
 			return false;
 		}
 
@@ -170,16 +199,20 @@ class Hook
 	 * @param mixed $value
 	 * @param mixed $args
 	 * @return mixed
-	 * @todo ...$args
 	 */
 	public function applyFilter(string $name, $value, ...$args) : mixed
 	{
-		$args = [];
+		if ( empty($name) ) {
+			return $value;
+		}
+
+		// Prepare arguments array with value as first argument
+		$allArgs = array_merge([$value], $args);
 
 		// Do 'all' actions first
 		if ( isset($this->filters['all']) ) {
 			$this->currentFilter[] = $name;
-			$all = self::getArgs();
+			$all = self::getArgs($name, ...$allArgs);
 			$this->callHooks($all);
 		}
 
@@ -200,16 +233,14 @@ class Hook
 			$this->mergedFilters[$name] = true;
 		}
 		reset($this->filters[$name]);
-		if ( empty($args) ) {
-			$args = self::getArgs();
-		}
-		Arrayify::shift($args);
 
 		do {
 			foreach ((array)current($this->filters[$name]) as $current) {
 				if ( $current['callable'] !== null ) {
-					$args[0] = $value;
-					$value = self::callUserFunctionArray($current['callable'], $args);
+					$allArgs[0] = $value;
+					// Limit arguments based on callback count
+					$limitedArgs = array_slice($allArgs, 0, $current['count']);
+					$value = self::callUserFunctionArray($current['callable'], $limitedArgs);
 				}
 			}
 		} while (next($this->filters[$name]) !== false);
@@ -228,10 +259,14 @@ class Hook
 	 */
 	public function applyFilterArray(string $name, array $args) : mixed
 	{
+		if ( empty($name) || empty($args) ) {
+			return $args[0] ?? null;
+		}
+
 		// Do 'all' actions first
 		if ( isset($this->filters['all']) ) {
 			$this->currentFilter[] = $name;
-			$all = self::getArgs();
+			$all = self::getArgs($name, ...$args);
 			$this->callHooks($all);
 		}
 
@@ -256,7 +291,9 @@ class Hook
 		do {
 			foreach ((array)current($this->filters[$name]) as $current) {
 				if ( $current['callable'] !== null ) {
-					$args[0] = self::callUserFunctionArray($current['callable'], $args);
+					// Limit arguments based on callback count
+					$limitedArgs = array_slice($args, 0, $current['count']);
+					$args[0] = self::callUserFunctionArray($current['callable'], $limitedArgs);
 				}
 			}
 		} while (next($this->filters[$name]) !== false);
@@ -327,7 +364,6 @@ class Hook
 	 * @param string $name
 	 * @param mixed $args
 	 * @return void
-	 * @todo ...$args
 	 */
 	public function doAction(string $name, ...$args) : void
 	{
@@ -360,18 +396,8 @@ class Hook
 			$this->currentFilter[] = $name;
 		}
 
-		$_args = [];
-		if ( TypeCheck::isArray($args) && isset($args[0]) && TypeCheck::isObject($args[0]) && 1 == count($args) ) {
-			$_args[] = &$args[0];
-
-		} else {
-			$_args[] = $args;
-		}
-
-		$count = self::countArgs();
-		for ($a = 2; $a < $count; $a++) {
-			$_args[] = self::getArg($a);
-		}
+		// Prepare arguments properly
+		$callArgs = $args;
 
 		// Sort
 		if ( !isset($this->mergedFilters[$name]) ) {
@@ -383,7 +409,9 @@ class Hook
 		do {
 			foreach ((array)current($this->filters[$name]) as $current) {
 				if ( $current['callable'] !== null ) {
-					self::callUserFunctionArray($current['callable'], $args);
+					// Limit arguments based on callback count
+					$limitedArgs = array_slice($callArgs, 0, $current['count']);
+					self::callUserFunctionArray($current['callable'], $limitedArgs);
 				}
 			}
 		} while (next($this->filters[$name]) !== false);
@@ -401,6 +429,10 @@ class Hook
 	 */
 	public function doActionArray(string $name, array $args) : void
 	{
+		if ( empty($name) ) {
+			return;
+		}
+
 		if ( !TypeCheck::isArray($this->actions) ) {
 			$this->actions = [];
 		}
@@ -415,7 +447,7 @@ class Hook
 		// Do 'all' actions first
 		if ( isset($this->filters['all']) ) {
 			$this->currentFilter[] = $name;
-			$all = self::getArgs();
+			$all = self::getArgs($name, ...$args);
 			$this->callHooks($all);
 		}
 
@@ -431,16 +463,18 @@ class Hook
 		}
 
 		// Sort
-		if ( !isset($mergedFilters[$name]) ) {
+		if ( !isset($this->mergedFilters[$name]) ) {
 			ksort($this->filters[$name]);
-			$mergedFilters[$name] = true;
+			$this->mergedFilters[$name] = true;
 		}
 		reset($this->filters[$name]);
 
 		do {
 			foreach ((array)current($this->filters[$name]) as $current) {
 				if ( $current['callable'] !== null ) {
-					self::callUserFunctionArray($current['callable'], $args);
+					// Limit arguments based on callback count
+					$limitedArgs = array_slice($args, 0, $current['count']);
+					self::callUserFunctionArray($current['callable'], $limitedArgs);
 				}
 			}
 		} while (next($this->filters[$name]) !== false);
@@ -510,11 +544,12 @@ class Hook
 	 * Get function args.
 	 *
 	 * @access public
+	 * @param mixed ...$args
 	 * @return array
 	 */
-	public static function getArgs() : array
+	public static function getArgs(...$args) : array
 	{
-		return func_get_args();
+		return $args;
 	}
 
 	/**
@@ -522,9 +557,9 @@ class Hook
 	 *
 	 * @access public
 	 * @param int $position
-	 * @return array
+	 * @return mixed
 	 */
-	public static function getArg(int $position) : array
+	public static function getArg(int $position) : mixed
 	{
 		return func_get_arg($position);
 	}
@@ -538,6 +573,17 @@ class Hook
 	public static function countArgs() : int
 	{
 		return func_num_args();
+	}
+
+	/**
+	 * Get all function arguments.
+	 *
+	 * @access public
+	 * @return array
+	 */
+	public static function getAllArgs() : array
+	{
+		return func_get_args();
 	}
 
 	/**
@@ -598,5 +644,45 @@ class Hook
 		}
 
 		return false;
+	}
+
+	/**
+	 * Get all registered filters for debugging.
+	 *
+	 * @access public
+	 * @param ?string $name
+	 * @return array
+	 */
+	public function getFilters(?string $name = null) : array
+	{
+		if ( $name !== null ) {
+			return $this->filters[$name] ?? [];
+		}
+		return $this->filters;
+	}
+
+	/**
+	 * Get current action being executed.
+	 *
+	 * @access public
+	 * @return ?string
+	 */
+	public function getCurrentAction() : ?string
+	{
+		return end($this->currentFilter) ?: null;
+	}
+
+	/**
+	 * Clear all hooks.
+	 *
+	 * @access public
+	 * @return void
+	 */
+	public function clearAllHooks() : void
+	{
+		$this->filters = [];
+		$this->mergedFilters = [];
+		$this->actions = [];
+		$this->currentFilter = [];
 	}
 }
