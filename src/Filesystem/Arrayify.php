@@ -436,7 +436,7 @@ final class Arrayify
 
 		foreach ($array as $index => $item) {
 			$value = null;
-			
+
 			if ( TypeCheck::isArray($item) && isset($item[$key]) ) {
 				$value = $item[$key];
 			} elseif ( TypeCheck::isObject($item) && property_exists($item, $key) ) {
@@ -451,7 +451,7 @@ final class Arrayify
 					} elseif ( TypeCheck::isObject($item) && property_exists($item, $indexKey) ) {
 						$itemKey = $item->{$indexKey};
 					}
-					
+
 					if ( $itemKey !== null ) {
 						$result[$itemKey] = $value;
 					} else {
@@ -480,7 +480,7 @@ final class Arrayify
 
 		foreach ($array as $item) {
 			$groupKey = null;
-			
+
 			if ( TypeCheck::isArray($item) && isset($item[$key]) ) {
 				$groupKey = $item[$key];
 			} elseif ( TypeCheck::isObject($item) && property_exists($item, $key) ) {
