@@ -274,7 +274,7 @@ final class Archive extends File
 				return $isValid;
 			}
 		} catch (Exception $e) {
-			// Archive is corrupted or invalid
+			return false;
 		}
 
 		return false;
@@ -323,7 +323,7 @@ final class Archive extends File
 				return $info;
 			}
 		} catch (Exception $e) {
-			// Archive is corrupted or invalid
+			return false;
 		}
 
 		return false;
@@ -363,7 +363,7 @@ final class Archive extends File
 				}
 			}
 		} catch (Exception $e) {
-			// File extraction failed
+			return false;
 		}
 
 		return false;
