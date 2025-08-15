@@ -127,11 +127,34 @@ class Validator
 	 * @param string $file
 	 * @param array $types
 	 * @return bool
-	 * @todo
 	 */
 	public static function isMime(string $file, ?array $types = null) : bool
 	{
-		return true;
+		if ( empty($file) || !File::exists($file) ) {
+			return false;
+		}
+
+		// Get MIME type using multiple methods for reliability
+		$mime = File::getMimeType($file);
+
+		// Fallback to PHP's mime_content_type if available
+		if ( $mime === 'undefined' && TypeCheck::isFunction('mime_content_type') ) {
+			$mime = @mime_content_type($file);
+		}
+
+		if ( $types === null || empty($types) ) {
+			// If no specific types are required, just check if we got a valid MIME type
+			return !empty($mime) && $mime !== 'undefined';
+		}
+
+		// Check against allowed MIME types
+		foreach ($types as $ext => $allowedMime) {
+			if ( $mime === $allowedMime ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
