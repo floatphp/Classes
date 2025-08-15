@@ -592,7 +592,7 @@ class Hook
 	 * @access public
 	 * @param callable $callback
 	 * @param mixed $args
-	 * @return array
+	 * @return mixed
 	 */
 	public static function callUserFunction(callable $callback, ...$args) : mixed
 	{
@@ -605,7 +605,7 @@ class Hook
 	 * @access public
 	 * @param callable $callback
 	 * @param array $args
-	 * @return array
+	 * @return mixed
 	 */
 	public static function callUserFunctionArray(callable $callback, array $args) : mixed
 	{
