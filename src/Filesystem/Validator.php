@@ -138,7 +138,7 @@ class Validator
 		$mime = File::getMimeType($file);
 
 		// Fallback to PHP's mime_content_type if available
-		if ( $mime === 'undefined' && TypeCheck::isFunction('mime_content_type') ) {
+		if ( $mime === 'undefined' && TypeCheck::isFunction('mime-content-type') ) {
 			$mime = @mime_content_type($file);
 		}
 
