@@ -31,12 +31,14 @@ class Db
      * @var ?\PDOStatement $query
      * @var bool $isConnected
      * @var array $parameters
+     * @var array $config
      * @var ?LoggerInterface $logger
      */
     protected ?PDO $pdo = null;
     protected ?\PDOStatement $query = null;
     protected bool $isConnected = false;
     protected array $parameters = [];
+    protected array $config = [];
     protected ?LoggerInterface $logger = null;
 
     /**
@@ -49,6 +51,7 @@ class Db
     public function __construct(array $config = [], ?LoggerInterface $logger = null)
     {
         $this->logger = $logger;
+        $this->config = $config; // Store config for potential reconnections
         $this->connect($config);
         $this->parameters = [];
     }
@@ -303,9 +306,12 @@ class Db
      */
     protected function init(string $sql, ?array $params = null) : void
     {
+        // Reset parameters before each query for consistency
+        $this->parameters = [];
+
         // Connect to database
         if ( !$this->isConnected ) {
-            $this->connect();
+            $this->connect($this->config);
         }
 
         try {
@@ -342,14 +348,10 @@ class Db
             $this->query->execute();
 
         } catch (PDOException $e) {
-            // Write into log and display exception
             $message = $e->getMessage();
             $this->log($message, $sql);
-            throw new PDOException("Query execution failed: " . $message, 0, $e);
+            throw new PDOException("Query execution failed: " . $message, (int)$e->getCode(), $e);
         }
-
-        // Reset bind parameters
-        $this->parameters = [];
     }
 
     /** 
@@ -365,57 +367,19 @@ class Db
             return false;
         }
 
-        // Clean up whitespace
-        $sql = Stringify::replace(["\r\n", "\r", "\n", "\t"], ' ', $sql);
-
-        // Replace multiple spaces with single space iteratively
-        while (Stringify::contains($sql, '  ')) {
-            $sql = Stringify::replace('  ', ' ', $sql);
-        }
-
-        // Remove leading/trailing spaces by removing common space patterns
-        while (Stringify::contains($sql, ' ') && ($sql[0] ?? '') === ' ') {
-            $sql = Stringify::subReplace($sql, '', 0, 1);
-        }
-        while (Stringify::contains($sql, ' ') && ($sql[strlen($sql) - 1] ?? '') === ' ') {
-            $sql = Stringify::subReplace($sql, '', strlen($sql) - 1, 1);
-        }
+        $sql = trim(Stringify::replaceRegex('/\s+/', ' ', $sql));
 
         if ( empty($sql) ) {
             return false;
         }
 
-        // Extract first word
-        $header = $sql;
+        $firstWord = Stringify::lowercase(explode(' ', $sql)[0]);
 
-        if ( Stringify::contains($sql, ' ') ) {
-            // Find first space position
-            $chars = Stringify::split($sql, ['length' => 1]);
-            $spacePos = -1;
-            if ( is_array($chars) ) {
-                foreach ($chars as $index => $char) {
-                    if ( $char === ' ' ) {
-                        $spacePos = $index;
-                        break;
-                    }
-                }
-            }
-            if ( $spacePos >= 0 ) {
-                $header = Stringify::subReplace($sql, '', $spacePos);
-            }
-        }
-
-        $st = Stringify::lowercase($header);
-
-        if ( $st == 'select' || $st == 'show' ) {
-            return 'read';
-        }
-
-        if ( $st == 'insert' || $st == 'update' || $st == 'delete' ) {
-            return 'write';
-        }
-
-        return false;
+        return match ($firstWord) {
+            'select', 'show'             => 'read',
+            'insert', 'update', 'delete' => 'write',
+            default                      => false
+        };
     }
 
     /** 
