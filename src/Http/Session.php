@@ -29,16 +29,16 @@ final class Session
      * @var array CONFIG Default secure session configuration
      */
     public const CONFIG = [
-        'cookie_lifetime' => 0,
-        'cookie_path'     => '/',
-        'cookie_domain'   => '',
-        'cookie_secure'   => true,
-        'cookie_httponly' => true,
-        'cookie_samesite' => 'Strict',
-        'use_strict_mode' => true,
-        'use_only_cookies' => true,
-        'entropy_length'   => 32,
-        'hash_function'    => 'sha256'
+        'cookie-lifetime' => 0,
+        'cookie-path'     => '/',
+        'cookie-domain'   => '',
+        'cookie-secure'   => true,
+        'cookie-httponly' => true,
+        'cookie-samesite' => 'Strict',
+        'use-strict-mode' => true,
+        'use-only-cookies' => true,
+        'entropy-length'   => 32,
+        'hash-function'    => 'sha256'
     ];
 
     /**
@@ -80,20 +80,20 @@ final class Session
         
         // Apply configuration
         foreach (self::$config as $key => $value) {
-            if ( strpos($key, 'cookie_') === 0 ) {
+            if ( strpos($key, 'cookie-') === 0 ) {
                 $iniKey = "session.{$key}";
                 System::setIni($iniKey, (string)$value);
             }
         }
         
         // Set additional security settings
-        System::setIni('session.use_strict_mode', self::$config['use_strict_mode'] ? '1' : '0');
-        System::setIni('session.use_only_cookies', self::$config['use_only_cookies'] ? '1' : '0');
-        System::setIni('session.entropy_length', (string)self::$config['entropy_length']);
-        System::setIni('session.hash_function', self::$config['hash_function']);
+        System::setIni('session.use-strict-mode', self::$config['use-strict-mode'] ? '1' : '0');
+        System::setIni('session.use-only-cookies', self::$config['use-only-cookies'] ? '1' : '0');
+        System::setIni('session.entropy-length', (string)self::$config['entropy-length']);
+        System::setIni('session.hash-function', self::$config['hash-function']);
         
-        // Disable session.auto_start for security
-        System::setIni('session.auto_start', '0');
+        // Disable session auto-start for security
+        System::setIni('session.auto-start', '0');
     }
 
     /**
@@ -386,7 +386,7 @@ final class Session
      */
     public static function setTimeout(int $seconds) : void
     {
-        System::setIni('session.gc_maxlifetime', (string)$seconds);
+        System::setIni('session.gc-maxlifetime', (string)$seconds);
         self::set('--session-timeout', $seconds);
         self::set('--session-expires-at', time() + $seconds);
     }
@@ -430,7 +430,7 @@ final class Session
     {
         self::$config[$key] = $value;
         
-        if ( strpos($key, 'cookie_') === 0 ) {
+        if ( strpos($key, 'cookie-') === 0 ) {
             $iniKey = "session.{$key}";
             System::setIni($iniKey, (string)$value);
         }
