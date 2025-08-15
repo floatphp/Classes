@@ -15,9 +15,8 @@ declare(strict_types=1);
 
 namespace FloatPHP\Classes\Http;
 
-use FloatPHP\Classes\Server\Date;
-use FloatPHP\Classes\Filesystem\TypeCheck;
-use FloatPHP\Classes\Security\Tokenizer;
+use FloatPHP\Classes\Server\{Date, System};
+use FloatPHP\Classes\Filesystem\{Arrayify, Validator};
 use \RuntimeException;
 
 /**
@@ -77,24 +76,24 @@ final class Session
      */
     public static function configure(array $config = []) : void
     {
-        self::$config = array_merge(self::CONFIG, $config);
+        self::$config = Arrayify::merge(self::CONFIG, $config);
         
         // Apply configuration
         foreach (self::$config as $key => $value) {
             if ( strpos($key, 'cookie_') === 0 ) {
                 $iniKey = "session.{$key}";
-                ini_set($iniKey, (string)$value);
+                System::setIni($iniKey, (string)$value);
             }
         }
         
         // Set additional security settings
-        ini_set('session.use_strict_mode', self::$config['use_strict_mode'] ? '1' : '0');
-        ini_set('session.use_only_cookies', self::$config['use_only_cookies'] ? '1' : '0');
-        ini_set('session.entropy_length', (string)self::$config['entropy_length']);
-        ini_set('session.hash_function', self::$config['hash_function']);
+        System::setIni('session.use_strict_mode', self::$config['use_strict_mode'] ? '1' : '0');
+        System::setIni('session.use_only_cookies', self::$config['use_only_cookies'] ? '1' : '0');
+        System::setIni('session.entropy_length', (string)self::$config['entropy_length']);
+        System::setIni('session.hash_function', self::$config['hash_function']);
         
         // Disable session.auto_start for security
-        ini_set('session.auto_start', '0');
+        System::setIni('session.auto_start', '0');
     }
 
     /**
@@ -180,14 +179,14 @@ final class Session
      */
     public static function shouldRegenerate() : bool
     {
-        $lastRegeneration = self::get('--session-regenerated-at');
+        $last = self::get('--session-regenerated-at');
         
-        if ( !$lastRegeneration ) {
+        if ( !$last ) {
             return true;
         }
         
         // Regenerate every 15 minutes
-        return (time() - $lastRegeneration) > 900;
+        return (time() - $last) > 900;
     }
 
     /**
@@ -387,7 +386,7 @@ final class Session
      */
     public static function setTimeout(int $seconds) : void
     {
-        ini_set('session.gc_maxlifetime', (string)$seconds);
+        System::setIni('session.gc_maxlifetime', (string)$seconds);
         self::set('--session-timeout', $seconds);
         self::set('--session-expires-at', time() + $seconds);
     }
@@ -433,7 +432,7 @@ final class Session
         
         if ( strpos($key, 'cookie_') === 0 ) {
             $iniKey = "session.{$key}";
-            ini_set($iniKey, (string)$value);
+            System::setIni($iniKey, (string)$value);
         }
     }
 
@@ -553,17 +552,16 @@ final class Session
      */
     public static function validateFingerprint() : bool
     {
-        $currentFingerprint = self::getFingerprint();
-        $sessionFingerprint = self::get('--session-fingerprint');
+        $current = self::getFingerprint();
+        $session = self::get('--session-fingerprint');
         
-        if ( !$sessionFingerprint ) {
-            self::set('--session-fingerprint', $currentFingerprint);
+        if ( !$session ) {
+            self::set('--session-fingerprint', $current);
             return true;
         }
         
-        return $sessionFingerprint === $currentFingerprint;
+        return $session === $current;
     }
-
 
     /**
      * Validate User-Agent consistency.
@@ -573,15 +571,15 @@ final class Session
      */
     private static function validateUserAgent() : bool
     {
-        $currentUA = Server::get('http-user-agent') ?? '';
-        $sessionUA = self::get('--session-user-agent');
+        $current = Server::get('http-user-agent') ?? '';
+        $session = self::get('--session-user-agent');
         
-        if ( !$sessionUA ) {
-            self::set('--session-user-agent', $currentUA);
+        if ( !$session ) {
+            self::set('--session-user-agent', $current);
             return true;
         }
         
-        return $sessionUA === $currentUA;
+        return $session === $current;
     }
 
     /**
@@ -592,43 +590,15 @@ final class Session
      */
     private static function validateIpAddress() : bool
     {
-        $currentIP = Server::getIp();
-        $sessionIP = self::get('--session-ip-address');
+        $current = Server::getIp();
+        $session = self::get('--session-ip-address');
         
-        if ( !$sessionIP ) {
-            self::set('--session-ip-address', $currentIP);
+        if ( !$session ) {
+            self::set('--session-ip-address', $current);
             return true;
         }
         
-        // Allow for proxy/load balancer IP changes within same subnet
-        return self::isSameSubnet($sessionIP, $currentIP);
-    }
-
-    /**
-     * Check if two IP addresses are in the same subnet.
-     *
-     * @access private
-     * @param string $ip1
-     * @param string $ip2
-     * @param int $cidr CIDR subnet mask (default: 24 for /24 subnet)
-     * @return bool
-     */
-    private static function isSameSubnet(string $ip1, string $ip2, int $cidr = 24) : bool
-    {
-        // For exact match (most secure)
-        if ( $ip1 === $ip2 ) {
-            return true;
-        }
-        
-        // For IPv4 subnet checking
-        if ( filter_var($ip1, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && 
-             filter_var($ip2, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ) {
-            
-            $mask = -1 << (32 - $cidr);
-            return (ip2long($ip1) & $mask) === (ip2long($ip2) & $mask);
-        }
-        
-        // For IPv6 or other cases, require exact match
-        return false;
+        // Allow for proxy/load balancer
+        return Validator::isSameSubnet($session, $current);
     }
 }
