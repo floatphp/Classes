@@ -27,9 +27,9 @@ final class Session
 {
     /**
      * @access public
-     * @var array DEFAULT_CONFIG Default secure session configuration
+     * @var array CONFIG Default secure session configuration
      */
-    public const DEFAULT_CONFIG = [
+    public const CONFIG = [
         'cookie_lifetime' => 0,
         'cookie_path'     => '/',
         'cookie_domain'   => '',
@@ -45,7 +45,7 @@ final class Session
     /**
      * @access private
      * @var array $config Session configuration
-     * @var bool $regenerated Whether session ID was regenerated
+     * @var bool $regenerated Whether session ID regenerated
      */
     private static array $config = [];
     private static bool $regenerated = false;
@@ -77,7 +77,7 @@ final class Session
      */
     public static function configure(array $config = []) : void
     {
-        self::$config = array_merge(self::DEFAULT_CONFIG, $config);
+        self::$config = array_merge(self::CONFIG, $config);
         
         // Apply configuration
         foreach (self::$config as $key => $value) {
