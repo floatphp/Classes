@@ -734,7 +734,7 @@ final class Stringify
 	 * @param int $offset
 	 * @return bool
 	 */
-	public static function match(string $regex, string $string, &$matches, int $flags = 0, int $offset = 0) : bool
+	public static function match(string $regex, string $string, &$matches = null, int $flags = 0, int $offset = 0) : bool
 	{
 		$shift = ($flags === -1) ? true : false;
 		$flags = ($flags !== -1) ? $flags : 0;
