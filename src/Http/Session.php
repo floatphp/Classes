@@ -29,13 +29,13 @@ final class Session
      * @var array CONFIG Default secure session configuration
      */
     public const CONFIG = [
-        'cookie-lifetime' => 0,
-        'cookie-path'     => '/',
-        'cookie-domain'   => '',
-        'cookie-secure'   => true,
-        'cookie-httponly' => true,
-        'cookie-samesite' => 'Strict',
-        'use-strict-mode' => true,
+        'cookie-lifetime'  => 0,
+        'cookie-path'      => '/',
+        'cookie-domain'    => '',
+        'cookie-secure'    => true,
+        'cookie-httponly'  => true,
+        'cookie-samesite'  => 'Strict',
+        'use-strict-mode'  => true,
         'use-only-cookies' => true,
         'entropy-length'   => 32,
         'hash-function'    => 'sha256'
@@ -77,7 +77,7 @@ final class Session
     public static function configure(array $config = []) : void
     {
         self::$config = Arrayify::merge(self::CONFIG, $config);
-        
+
         // Apply configuration
         foreach (self::$config as $key => $value) {
             if ( strpos($key, 'cookie-') === 0 ) {
@@ -85,13 +85,13 @@ final class Session
                 System::setIni($iniKey, (string)$value);
             }
         }
-        
+
         // Set additional security settings
         System::setIni('session.use-strict-mode', self::$config['use-strict-mode'] ? '1' : '0');
         System::setIni('session.use-only-cookies', self::$config['use-only-cookies'] ? '1' : '0');
         System::setIni('session.entropy-length', (string)self::$config['entropy-length']);
         System::setIni('session.hash-function', self::$config['hash-function']);
-        
+
         // Disable session auto-start for security
         System::setIni('session.auto-start', '0');
     }
@@ -108,14 +108,14 @@ final class Session
         if ( self::isActive() ) {
             return true;
         }
-        
+
         self::configure($config);
-        
+
         if ( @session_start() ) {
             self::validateSession();
             return true;
         }
-        
+
         return false;
     }
 
@@ -131,15 +131,15 @@ final class Session
         if ( !self::isActive() ) {
             return false;
         }
-        
+
         $result = session_regenerate_id($deleteOld);
-        
+
         if ( $result ) {
             self::$regenerated = true;
             self::set('--session-id', session_id());
             self::set('--session-regenerated-at', time());
         }
-        
+
         return $result;
     }
 
@@ -156,18 +156,18 @@ final class Session
             self::end();
             return false;
         }
-        
+
         // Check for session timeout
         if ( self::isTimedOut() ) {
             self::end();
             return false;
         }
-        
+
         // Auto-regenerate session ID periodically
         if ( self::shouldRegenerate() ) {
             self::regenerate();
         }
-        
+
         return true;
     }
 
@@ -180,11 +180,11 @@ final class Session
     public static function shouldRegenerate() : bool
     {
         $last = self::get('--session-regenerated-at');
-        
+
         if ( !$last ) {
             return true;
         }
-        
+
         // Regenerate every 15 minutes
         return (time() - $last) > 900;
     }
@@ -429,7 +429,7 @@ final class Session
     public static function setConfig(string $key, mixed $value) : void
     {
         self::$config[$key] = $value;
-        
+
         if ( strpos($key, 'cookie-') === 0 ) {
             $iniKey = "session.{$key}";
             System::setIni($iniKey, (string)$value);
@@ -509,11 +509,11 @@ final class Session
     {
         $value = $_SESSION['--flash'][$key] ?? $default;
         unset($_SESSION['--flash'][$key]);
-        
+
         if ( empty($_SESSION['--flash']) ) {
             unset($_SESSION['--flash']);
         }
-        
+
         return $value;
     }
 
@@ -540,7 +540,7 @@ final class Session
         $ua = Server::get('http-user-agent') ?? '';
         $language = Server::get('http-accept-language') ?? '';
         $encoding = Server::get('http-accept-encoding') ?? '';
-        
+
         return hash('sha256', $ua . $language . $encoding);
     }
 
@@ -554,12 +554,12 @@ final class Session
     {
         $current = self::getFingerprint();
         $session = self::get('--session-fingerprint');
-        
+
         if ( !$session ) {
             self::set('--session-fingerprint', $current);
             return true;
         }
-        
+
         return $session === $current;
     }
 
@@ -573,12 +573,12 @@ final class Session
     {
         $current = Server::get('http-user-agent') ?? '';
         $session = self::get('--session-user-agent');
-        
+
         if ( !$session ) {
             self::set('--session-user-agent', $current);
             return true;
         }
-        
+
         return $session === $current;
     }
 
@@ -592,12 +592,12 @@ final class Session
     {
         $current = Server::getIp();
         $session = self::get('--session-ip-address');
-        
+
         if ( !$session ) {
             self::set('--session-ip-address', $current);
             return true;
         }
-        
+
         // Allow for proxy/load balancer
         return Validator::isSameSubnet($session, $current);
     }
