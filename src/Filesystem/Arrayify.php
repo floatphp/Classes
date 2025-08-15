@@ -515,6 +515,7 @@ final class Arrayify
 				if ( $depth > 0 ) {
 					$flattened = self::flatten($value, $depth - 1);
 					$result = self::merge($result, $flattened);
+
 				} else {
 					// When depth is reached, only add non-empty arrays
 					if ( !empty($value) ) {
