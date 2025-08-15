@@ -259,7 +259,7 @@ class Router implements RouterInterface
 
         // Sanitize method (uppercase and validate)
         $method = Stringify::uppercase($method);
-        
+
         // Strip base path from request URL
         $url = substr($url, strlen($this->base));
 
@@ -274,7 +274,7 @@ class Router implements RouterInterface
         foreach ($this->routes as $handler) {
 
             list($routeMethod, $route, $controller, $name, $permission) = $handler;
-            
+
             // Normalize route method for comparison
             $routeMethod = Stringify::uppercase($routeMethod);
             $routeMethodMatch = (stripos($routeMethod, $method) !== false) || $routeMethod === '*';
