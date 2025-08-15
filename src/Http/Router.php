@@ -17,6 +17,7 @@ namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Filesystem\{TypeCheck, Stringify, Arrayify};
 use FloatPHP\Classes\Html\Hook;
+use FloatPHP\Classes\Http\Server;
 use FloatPHP\Interfaces\Classes\RouterInterface;
 use FloatPHP\Exceptions\Classes\RouterException;
 
@@ -87,7 +88,9 @@ class Router implements RouterInterface
         }
 
         foreach ($routes as $route) {
-            Hook::callUserFunctionArray([$this, 'map'], $route);
+            if ( TypeCheck::isArray($route) && !empty($route) ) {
+                Hook::callUserFunctionArray([$this, 'map'], $route);
+            }
         }
     }
 
@@ -108,10 +111,72 @@ class Router implements RouterInterface
     }
 
     /**
+     * Get router base path.
+     *
+     * @access public
+     * @return string
+     */
+    public function getBase() : string
+    {
+        return $this->base;
+    }
+
+    /**
+     * Get route types.
+     *
+     * @access public
+     * @return array
+     */
+    public function getTypes() : array
+    {
+        return $this->types;
+    }
+
+    /**
+     * Get named routes.
+     *
+     * @access public
+     * @return array
+     */
+    public function getNames() : array
+    {
+        return $this->names;
+    }
+
+    /**
+     * Clear all routes.
+     *
+     * @access public
+     * @return void
+     */
+    public function clearRoutes() : void
+    {
+        $this->routes = [];
+        $this->names = [];
+    }
+
+    /**
+     * Check if a named route exists.
+     *
+     * @access public
+     * @param string $name
+     * @return bool
+     */
+    public function hasRoute(string $name) : bool
+    {
+        return isset($this->names[$name]);
+    }
+
+    /**
      * @inheritdoc
      */
-    public function map(string $method, string $route, $controller, ?string $name = null, $permission = null)
+    public function map(string $method, string $route, $controller, ?string $name = null, $permission = null) : void
     {
+        // Validate required parameters
+        if ( empty($method) || empty($route) ) {
+            throw new RouterException('Method and route cannot be empty');
+        }
+
         $this->routes[] = [$method, $route, $controller, $name, $permission];
 
         if ( $name ) {
@@ -122,8 +187,6 @@ class Router implements RouterInterface
             }
             $this->names[$name] = $route;
         }
-
-        return;
     }
 
     /**
@@ -131,6 +194,11 @@ class Router implements RouterInterface
      */
     public function generate(string $name, array $params = []) : string
     {
+        // Validate input
+        if ( empty($name) ) {
+            throw new RouterException('Route name cannot be empty');
+        }
+
         // Check if named route exists
         if ( !isset($this->names[$name]) ) {
             throw new RouterException(
@@ -189,6 +257,9 @@ class Router implements RouterInterface
             $method = Server::get('request-method') ?: 'GET';
         }
 
+        // Sanitize method (uppercase and validate)
+        $method = Stringify::uppercase($method);
+        
         // Strip base path from request URL
         $url = substr($url, strlen($this->base));
 
@@ -203,10 +274,13 @@ class Router implements RouterInterface
         foreach ($this->routes as $handler) {
 
             list($routeMethod, $route, $controller, $name, $permission) = $handler;
-            $routeMethod = (stripos($routeMethod, $method) !== false);
+            
+            // Normalize route method for comparison
+            $routeMethod = Stringify::uppercase($routeMethod);
+            $routeMethodMatch = (stripos($routeMethod, $method) !== false) || $routeMethod === '*';
 
             // Method did not match, continue to next route.
-            if ( !$routeMethod ) {
+            if ( !$routeMethodMatch ) {
                 continue;
             }
 
