@@ -42,7 +42,7 @@ final class Cookie
 	 * @var array SAMESITE Valid SameSite attribute values
 	 */
 	public const SAMESITE = ['Strict', 'Lax', 'None'];
-	
+
 	/**
 	 * Get _COOKIE value with validation.
 	 * 
@@ -57,20 +57,20 @@ final class Cookie
 			if ( !self::isSetted($key) ) {
 				return null;
 			}
-			
+
 			$value = $_COOKIE[$key];
-			
+
 			if ( $validate && !Validator::isCookieValue($value) ) {
 				return null;
 			}
-			
+
 			return $value;
 		}
-		
+
 		if ( !self::isSetted() ) {
 			return null;
 		}
-		
+
 		if ( $validate ) {
 			// Return only validated cookies
 			$validated = [];
@@ -81,7 +81,7 @@ final class Cookie
 			}
 			return $validated;
 		}
-		
+
 		return $_COOKIE;
 	}
 
@@ -101,19 +101,19 @@ final class Cookie
 		if ( !Validator::isCookieName($key) ) {
 			throw new InvalidArgumentException('Invalid cookie name');
 		}
-		
+
 		// Convert value to string and validate
 		$value = (string)$value;
 		if ( !Validator::isCookieValue($value) ) {
 			throw new InvalidArgumentException('Invalid cookie value');
 		}
-		
+
 		// Merge with secure defaults
 		$options = self::mergeOptions($options);
-		
+
 		// Validate options
 		self::validateOptions($options);
-		
+
 		return setcookie($key, $value, $options);
 	}
 
@@ -138,7 +138,7 @@ final class Cookie
 			'httponly' => true,
 			'samesite' => 'Strict'
 		];
-		
+
 		return self::set($key, $value, $options);
 	}
 
@@ -229,7 +229,7 @@ final class Cookie
 	{
 		$cookies = [];
 		$params = session_get_cookie_params();
-		
+
 		foreach ($_COOKIE as $name => $value) {
 			$cookies[$name] = [
 				'value'    => $value,
@@ -239,7 +239,7 @@ final class Cookie
 				'valid'    => Validator::isCookieValue($value)
 			];
 		}
-		
+
 		return $cookies;
 	}
 
@@ -256,12 +256,12 @@ final class Cookie
 	{
 		// Use secure defaults
 		$defaults = self::OPTIONS;
-		
+
 		// Auto-detect secure if not explicitly set
 		if ( !isset($options['secure']) && Server::isSsl() ) {
 			$defaults['secure'] = true;
 		}
-		
+
 		return Arrayify::merge($defaults, $options);
 	}
 
@@ -279,12 +279,12 @@ final class Cookie
 		if ( isset($options['samesite']) && !Arrayify::inArray($options['samesite'], self::SAMESITE) ) {
 			throw new InvalidArgumentException('Invalid SameSite value. Must be: Strict, Lax, or None');
 		}
-		
+
 		// Validate secure + SameSite=None combination
 		if ( isset($options['samesite']) && $options['samesite'] === 'None' && empty($options['secure']) ) {
 			throw new InvalidArgumentException('SameSite=None requires Secure attribute');
 		}
-		
+
 		// Validate expires
 		if ( isset($options['expires']) && !TypeCheck::isInt($options['expires']) && $options['expires'] < 0 ) {
 			throw new InvalidArgumentException('Invalid expires value');
