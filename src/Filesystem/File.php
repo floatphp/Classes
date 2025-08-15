@@ -290,11 +290,63 @@ class File
 	 */
 	public static function copy(string $path, string $to, $context = null) : bool
 	{
+		$path = Validator::isPath($path);
+		$to = Validator::isPath($to);
+		if ( empty($path) || empty($to) ) {
+			return false;
+		}
+
 		$dir = dirname($to);
 		if ( self::exists($path) && self::isDir($dir) ) {
 			return copy($path, $to, $context);
 		}
+
 		return false;
+	}
+
+	/**
+	 * Copy file with exception handling.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param string $to
+	 * @param resource $context
+	 * @return bool
+	 * @throws \InvalidArgumentException
+	 * @throws \RuntimeException
+	 */
+	public static function copySafe(string $path, string $to, $context = null) : bool
+	{
+		$path = Validator::isPath($path, true);
+		$to = Validator::isPath($to, true);
+
+		if ( !self::exists($path) ) {
+			throw new \RuntimeException("Source file does not exist: {$path}");
+		}
+
+		if ( !self::isReadable($path) ) {
+			throw new \RuntimeException("Source file is not readable: {$path}");
+		}
+
+		$dir = dirname($to);
+		if ( !self::isDir($dir) ) {
+			throw new \RuntimeException("Destination directory does not exist: {$dir}");
+		}
+
+		if ( !self::isWritable($dir) ) {
+			throw new \RuntimeException("Destination directory is not writable: {$dir}");
+		}
+
+		if ( self::exists($to) && !self::isWritable($to) ) {
+			throw new \RuntimeException("Destination file is not writable: {$to}");
+		}
+
+		$result = copy($path, $to, $context);
+		if ( !$result ) {
+			throw new \RuntimeException("Failed to copy file from {$path} to {$to}");
+		}
+
+		return true;
 	}
 
 	/**
@@ -308,11 +360,63 @@ class File
 	 */
 	public static function move(string $path, string $to, $context = null) : bool
 	{
+		$path = Validator::isPath($path);
+		$to = Validator::isPath($to);
+		if ( empty($path) || empty($to) ) {
+			return false;
+		}
+
 		$dir = dirname($to);
 		if ( self::exists($path) && self::isDir($dir) ) {
 			return rename($path, $to, $context);
 		}
+
 		return false;
+	}
+
+	/**
+	 * Move file with exception handling.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param string $to
+	 * @param resource $context
+	 * @return bool
+	 * @throws \InvalidArgumentException
+	 * @throws \RuntimeException
+	 */
+	public static function moveSafe(string $path, string $to, $context = null) : bool
+	{
+		$path = Validator::isPath($path, true);
+		$to = Validator::isPath($to, true);
+
+		if ( !self::exists($path) ) {
+			throw new \RuntimeException("Source file does not exist: {$path}");
+		}
+
+		if ( !self::isWritable(dirname($path)) ) {
+			throw new \RuntimeException("Source directory is not writable: " . dirname($path));
+		}
+
+		$dir = dirname($to);
+		if ( !self::isDir($dir) ) {
+			throw new \RuntimeException("Destination directory does not exist: {$dir}");
+		}
+
+		if ( !self::isWritable($dir) ) {
+			throw new \RuntimeException("Destination directory is not writable: {$dir}");
+		}
+
+		if ( self::exists($to) ) {
+			throw new \RuntimeException("Destination file already exists: {$to}");
+		}
+
+		$result = rename($path, $to, $context);
+		if ( !$result ) {
+			throw new \RuntimeException("Failed to move file from {$path} to {$to}");
+		}
+
+		return true;
 	}
 
 	/**
@@ -381,6 +485,11 @@ class File
 	 */
 	public static function addDir(string $path, int $p = 0755, bool $r = true, $c = null) : bool
 	{
+		$path = Validator::isPath($path);
+		if ( empty($path) ) {
+			return false;
+		}
+
 		if ( !self::isFile($path) && !self::isDir($path) ) {
 			if ( TypeCheck::isResource($c) ) {
 				return @mkdir($path, $p, $r, $c);
@@ -388,6 +497,50 @@ class File
 			return @mkdir($path, $p, $r);
 		}
 		return false;
+	}
+
+	/**
+	 * Add directory with exception handling.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param int $p permissions
+	 * @param bool $r recursive
+	 * @param resource $c context
+	 * @return bool
+	 * @throws \InvalidArgumentException
+	 * @throws \RuntimeException
+	 */
+	public static function addDirSafe(string $path, int $p = 0755, bool $r = true, $c = null) : bool
+	{
+		$path = Validator::isPath($path, true);
+
+		if ( self::exists($path) ) {
+			if ( self::isDir($path) ) {
+				return true; // Directory already exists
+			}
+			throw new \RuntimeException("Path exists but is not a directory: {$path}");
+		}
+
+		// Check parent directory permissions
+		$parent = dirname($path);
+		if ( !self::isDir($parent) && !$r ) {
+			throw new \RuntimeException("Parent directory does not exist: {$parent}");
+		}
+
+		if ( self::exists($parent) && !self::isWritable($parent) ) {
+			throw new \RuntimeException("Parent directory is not writable: {$parent}");
+		}
+
+		$result = TypeCheck::isResource($c) ?
+			@mkdir($path, $p, $r, $c) :
+			@mkdir($path, $p, $r);
+
+		if ( !$result ) {
+			throw new \RuntimeException("Failed to create directory: {$path}");
+		}
+
+		return true;
 	}
 
 	/**
@@ -516,7 +669,44 @@ class File
 	 */
 	public static function r(string $path, bool $i = false, $c = null, int $o = 0, ?int $l = null) : mixed
 	{
+		$path = Validator::isPath($path);
+		if ( empty($path) ) {
+			return false;
+		}
 		return @file_get_contents($path, $i, $c, $o, $l);
+	}
+
+	/**
+	 * Read file with exception handling.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param bool $i Include path
+	 * @param ?resource $c Context
+	 * @param int $o Offset
+	 * @param ?int $l Length
+	 * @return string
+	 * @throws \InvalidArgumentException
+	 * @throws \RuntimeException
+	 */
+	public static function readSafe(string $path, bool $i = false, $c = null, int $o = 0, ?int $l = null) : string
+	{
+		$path = Validator::isPath($path, true);
+
+		if ( !self::exists($path) ) {
+			throw new \RuntimeException("File does not exist: {$path}");
+		}
+
+		if ( !self::isReadable($path) ) {
+			throw new \RuntimeException("File is not readable: {$path}");
+		}
+
+		$content = @file_get_contents($path, $i, $c, $o, $l);
+		if ( $content === false ) {
+			throw new \RuntimeException("Failed to read file: {$path}");
+		}
+
+		return $content;
 	}
 
 	/**
@@ -531,12 +721,62 @@ class File
 	 */
 	public static function w(string $path, $input = '', bool $append = false, $c = null) : bool
 	{
+		$path = Validator::isPath($path);
+		if ( empty($path) ) {
+			return false;
+		}
+
 		$flag = 0;
 		if ( $append ) {
 			$flag = FILE_APPEND;
 			$input .= Stringify::break();
 		}
 		return (bool)@file_put_contents($path, $input, $flag, $c);
+	}
+
+	/**
+	 * Write file with exception handling.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param mixed $input
+	 * @param bool $append
+	 * @param ?resource $c Context
+	 * @return int
+	 * @throws \InvalidArgumentException
+	 * @throws \RuntimeException
+	 */
+	public static function writeSafe(string $path, $input = '', bool $append = false, $c = null) : int
+	{
+		$path = Validator::isPath($path, true);
+
+		// Check if directory exists and is writable
+		$dir = dirname($path);
+		if ( !self::isDir($dir) ) {
+			throw new \RuntimeException("Directory does not exist: {$dir}");
+		}
+
+		if ( !self::isWritable($dir) ) {
+			throw new \RuntimeException("Directory is not writable: {$dir}");
+		}
+
+		// Check if file exists and is writable
+		if ( self::exists($path) && !self::isWritable($path) ) {
+			throw new \RuntimeException("File is not writable: {$path}");
+		}
+
+		$flag = 0;
+		if ( $append ) {
+			$flag = FILE_APPEND;
+			$input .= Stringify::break();
+		}
+
+		$result = @file_put_contents($path, $input, $flag, $c);
+		if ( $result === false ) {
+			throw new \RuntimeException("Failed to write file: {$path}");
+		}
+
+		return $result;
 	}
 
 	/**
