@@ -71,7 +71,7 @@ class Hook
 	public function addFilter(string $name, $callback, int $priority = self::PRIORITY, int $args = self::COUNT) : bool
 	{
 		// Validate parameters
-		if ( empty($name) || !is_callable($callback) ) {
+		if ( empty($name) || !TypeCheck::isCallable($callback) ) {
 			return false;
 		}
 
