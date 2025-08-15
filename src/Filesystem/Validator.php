@@ -314,10 +314,10 @@ class Validator
 	/**
 	 * Uncompresses IPv6 address.
 	 *
-	 * @access public
+	 * @access private
 	 * @return string
 	 */
-	public static function uncompressIpV6(string $ip) : string
+	private static function uncompressIpV6(string $ip) : string
 	{
 		if ( Stringify::subCount($ip, '::') !== 1 ) {
 			return $ip;
@@ -353,11 +353,11 @@ class Validator
 	/**
 	 * Splits IPv6 address into the IPv6 and IPv4 parts.
 	 *
-	 * @access public
+	 * @access private
 	 * @param string $ip
 	 * @return array
 	 */
-	public static function splitIpV6(string $ip) : array
+	private static function splitIpV6(string $ip) : array
 	{
 		if ( strpos($ip, '.') !== false ) {
 			$pos = (int)strrpos($ip, ':');
@@ -374,7 +374,7 @@ class Validator
 	 * @access public
 	 * @param string $ip1
 	 * @param string $ip2
-	 * @param int $cidr CIDR subnet mask (default: 24 for /24 subnet)
+	 * @param int $cidr CIDR subnet mask
 	 * @return bool
 	 */
 	public static function isSameSubnet(string $ip1, string $ip2, int $cidr = 24) : bool
