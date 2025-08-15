@@ -152,7 +152,7 @@ final class Session
     public static function validateSession() : bool
     {
         // Check for session hijacking
-        if ( !self::validateUserAgent() || !self::validateIpAddress() || !self::validateFingerprint() ) {
+        if ( !self::isUserAgent() || !self::isIpAddress() || !self::validateFingerprint() ) {
             self::end();
             return false;
         }
@@ -537,11 +537,11 @@ final class Session
      */
     public static function getFingerprint() : string
     {
-        $userAgent = Server::get('http-user-agent') ?? '';
-        $acceptLanguage = Server::get('http-accept-language') ?? '';
-        $acceptEncoding = Server::get('http-accept-encoding') ?? '';
+        $ua = Server::get('http-user-agent') ?? '';
+        $language = Server::get('http-accept-language') ?? '';
+        $encoding = Server::get('http-accept-encoding') ?? '';
         
-        return hash('sha256', $userAgent . $acceptLanguage . $acceptEncoding);
+        return hash('sha256', $ua . $language . $encoding);
     }
 
     /**
@@ -569,7 +569,7 @@ final class Session
      * @access private
      * @return bool
      */
-    private static function validateUserAgent() : bool
+    private static function isUserAgent() : bool
     {
         $current = Server::get('http-user-agent') ?? '';
         $session = self::get('--session-user-agent');
@@ -588,7 +588,7 @@ final class Session
      * @access private
      * @return bool
      */
-    private static function validateIpAddress() : bool
+    private static function isIpAddress() : bool
     {
         $current = Server::getIp();
         $session = self::get('--session-ip-address');
