@@ -27,7 +27,7 @@ final class MailTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->mail = new Mail('test@example.comexample.com', 'Test Sender');
+        $this->mail = new Mail('test@example.com', 'Test Sender');
     }
 
     /**
@@ -212,8 +212,8 @@ final class MailTest extends TestCase
         $result = $mail
             ->to('recipient@example.com', 'Recipient Name')
             ->replyTo('noreply@example.com', 'No Reply')
-            ->setCc(['cc@example.comexample.com' => 'CC Name'])
-            ->setBcc(['bcc@example.comexample.comexample.com' => 'BCC Name'])
+            ->setCc(['cc@example.com' => 'CC Name'])
+            ->setBcc(['bcc@example.comexample.com' => 'BCC Name'])
             ->setSubject('Complex Test Email')
             ->setBody('<h1>HTML Email</h1><p>This is a test email.</p>')
             ->asHtml()
