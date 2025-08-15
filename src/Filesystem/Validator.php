@@ -239,6 +239,56 @@ class Validator
 	}
 
 	/**
+	 * Validate cookie value.
+	 * 
+	 * @access public
+	 * @param string $valu
+	 * @param int $length
+	 * @return bool
+	 */
+	public static function isCookieValue(string $value, int $length = 4096) : bool
+	{
+		// Check length
+		if ( strlen($value) > $length ) {
+			return false;
+		}
+		
+		// Check for control characters (0x00-0x1F and 0x7F)
+		if ( Stringify::match('/[\x00-\x1F\x7F]/', $value) ) {
+			return false;
+		}
+		
+		return true;
+	}
+
+	/**
+	 * Validate cookie name.
+	 * 
+	 * @access public
+	 * @param string $name
+	 * @param int $length
+	 * @return bool
+	 */
+	public static function isCookieName(string $name, int $length = 255) : bool
+	{
+		// Check length
+		if ( strlen($name) > $length || empty($name) ) {
+			return false;
+		}
+		
+		// Check for invalid characters (RFC 6265)
+		$invalidChars = ['(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', "\t"];
+		
+		foreach ($invalidChars as $char) {
+			if ( Stringify::contains($name, $char) ) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+	/**
 	 * Uncompresses IPv6 address.
 	 *
 	 * @access public
