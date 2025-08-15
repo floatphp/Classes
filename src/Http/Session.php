@@ -16,20 +16,178 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Server\Date;
+use FloatPHP\Classes\Filesystem\TypeCheck;
+use FloatPHP\Classes\Security\Tokenizer;
+use \RuntimeException;
 
 /**
- * Advanced session manipulation.
+ * Advanced session manipulation with enhanced security features.
  */
 final class Session
 {
     /**
-     * Start session if not active.
+     * @access public
+     * @var array DEFAULT_CONFIG Default secure session configuration
      */
-    public function __construct()
+    public const DEFAULT_CONFIG = [
+        'cookie_lifetime' => 0,
+        'cookie_path'     => '/',
+        'cookie_domain'   => '',
+        'cookie_secure'   => true,
+        'cookie_httponly' => true,
+        'cookie_samesite' => 'Strict',
+        'use_strict_mode' => true,
+        'use_only_cookies' => true,
+        'entropy_length'   => 32,
+        'hash_function'    => 'sha256'
+    ];
+
+    /**
+     * @access private
+     * @var array $config Session configuration
+     * @var bool $regenerated Whether session ID was regenerated
+     */
+    private static array $config = [];
+    private static bool $regenerated = false;
+
+    /**
+     * Start session with secure configuration.
+     *
+     * @access public
+     * @param array $config Custom session configuration
+     * @throws RuntimeException
+     */
+    public function __construct(array $config = [])
     {
         if ( !self::isActive() ) {
-            @session_start();
+            self::configure($config);
+            if ( !@session_start() ) {
+                throw new RuntimeException('Failed to start session');
+            }
+            self::validateSession();
         }
+    }
+
+    /**
+     * Configure session with secure defaults.
+     *
+     * @access public
+     * @param array $config
+     * @return void
+     */
+    public static function configure(array $config = []) : void
+    {
+        self::$config = array_merge(self::DEFAULT_CONFIG, $config);
+        
+        // Apply configuration
+        foreach (self::$config as $key => $value) {
+            if ( strpos($key, 'cookie_') === 0 ) {
+                $iniKey = "session.{$key}";
+                ini_set($iniKey, (string)$value);
+            }
+        }
+        
+        // Set additional security settings
+        ini_set('session.use_strict_mode', self::$config['use_strict_mode'] ? '1' : '0');
+        ini_set('session.use_only_cookies', self::$config['use_only_cookies'] ? '1' : '0');
+        ini_set('session.entropy_length', (string)self::$config['entropy_length']);
+        ini_set('session.hash_function', self::$config['hash_function']);
+        
+        // Disable session.auto_start for security
+        ini_set('session.auto_start', '0');
+    }
+
+    /**
+     * Start session securely.
+     *
+     * @access public
+     * @param array $config
+     * @return bool
+     */
+    public static function start(array $config = []) : bool
+    {
+        if ( self::isActive() ) {
+            return true;
+        }
+        
+        self::configure($config);
+        
+        if ( @session_start() ) {
+            self::validateSession();
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Regenerate session ID for security.
+     *
+     * @access public
+     * @param bool $deleteOld Whether to delete old session data
+     * @return bool
+     */
+    public static function regenerate(bool $deleteOld = true) : bool
+    {
+        if ( !self::isActive() ) {
+            return false;
+        }
+        
+        $result = session_regenerate_id($deleteOld);
+        
+        if ( $result ) {
+            self::$regenerated = true;
+            self::set('--session-id', session_id());
+            self::set('--session-regenerated-at', time());
+        }
+        
+        return $result;
+    }
+
+    /**
+     * Validate session security.
+     *
+     * @access public
+     * @return bool
+     */
+    public static function validateSession() : bool
+    {
+        // Check for session hijacking
+        if ( !self::validateUserAgent() || !self::validateIpAddress() || !self::validateFingerprint() ) {
+            self::end();
+            return false;
+        }
+        
+        // Check for session timeout
+        if ( self::isTimedOut() ) {
+            self::end();
+            return false;
+        }
+        
+        // Auto-regenerate session ID periodically
+        if ( self::shouldRegenerate() ) {
+            self::regenerate();
+        }
+        
+        return true;
+    }
+
+    /**
+     * Check if session ID should be regenerated.
+     *
+     * @access public
+     * @return bool
+     */
+    public static function shouldRegenerate() : bool
+    {
+        $lastRegeneration = self::get('--session-regenerated-at');
+        
+        if ( !$lastRegeneration ) {
+            return true;
+        }
+        
+        // Regenerate every 15 minutes
+        return (time() - $lastRegeneration) > 900;
     }
 
     /**
@@ -218,5 +376,259 @@ final class Session
         }
         self::unset();
         return @session_destroy();
+    }
+
+    /**
+     * Set session timeout.
+     *
+     * @access public
+     * @param int $seconds
+     * @return void
+     */
+    public static function setTimeout(int $seconds) : void
+    {
+        ini_set('session.gc_maxlifetime', (string)$seconds);
+        self::set('--session-timeout', $seconds);
+        self::set('--session-expires-at', time() + $seconds);
+    }
+
+    /**
+     * Check if session has timed out.
+     *
+     * @access public
+     * @return bool
+     */
+    public static function isTimedOut() : bool
+    {
+        $expiresAt = self::get('--session-expires-at');
+        return $expiresAt && time() > $expiresAt;
+    }
+
+    /**
+     * Get session configuration.
+     *
+     * @access public
+     * @param ?string $key
+     * @return mixed
+     */
+    public static function getConfig(?string $key = null) : mixed
+    {
+        if ( $key ) {
+            return self::$config[$key] ?? null;
+        }
+        return self::$config;
+    }
+
+    /**
+     * Update session configuration at runtime.
+     *
+     * @access public
+     * @param string $key
+     * @param mixed $value
+     * @return void
+     */
+    public static function setConfig(string $key, mixed $value) : void
+    {
+        self::$config[$key] = $value;
+        
+        if ( strpos($key, 'cookie_') === 0 ) {
+            $iniKey = "session.{$key}";
+            ini_set($iniKey, (string)$value);
+        }
+    }
+
+    /**
+     * Clear session data without destroying the session.
+     *
+     * @access public
+     * @return void
+     */
+    public static function clear() : void
+    {
+        $_SESSION = [];
+    }
+
+    /**
+     * Get session save path.
+     *
+     * @access public
+     * @return string
+     */
+    public static function getSavePath() : string
+    {
+        return session_save_path();
+    }
+
+    /**
+     * Set session save path.
+     *
+     * @access public
+     * @param string $path
+     * @return void
+     */
+    public static function setSavePath(string $path) : void
+    {
+        session_save_path($path);
+    }
+
+    /**
+     * Check if session was regenerated in this request.
+     *
+     * @access public
+     * @return bool
+     */
+    public static function wasRegenerated() : bool
+    {
+        return self::$regenerated;
+    }
+
+    /**
+     * Flash a message for the next request.
+     *
+     * @access public
+     * @param string $key
+     * @param mixed $value
+     * @return void
+     */
+    public static function flash(string $key, mixed $value) : void
+    {
+        if ( !isset($_SESSION['--flash']) ) {
+            $_SESSION['--flash'] = [];
+        }
+        $_SESSION['--flash'][$key] = $value;
+    }
+
+    /**
+     * Get and remove flash message.
+     *
+     * @access public
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    public static function getFlash(string $key, mixed $default = null) : mixed
+    {
+        $value = $_SESSION['--flash'][$key] ?? $default;
+        unset($_SESSION['--flash'][$key]);
+        
+        if ( empty($_SESSION['--flash']) ) {
+            unset($_SESSION['--flash']);
+        }
+        
+        return $value;
+    }
+
+    /**
+     * Check if a flash message exists.
+     *
+     * @access public
+     * @param string $key
+     * @return bool
+     */
+    public static function hasFlash(string $key) : bool
+    {
+        return isset($_SESSION['--flash'][$key]);
+    }
+
+    /**
+     * Get session fingerprint for security validation.
+     *
+     * @access public
+     * @return string
+     */
+    public static function getFingerprint() : string
+    {
+        $userAgent = Server::get('http-user-agent') ?? '';
+        $acceptLanguage = Server::get('http-accept-language') ?? '';
+        $acceptEncoding = Server::get('http-accept-encoding') ?? '';
+        
+        return hash('sha256', $userAgent . $acceptLanguage . $acceptEncoding);
+    }
+
+    /**
+     * Validate session fingerprint.
+     *
+     * @access public
+     * @return bool
+     */
+    public static function validateFingerprint() : bool
+    {
+        $currentFingerprint = self::getFingerprint();
+        $sessionFingerprint = self::get('--session-fingerprint');
+        
+        if ( !$sessionFingerprint ) {
+            self::set('--session-fingerprint', $currentFingerprint);
+            return true;
+        }
+        
+        return $sessionFingerprint === $currentFingerprint;
+    }
+
+
+    /**
+     * Validate User-Agent consistency.
+     *
+     * @access private
+     * @return bool
+     */
+    private static function validateUserAgent() : bool
+    {
+        $currentUA = Server::get('http-user-agent') ?? '';
+        $sessionUA = self::get('--session-user-agent');
+        
+        if ( !$sessionUA ) {
+            self::set('--session-user-agent', $currentUA);
+            return true;
+        }
+        
+        return $sessionUA === $currentUA;
+    }
+
+    /**
+     * Validate IP address consistency.
+     *
+     * @access private
+     * @return bool
+     */
+    private static function validateIpAddress() : bool
+    {
+        $currentIP = Server::getIp();
+        $sessionIP = self::get('--session-ip-address');
+        
+        if ( !$sessionIP ) {
+            self::set('--session-ip-address', $currentIP);
+            return true;
+        }
+        
+        // Allow for proxy/load balancer IP changes within same subnet
+        return self::isSameSubnet($sessionIP, $currentIP);
+    }
+
+    /**
+     * Check if two IP addresses are in the same subnet.
+     *
+     * @access private
+     * @param string $ip1
+     * @param string $ip2
+     * @param int $cidr CIDR subnet mask (default: 24 for /24 subnet)
+     * @return bool
+     */
+    private static function isSameSubnet(string $ip1, string $ip2, int $cidr = 24) : bool
+    {
+        // For exact match (most secure)
+        if ( $ip1 === $ip2 ) {
+            return true;
+        }
+        
+        // For IPv4 subnet checking
+        if ( filter_var($ip1, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) && 
+             filter_var($ip2, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ) {
+            
+            $mask = -1 << (32 - $cidr);
+            return (ip2long($ip1) & $mask) === (ip2long($ip2) & $mask);
+        }
+        
+        // For IPv6 or other cases, require exact match
+        return false;
     }
 }
