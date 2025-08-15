@@ -33,8 +33,10 @@ final class Shortcode extends Hook
 	/**
 	 * @access private
 	 * @var array $tags
+	 * @var string $cachedRegex
 	 */
 	private $tags = [];
+	private $cachedRegex = null;
 
 	/**
 	 * Get singleton hook instance.
@@ -61,11 +63,18 @@ final class Shortcode extends Hook
 	 */
 	public function add(string $name, $callback) : bool
 	{
-		if ( TypeCheck::isCallable($callback) ) {
-			$this->tags[$name] = $callback;
-			return true;
+		if ( empty($name) || !TypeCheck::isCallable($callback) ) {
+			return false;
 		}
-		return false;
+
+		// Validate shortcode name (alphanumeric and dashes only)
+		if ( !Stringify::match('/^[a-zA-Z0-9_-]+$/', $name) ) {
+			return false;
+		}
+
+		$this->tags[$name] = $callback;
+		$this->cachedRegex = null; // Clear cache
+		return true;
 	}
 
 	/**
@@ -77,8 +86,13 @@ final class Shortcode extends Hook
 	 */
 	public function remove(string $name) : bool
 	{
+		if ( empty($name) ) {
+			return false;
+		}
+
 		if ( isset($this->tags[$name]) ) {
 			unset($this->tags[$name]);
+			$this->cachedRegex = null; // Clear cache
 			return true;
 		}
 		return false;
@@ -93,6 +107,7 @@ final class Shortcode extends Hook
 	public function removeAll() : bool
 	{
 		$this->tags = [];
+		$this->cachedRegex = null; // Clear cache
 		return true;
 	}
 
@@ -118,7 +133,11 @@ final class Shortcode extends Hook
 	 */
 	public function contain(string $content, string $name) : bool
 	{
-		if ( strpos($content, '[') === false ) {
+		if ( empty($content) || empty($name) ) {
+			return false;
+		}
+
+		if ( !Stringify::contains($content, '[') ) {
 			return false;
 		}
 
@@ -153,11 +172,20 @@ final class Shortcode extends Hook
 	 */
 	public function do(string $content, bool $escape = false) : mixed
 	{
+		if ( empty($content) ) {
+			return $content;
+		}
+
 		if ( $escape ) {
 			$content = Sanitizer::escapeHTML($content);
 		}
 
 		if ( empty($this->tags) || !TypeCheck::isArray($this->tags) ) {
+			return $content;
+		}
+
+		// Quick check if content has shortcodes
+		if ( !Stringify::contains($content, '[') ) {
 			return $content;
 		}
 
@@ -175,10 +203,20 @@ final class Shortcode extends Hook
 	 */
 	public function getShortcodeRegex() : string
 	{
-		$names = array_keys($this->tags);
-		$regex = implode('|', array_map('preg_quote', $names));
+		// Use cached regex if available
+		if ( $this->cachedRegex !== null ) {
+			return $this->cachedRegex;
+		}
 
-		return
+		if ( empty($this->tags) ) {
+			return '';
+		}
+
+		$names = Arrayify::keys($this->tags);
+		$quotedNames = array_map('preg_quote', $names);
+		$regex = implode('|', $quotedNames);
+
+		$this->cachedRegex =
 			'\\['
 			. '(\\[?)'
 			. "($regex)"
@@ -207,6 +245,8 @@ final class Shortcode extends Hook
 			. ')?'
 			. ')'
 			. '(\\]?)';
+
+		return $this->cachedRegex;
 	}
 
 	/**
@@ -218,6 +258,10 @@ final class Shortcode extends Hook
 	 */
 	public function parseAtts($content) : mixed
 	{
+		if ( empty($content) ) {
+			return [];
+		}
+
 		$atts = [];
 		$regex = '/(\w+)\s*=\s*"([^"]*)"(?:\s|$)|(\w+)\s*=\s*\'([^\']*)\'(?:\s|$)|(\w+)\s*=\s*([^\s\'"]+)(?:\s|$)|"([^"]*)"(?:\s|$)|(\S+)(?:\s|$)/';
 		$content = Stringify::replaceRegex("/[\x{00a0}\x{200b}]+/u", ' ', $content);
@@ -225,13 +269,13 @@ final class Shortcode extends Hook
 		if ( Stringify::matchAll($regex, $content, $match, 2) ) {
 			foreach ($match as $tag) {
 				if ( !empty($tag[1]) ) {
-					$atts[strtolower($tag[1])] = stripcslashes($tag[2]);
+					$atts[Stringify::lowercase($tag[1])] = stripcslashes($tag[2]);
 
 				} elseif ( !empty($tag[3]) ) {
-					$atts[strtolower($tag[3])] = stripcslashes($tag[4]);
+					$atts[Stringify::lowercase($tag[3])] = stripcslashes($tag[4]);
 
 				} elseif ( !empty($tag[5]) ) {
-					$atts[strtolower($tag[5])] = stripcslashes($tag[6]);
+					$atts[Stringify::lowercase($tag[5])] = stripcslashes($tag[6]);
 
 				} elseif ( isset($tag[7]) && $tag[7] !== '' ) {
 					$atts[] = stripcslashes($tag[7]);
@@ -311,12 +355,11 @@ final class Shortcode extends Hook
 	 * @access public
 	 * @param array $tag
 	 * @return mixed
-	 * @todo
 	 */
 	public function doShortcodeTag(array $tag) : mixed
 	{
 		if ( count($tag) < 7 ) {
-			return null;
+			return '';
 		}
 
 		$first = $tag[1] ?? '';
@@ -328,27 +371,32 @@ final class Shortcode extends Hook
 		}
 
 		$name = $tag[2] ?? '';
+		if ( empty($name) || !isset($this->tags[$name]) ) {
+			return $tag[0] ?? '';
+		}
+
 		$atts = $tag[3] ?? '';
 		$atts = $this->parseAtts($atts);
 
 		// Set callback
-		$callback = $this->tags[$name] ?? function () {
-			return 'error';
-		};
+		$callback = $this->tags[$name];
 
 		// enclosing tag - extra parameter
 		$open = $tag[5] ?? false;
 		if ( $open ) {
-			return $first . self::callUserFunction($callback, $atts, $open, $tag) . $last;
+			try {
+				return $first . self::callUserFunction($callback, $atts, $open, $tag) . $last;
+			} catch (\Throwable $e) {
+				return $first . "[Error: {$name}]" . $last;
+			}
 		}
 
 		// self-closing tag
-		$close = $tag[5] ?? false;
-		if ( $close ) {
-			return $first . self::callUserFunction($callback, $atts, null, $tag) . $last;
+		try {
+			return $first . self::callUserFunction($callback, $atts, null, $name) . $last;
+		} catch (\Throwable $e) {
+			return $first . "[Error: {$name}]" . $last;
 		}
-
-		return self::callUserFunction($callback, $atts, null, $name);
 	}
 
 	/**
@@ -384,5 +432,49 @@ final class Shortcode extends Hook
 
 		$value = Stringify::replaceRegexCb(self::SPIN, $callback, $content);
 		return $value ?: $content;
+	}
+
+	/**
+	 * Get all registered shortcodes.
+	 *
+	 * @access public
+	 * @return array
+	 */
+	public function getTags() : array
+	{
+		return $this->tags;
+	}
+
+	/**
+	 * Get shortcode count.
+	 *
+	 * @access public
+	 * @return int
+	 */
+	public function getCount() : int
+	{
+		return count($this->tags);
+	}
+
+	/**
+	 * Clear regex cache (useful after bulk operations).
+	 *
+	 * @access public
+	 * @return void
+	 */
+	public function clearCache() : void
+	{
+		$this->cachedRegex = null;
+	}
+
+	/**
+	 * Check if shortcode processing is enabled.
+	 *
+	 * @access public
+	 * @return bool
+	 */
+	public function isEnabled() : bool
+	{
+		return !empty($this->tags);
 	}
 }
