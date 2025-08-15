@@ -16,7 +16,7 @@ declare(strict_types=1);
 namespace FloatPHP\Classes\Http;
 
 use FloatPHP\Classes\Server\System;
-use FloatPHP\Classes\Filesystem\{TypeCheck, Validator, Arrayify, Stringify};
+use FloatPHP\Classes\Filesystem\{TypeCheck, Validator, Arrayify};
 use \InvalidArgumentException;
 
 /**
@@ -26,9 +26,9 @@ final class Cookie
 {
 	/**
 	 * @access public
-	 * @var array DEFAULT_OPTIONS Default secure cookie options
+	 * @var array OPTIONS Default secure cookie options
 	 */
-	public const DEFAULT_OPTIONS = [
+	public const OPTIONS = [
 		'expires'  => 0,
 		'path'     => '/',
 		'domain'   => '',
@@ -39,17 +39,9 @@ final class Cookie
 
 	/**
 	 * @access public
-	 * @var array SAMESITE_VALUES Valid SameSite attribute values
+	 * @var array SAMESITE Valid SameSite attribute values
 	 */
-	public const SAMESITE_VALUES = ['Strict', 'Lax', 'None'];
-
-	/**
-	 * @access private
-	 * @var int MAX_NAME_LENGTH Maximum cookie name length
-	 * @var int MAX_VALUE_LENGTH Maximum cookie value length
-	 */
-	private const MAX_NAME_LENGTH = 255;
-	private const MAX_VALUE_LENGTH = 4096;
+	public const SAMESITE = ['Strict', 'Lax', 'None'];
 	
 	/**
 	 * Get _COOKIE value with validation.
@@ -68,7 +60,7 @@ final class Cookie
 			
 			$value = $_COOKIE[$key];
 			
-			if ( $validate && !self::isValidValue($value) ) {
+			if ( $validate && !Validator::isCookieValue($value) ) {
 				return null;
 			}
 			
@@ -83,7 +75,7 @@ final class Cookie
 			// Return only validated cookies
 			$validated = [];
 			foreach ($_COOKIE as $name => $value) {
-				if ( self::isValidValue($value) ) {
+				if ( Validator::isCookieValue($value) ) {
 					$validated[$name] = $value;
 				}
 			}
@@ -106,13 +98,13 @@ final class Cookie
 	public static function set(string $key, mixed $value = '', array $options = []) : bool
 	{
 		// Validate cookie name
-		if ( !self::isValidName($key) ) {
+		if ( !Validator::isCookieName($key) ) {
 			throw new InvalidArgumentException('Invalid cookie name');
 		}
 		
 		// Convert value to string and validate
 		$value = (string)$value;
-		if ( !self::isValidValue($value) ) {
+		if ( !Validator::isCookieValue($value) ) {
 			throw new InvalidArgumentException('Invalid cookie value');
 		}
 		
@@ -212,7 +204,7 @@ final class Cookie
 	 */
 	public static function clear() : bool
 	{
-		if ( System::getIni('session.use_cookies') ) {
+		if ( System::getIni('session.use-cookies') ) {
 			$params = session_get_cookie_params();
 			self::set(Session::getName(), '', [
 				'expires'  => time() - 42000,
@@ -244,60 +236,14 @@ final class Cookie
 				'secure'   => $params['secure'] ?? false,
 				'httponly' => $params['httponly'] ?? false,
 				'samesite' => $params['samesite'] ?? '',
-				'valid'    => self::isValidValue($value)
+				'valid'    => Validator::isCookieValue($value)
 			];
 		}
 		
 		return $cookies;
 	}
 
-	/**
-	 * Validate cookie name.
-	 * 
-	 * @access private
-	 * @param string $name
-	 * @return bool
-	 */
-	private static function isValidName(string $name) : bool
-	{
-		// Check length
-		if ( strlen($name) > self::MAX_NAME_LENGTH || empty($name) ) {
-			return false;
-		}
-		
-		// Check for invalid characters (RFC 6265)
-		$invalidChars = ['(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', "\t"];
-		
-		foreach ($invalidChars as $char) {
-			if ( strpos($name, $char) !== false ) {
-				return false;
-			}
-		}
-		
-		return true;
-	}
 
-	/**
-	 * Validate cookie value.
-	 * 
-	 * @access private
-	 * @param string $value
-	 * @return bool
-	 */
-	private static function isValidValue(string $value) : bool
-	{
-		// Check length
-		if ( strlen($value) > self::MAX_VALUE_LENGTH ) {
-			return false;
-		}
-		
-		// Check for control characters (0x00-0x1F and 0x7F)
-		if ( preg_match('/[\x00-\x1F\x7F]/', $value) ) {
-			return false;
-		}
-		
-		return true;
-	}
 
 	/**
 	 * Merge options with secure defaults.
@@ -309,14 +255,14 @@ final class Cookie
 	private static function mergeOptions(array $options) : array
 	{
 		// Use secure defaults
-		$defaults = self::DEFAULT_OPTIONS;
+		$defaults = self::OPTIONS;
 		
 		// Auto-detect secure if not explicitly set
 		if ( !isset($options['secure']) && Server::isSsl() ) {
 			$defaults['secure'] = true;
 		}
 		
-		return array_merge($defaults, $options);
+		return Arrayify::merge($defaults, $options);
 	}
 
 	/**
@@ -330,7 +276,7 @@ final class Cookie
 	private static function validateOptions(array $options) : void
 	{
 		// Validate SameSite
-		if ( isset($options['samesite']) && !in_array($options['samesite'], self::SAMESITE_VALUES) ) {
+		if ( isset($options['samesite']) && !Arrayify::inArray($options['samesite'], self::SAMESITE) ) {
 			throw new InvalidArgumentException('Invalid SameSite value. Must be: Strict, Lax, or None');
 		}
 		
