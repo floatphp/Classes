@@ -344,4 +344,32 @@ class Validator
 		}
 		return [$ip, ''];
 	}
+
+	/**
+	 * Check if two IP addresses are in the same subnet.
+	 *
+	 * @access public
+	 * @param string $ip1
+	 * @param string $ip2
+	 * @param int $cidr CIDR subnet mask (default: 24 for /24 subnet)
+	 * @return bool
+	 */
+	public static function isSameSubnet(string $ip1, string $ip2, int $cidr = 24) : bool
+	{
+		// For exact match (most secure)
+		if ( $ip1 === $ip2 ) {
+			return true;
+		}
+		
+		// For IPv4 subnet checking
+		if ( Stringify::filter($ip1, 1048576, 275) && 
+			 Stringify::filter($ip2, 1048576, 275) ) {
+			
+			$mask = -1 << (32 - $cidr);
+			return (ip2long($ip1) & $mask) === (ip2long($ip2) & $mask);
+		}
+		
+		// For IPv6 or other cases, require exact match
+		return false;
+	}
 }
