@@ -22,7 +22,6 @@ use \RuntimeException;
 
 /**
  * Advanced mail manipulation.
- * @see http://github.com/eoghanobrien/php-simple-mail
  */
 class Mail
 {
