@@ -252,12 +252,12 @@ class Validator
 		if ( strlen($value) > $length ) {
 			return false;
 		}
-		
+
 		// Check for control characters (0x00-0x1F and 0x7F)
 		if ( Stringify::match('/[\x00-\x1F\x7F]/', $value) ) {
 			return false;
 		}
-		
+
 		return true;
 	}
 
@@ -275,16 +275,16 @@ class Validator
 		if ( strlen($name) > $length || empty($name) ) {
 			return false;
 		}
-		
+
 		// Check for invalid characters (RFC 6265)
 		$invalidChars = ['(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', "\t"];
-		
+
 		foreach ($invalidChars as $char) {
 			if ( Stringify::contains($name, $char) ) {
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -360,16 +360,54 @@ class Validator
 		if ( $ip1 === $ip2 ) {
 			return true;
 		}
-		
+
 		// For IPv4 subnet checking
-		if ( Stringify::filter($ip1, 1048576, 275) && 
-			 Stringify::filter($ip2, 1048576, 275) ) {
-			
+		if (
+			Stringify::filter($ip1, 1048576, 275) &&
+			Stringify::filter($ip2, 1048576, 275)
+		) {
+
 			$mask = -1 << (32 - $cidr);
 			return (ip2long($ip1) & $mask) === (ip2long($ip2) & $mask);
 		}
-		
+
 		// For IPv6 or other cases, require exact match
 		return false;
+	}
+
+	/**
+	 * Validate and sanitize file path against directory traversal attacks.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param bool $throwException
+	 * @return string
+	 * @throws \InvalidArgumentException
+	 */
+	public static function isPath(string $path, bool $throwException = false) : string
+	{
+		// Normalize path
+		$path = Stringify::formatPath($path);
+
+		// Check for directory traversal patterns
+		$dangerous = ['../', '..\/', '../', '..\\'];
+		foreach ($dangerous as $pattern) {
+			if ( Stringify::contains($path, $pattern) ) {
+				if ( $throwException ) {
+					throw new \InvalidArgumentException("Path contains directory traversal: {$path}");
+				}
+				return '';
+			}
+		}
+
+		// Check for null bytes (path truncation attack)
+		if ( Stringify::contains($path, "\0") ) {
+			if ( $throwException ) {
+				throw new \InvalidArgumentException("Path contains null byte: {$path}");
+			}
+			return '';
+		}
+
+		return $path;
 	}
 }
