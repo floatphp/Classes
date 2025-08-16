@@ -74,7 +74,7 @@ final class Sanitizer
         if ( trim($string) === '' ) {
             return '';
         }
-        
+
         // Validate flags parameter
         if ( $flags < 0 || $flags > 15 ) {
             $flags = 3; // Default to ENT_QUOTES
@@ -372,7 +372,7 @@ final class Sanitizer
 
         // Basic HTML sanitization
         $allowedTags = '<p><br><strong><em><u><ol><ul><li><a><img>';
-        
+
         if ( $html === 'comment' ) {
             // More restrictive for comments
             $allowedTags = '<p><br><strong><em>';
@@ -430,7 +430,7 @@ final class Sanitizer
 
         // Prevent reserved Windows filenames
         $reserved = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'];
-        
+
         $baseName = pathinfo($string, PATHINFO_FILENAME);
         if ( in_array(strtoupper($baseName), $reserved) ) {
             $string = 'file_' . $string;
@@ -469,15 +469,31 @@ final class Sanitizer
 
         // Define allowed MIME types for security
         $allowedTypes = [
-            'text/plain', 'text/html', 'text/css', 'text/javascript', 'text/csv',
-            'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
-            'application/pdf', 'application/json', 'application/xml',
-            'application/zip', 'application/x-zip-compressed',
-            'application/msword', 'application/vnd.ms-excel',
+            'text/plain',
+            'text/html',
+            'text/css',
+            'text/javascript',
+            'text/csv',
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp',
+            'image/svg+xml',
+            'application/pdf',
+            'application/json',
+            'application/xml',
+            'application/zip',
+            'application/x-zip-compressed',
+            'application/msword',
+            'application/vnd.ms-excel',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'audio/mpeg', 'audio/wav', 'audio/ogg',
-            'video/mp4', 'video/webm', 'video/ogg'
+            'audio/mpeg',
+            'audio/wav',
+            'audio/ogg',
+            'video/mp4',
+            'video/webm',
+            'video/ogg'
         ];
 
         // Check if MIME type is in allowed list
