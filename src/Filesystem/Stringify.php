@@ -173,7 +173,7 @@ final class Stringify
 		// Check for regex errors
 		if ( $result === null ) {
 			$error = preg_last_error();
-			$errorMessage = self::getPregErrorMessage($error);
+			$errorMessage = self::getPregError($error);
 			throw new \RuntimeException("Regex execution failed: {$errorMessage}");
 		}
 
@@ -209,7 +209,7 @@ final class Stringify
 		// Check for regex errors
 		if ( $result === null ) {
 			$error = preg_last_error();
-			$errorMessage = self::getPregErrorMessage($error);
+			$errorMessage = self::getPregError($error);
 			throw new \RuntimeException("Regex callback execution failed: {$errorMessage}");
 		}
 
@@ -483,7 +483,7 @@ final class Stringify
 			// Check for regex errors
 			if ( $result === false ) {
 				$error = preg_last_error();
-				$errorMessage = self::getPregErrorMessage($error);
+				$errorMessage = self::getPregError($error);
 				throw new \RuntimeException("Regex split failed: {$errorMessage}");
 			}
 
@@ -938,7 +938,7 @@ final class Stringify
 		// Check for regex errors
 		if ( $matched === false ) {
 			$error = preg_last_error();
-			$errorMessage = self::getPregErrorMessage($error);
+			$errorMessage = self::getPregError($error);
 			throw new \RuntimeException("Regex match failed: {$errorMessage}");
 		}
 
@@ -1079,6 +1079,9 @@ final class Stringify
 	 * - 'name': Default sanitization without encoding quotes
 	 * - 'text': Remove low ASCII characters
 	 * - 'url': Sanitize URL
+	 * - 'ip': Validate IP address
+	 * - 'ipv6': Validate IPv6 address
+	 * - 'mac': Validate MAC address
 	 * 
 	 * Default filter constant: FILTER_DEFAULT (516)
 	 *
@@ -1330,7 +1333,7 @@ final class Stringify
 	 * @param int $error
 	 * @return string
 	 */
-	private static function getPregErrorMessage(int $error) : string
+	private static function getPregError(int $error) : string
 	{
 		return match ($error) {
 			PREG_NO_ERROR              => 'No error',
