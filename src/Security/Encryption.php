@@ -77,6 +77,17 @@ class Encryption
 	 */
 	public function __construct($data, ?string $secret = self::SECRET, ?string $vector = self::VECTOR, ?int $length = self::LENGTH)
 	{
+		// Input validation
+		if ( $secret !== null && trim($secret) === '' ) {
+			throw new \InvalidArgumentException('Secret key cannot be empty');
+		}
+		if ( $vector !== null && trim($vector) === '' ) {
+			throw new \InvalidArgumentException('Vector cannot be empty');
+		}
+		if ( $length !== null && ($length < 1 || $length > 64) ) {
+			throw new \InvalidArgumentException('Vector length must be between 1 and 64');
+		}
+
 		// Set data
 		$this->data = $data;
 
@@ -103,6 +114,11 @@ class Encryption
 	 */
 	public function setOptions(int $options = self::OPTIONS) : self
 	{
+		// Validate options are within reasonable range
+		if ( $options < 0 || $options > 15 ) {
+			throw new \InvalidArgumentException('OpenSSL options must be between 0 and 15');
+		}
+
 		$this->options = $options;
 		return $this;
 	}
@@ -116,6 +132,16 @@ class Encryption
 	 */
 	public function setCipher(string $cipher = self::CIPHER) : self
 	{
+		// Input validation
+		if ( trim($cipher) === '' ) {
+			throw new \InvalidArgumentException('Cipher algorithm cannot be empty');
+		}
+		
+		// Validate cipher is supported
+		if ( !in_array($cipher, openssl_get_cipher_methods()) ) {
+			throw new \InvalidArgumentException("Unsupported cipher algorithm: {$cipher}");
+		}
+
 		$this->cipher = $cipher;
 		return $this;
 	}
@@ -142,6 +168,16 @@ class Encryption
 	 */
 	public function initialize(string $algo = self::ALGO) : self
 	{
+		// Input validation
+		if ( trim($algo) === '' ) {
+			throw new \InvalidArgumentException('Hash algorithm cannot be empty');
+		}
+		
+		// Validate hash algorithm is supported
+		if ( !in_array($algo, hash_algos()) ) {
+			throw new \InvalidArgumentException("Unsupported hash algorithm: {$algo}");
+		}
+
 		$this->secret = hash($algo, $this->secret);
 		$this->vector = substr(hash($algo, $this->vector), 0, $this->length);
 		return $this;
@@ -156,27 +192,50 @@ class Encryption
 	 */
 	public function encrypt(int $loop = 1) : string
 	{
-		if ( TypeCheck::isString($this->data) ) {
-			if ( $this->bypass && $this->isCrypted() ) {
-				return $this->data;
-			}
-		} else {
-			$this->data = Stringify::serialize($this->data);
+		// Input validation
+		if ( $loop < 1 || $loop > 5 ) {
+			throw new \InvalidArgumentException('Loop count must be between 1 and 5');
 		}
 
-		$loop = ($loop <= 3) ? $loop : 3;
-		$encrypt = openssl_encrypt(
-			$this->data,
-			$this->cipher,
-			$this->secret,
-			$this->options,
-			$this->vector
-		);
+		try {
+			if ( TypeCheck::isString($this->data) ) {
+				if ( $this->bypass && $this->isCrypted() ) {
+					return $this->data;
+				}
+			} else {
+				$this->data = Stringify::serialize($this->data);
+			}
 
-		$crypted = Tokenizer::base64($encrypt, $loop);
-		unset($this->data);
+			$loop = ($loop <= 3) ? $loop : 3;
+			
+			// Clear any previous OpenSSL errors
+			while (openssl_error_string() !== false) {}
+			
+			$encrypt = openssl_encrypt(
+				$this->data,
+				$this->cipher,
+				$this->secret,
+				$this->options,
+				$this->vector
+			);
 
-		return "{$this->prefix}{$crypted}";
+			// Check for OpenSSL errors
+			if ( $encrypt === false ) {
+				$error = openssl_error_string();
+				$errorMsg = $error ? "OpenSSL encryption failed: {$error}" : 'OpenSSL encryption failed with unknown error';
+				throw new \RuntimeException($errorMsg);
+			}
+
+			$crypted = Tokenizer::base64($encrypt, $loop);
+			unset($this->data);
+
+			return "{$this->prefix}{$crypted}";
+
+		} catch (\Exception $e) {
+			// Clean up and re-throw with context
+			unset($this->data);
+			throw new \RuntimeException("Encryption failed: " . $e->getMessage(), 0, $e);
+		}
 	}
 
 	/**
@@ -188,26 +247,56 @@ class Encryption
 	 */
 	public function decrypt(int $loop = 1)
 	{
+		// Input validation
+		if ( $loop < 1 || $loop > 5 ) {
+			throw new \InvalidArgumentException('Loop count must be between 1 and 5');
+		}
+
 		if ( !TypeCheck::isString($this->data) ) {
 			return false;
 		}
 
-		$loop = ($loop <= 3) ? $loop : 3;
-		$crypted = Stringify::remove($this->prefix, $this->data);
-		$decrypted = (string)openssl_decrypt(
-			Tokenizer::unbase64($crypted, $loop),
-			$this->cipher,
-			$this->secret,
-			$this->options,
-			$this->vector
-		);
+		try {
+			$loop = ($loop <= 3) ? $loop : 3;
+			$crypted = Stringify::remove($this->prefix, $this->data);
+			
+			// Validate that we have data to decrypt after removing prefix
+			if ( trim($crypted) === '' ) {
+				throw new \InvalidArgumentException('No encrypted data found after removing prefix');
+			}
 
-		if ( !$this->asString ) {
-			$decrypted = Stringify::unserialize($decrypted);
+			// Clear any previous OpenSSL errors
+			while (openssl_error_string() !== false) {}
+
+			$decrypted = openssl_decrypt(
+				Tokenizer::unbase64($crypted, $loop),
+				$this->cipher,
+				$this->secret,
+				$this->options,
+				$this->vector
+			);
+
+			// Check for OpenSSL errors
+			if ( $decrypted === false ) {
+				$error = openssl_error_string();
+				$errorMsg = $error ? "OpenSSL decryption failed: {$error}" : 'OpenSSL decryption failed - possibly invalid key or corrupted data';
+				throw new \RuntimeException($errorMsg);
+			}
+
+			if ( !$this->asString ) {
+				$unserialized = Stringify::unserialize($decrypted);
+				// If unserialization fails, return the string data
+				$decrypted = ($unserialized !== false) ? $unserialized : $decrypted;
+			}
+
+			unset($this->data);
+			return $decrypted;
+
+		} catch (\Exception $e) {
+			// Clean up and re-throw with context
+			unset($this->data);
+			throw new \RuntimeException("Decryption failed: " . $e->getMessage(), 0, $e);
 		}
-
-		unset($this->data);
-		return $decrypted;
 	}
 
 	/**
@@ -242,6 +331,16 @@ class Encryption
 	 */
 	public function isCrypted() : bool
 	{
+		// Validate that data is a string and not empty
+		if ( !TypeCheck::isString($this->data) || trim($this->data) === '' ) {
+			return false;
+		}
+
+		// Check if data is long enough to contain the prefix
+		if ( strlen($this->data) < strlen($this->prefix) ) {
+			return false;
+		}
+
 		$prefix = substr($this->data, 0, strlen($this->prefix));
 		return $prefix === $this->prefix;
 	}
