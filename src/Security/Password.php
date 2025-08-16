@@ -38,6 +38,14 @@ final class Password
      */
     public static function generate(int $length = self::LENGTH, bool $special = false) : string
     {
+        // Input validation
+        if ( $length < 1 ) {
+            throw new \InvalidArgumentException('Password length must be at least 1');
+        }
+        if ( $length > 1024 ) {
+            throw new \InvalidArgumentException('Password length too large (max: 1024)');
+        }
+
         $token = '';
         $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $chars .= 'abcdefghijklmnopqrstuvwxyz';
@@ -45,8 +53,10 @@ final class Password
         if ( $special ) {
             $chars .= '!#$%&()*+,-.:;<>?@[]^{}~';
         }
+        
+        $maxIndex = strlen($chars) - 1;
         for ($i = 0; $i < $length; $i++) {
-            $token .= $chars[Tokenizer::range(0, strlen($chars))];
+            $token .= $chars[Tokenizer::range(0, $maxIndex)];
         }
         return $token;
     }
@@ -61,6 +71,14 @@ final class Password
      */
     public static function isValid(string $pswd, string $hash) : bool
     {
+        // Input validation
+        if ( trim($pswd) === '' ) {
+            return false;
+        }
+        if ( trim($hash) === '' ) {
+            return false;
+        }
+
         return password_verify($pswd, $hash);
     }
 
@@ -77,7 +95,27 @@ final class Password
      */
     public static function hash(string $pswd, $algo = '2y', array $options = []) : string
     {
-        return password_hash($pswd, $algo, $options);
+        // Input validation
+        if ( trim($pswd) === '' ) {
+            throw new \InvalidArgumentException('Password cannot be empty');
+        }
+
+        try {
+            $hash = password_hash($pswd, $algo, $options);
+            
+            // Check if hashing failed
+            if ( $hash === false ) {
+                throw new \RuntimeException('Password hashing failed - possibly invalid algorithm or options');
+            }
+
+            return $hash;
+
+        } catch (\Exception $e) {
+            if ( $e instanceof \InvalidArgumentException || $e instanceof \RuntimeException ) {
+                throw $e;
+            }
+            throw new \RuntimeException('Password hashing failed: ' . $e->getMessage(), 0, $e);
+        }
     }
 
     /**
@@ -90,6 +128,19 @@ final class Password
      */
     public static function isStrong(string $pswd, int $length = self::LENGTH) : bool
     {
+        // Input validation
+        if ( trim($pswd) === '' ) {
+            return false;
+        }
+        
+        // Edge case handling for extreme length values
+        if ( $length < 1 ) {
+            $length = self::LENGTH;
+        }
+        if ( $length > 1024 ) {
+            $length = 1024;
+        }
+
         if ( $length < self::LENGTH ) {
             $length = self::LENGTH;
         }
