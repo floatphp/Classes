@@ -33,23 +33,28 @@ final class Sanitizer
      * @param bool $html, Escape
      * @return string
      */
-    public static function escapeUrl(string $string, bool $html = false) : string
+    public static function escapeUrl(string $url, bool $html = false) : string
     {
+        // Input validation
+        if ( trim($url) === '' ) {
+            return '';
+        }
+
         // Format spaces
-        $string = Stringify::formatSpace($string);
+        $url = Stringify::formatSpace($url);
 
         // Strip breaks
-        $string = Stringify::stripBreak($string);
+        $url = Stringify::stripBreak($url);
 
         // Filter URL
-        $string = Stringify::filter($string, 'url');
+        $url = Stringify::filter($url, 'url');
 
         // Escape HTML in URL
         if ( $html ) {
-            $string = self::escapeHTML($string);
+            $url = self::escapeHTML($url);
         }
 
-        return $string;
+        return $url;
     }
 
     /**
@@ -65,6 +70,16 @@ final class Sanitizer
      */
     public static function escapeHTML(string $string, int $flags = 3, $encode = 'UTF-8') : string
     {
+        // Input validation
+        if ( trim($string) === '' ) {
+            return '';
+        }
+        
+        // Validate flags parameter
+        if ( $flags < 0 || $flags > 15 ) {
+            $flags = 3; // Default to ENT_QUOTES
+        }
+
         return htmlspecialchars($string, $flags, $encode);
     }
 
@@ -80,6 +95,11 @@ final class Sanitizer
      */
     public static function escapeXML(string $string) : string
     {
+        // Input validation
+        if ( trim($string) === '' ) {
+            return '';
+        }
+
         return self::escapeHTML($string, 3 | 16, 'UTF-8');
     }
 
@@ -94,6 +114,11 @@ final class Sanitizer
      */
     public static function escapeJS(string $string) : string
     {
+        // Input validation
+        if ( trim($string) === '' ) {
+            return '';
+        }
+
         // Encode special characters
         $string = self::escapeHTML($string, 0, 'UTF-8');
 
@@ -117,6 +142,11 @@ final class Sanitizer
      */
     public static function escapeSQL(string $string) : string
     {
+        // Input validation
+        if ( trim($string) === '' ) {
+            return '';
+        }
+
         // Format spaces
         $string = Stringify::formatSpace($string);
 
@@ -136,6 +166,11 @@ final class Sanitizer
      */
     public static function sanitizeText(string $string) : string
     {
+        // Input validation
+        if ( trim($string) === '' ) {
+            return '';
+        }
+
         // Format spaces
         $string = Stringify::formatSpace($string);
 
@@ -208,6 +243,11 @@ final class Sanitizer
      */
     public static function sanitizeName(string $string, bool $strict = true) : string
     {
+        // Input validation
+        if ( trim($string) === '' ) {
+            return '';
+        }
+
         // Format spaces
         $string = Stringify::formatSpace($string);
 
@@ -216,6 +256,12 @@ final class Sanitizer
 
         // Strip special characters
         $string = Stringify::stripChar($string);
+
+        // Apply strict mode filtering
+        if ( $strict ) {
+            // Allow only alphanumeric characters and underscores
+            $string = preg_replace('/[^a-zA-Z0-9_]/', '', $string);
+        }
 
         return $string;
     }
@@ -311,10 +357,45 @@ final class Sanitizer
      * @param mixed $html
      * @param array $protocols
      * @return string
-     * @todo
      */
     public static function sanitizeHTML(string $string, $html = 'post', ?array $protocols = null) : string
     {
+        // Input validation
+        if ( trim($string) === '' ) {
+            return '';
+        }
+
+        // Set default allowed protocols
+        if ( $protocols === null ) {
+            $protocols = ['http', 'https', 'mailto'];
+        }
+
+        // Basic HTML sanitization
+        $allowedTags = '<p><br><strong><em><u><ol><ul><li><a><img>';
+        
+        if ( $html === 'comment' ) {
+            // More restrictive for comments
+            $allowedTags = '<p><br><strong><em>';
+        } elseif ( $html === 'basic' ) {
+            // Very basic HTML only
+            $allowedTags = '<p><br>';
+        }
+
+        // Strip dangerous tags but keep allowed ones
+        $string = strip_tags($string, $allowedTags);
+
+        // Remove dangerous attributes and protocols
+        $string = preg_replace('/on\w+\s*=\s*["\'][^"\']*["\']/i', '', $string);
+        $string = preg_replace('/javascript\s*:/i', '', $string);
+        $string = preg_replace('/vbscript\s*:/i', '', $string);
+        $string = preg_replace('/data\s*:/i', '', $string);
+
+        // Validate protocols in href and src attributes
+        foreach ($protocols as $protocol) {
+            $string = preg_replace('/href\s*=\s*["\'](?!' . preg_quote($protocol) . ':)[^"\']*["\']/i', '', $string);
+            $string = preg_replace('/src\s*=\s*["\'](?!' . preg_quote($protocol) . ':)[^"\']*["\']/i', '', $string);
+        }
+
         return $string;
     }
 
@@ -324,10 +405,42 @@ final class Sanitizer
      *
      * @access public
      * @param string $string
-     * @todo
+     * @return string
      */
     public static function sanitizeFilename(string $string) : string
     {
+        // Input validation
+        if ( trim($string) === '' ) {
+            return '';
+        }
+
+        // Length validation
+        if ( strlen($string) > 255 ) {
+            $string = substr($string, 0, 255);
+        }
+
+        // Remove path traversal attempts
+        $string = str_replace(['../', '.\\', '../'], '', $string);
+
+        // Remove dangerous characters
+        $string = preg_replace('/[<>:"|?*\x00-\x1f\x7f]/', '', $string);
+
+        // Remove leading/trailing dots and spaces
+        $string = trim($string, '. ');
+
+        // Prevent reserved Windows filenames
+        $reserved = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'];
+        
+        $baseName = pathinfo($string, PATHINFO_FILENAME);
+        if ( in_array(strtoupper($baseName), $reserved) ) {
+            $string = 'file_' . $string;
+        }
+
+        // Ensure filename is not empty after sanitization
+        if ( trim($string) === '' ) {
+            $string = 'file.txt';
+        }
+
         return $string;
     }
 
@@ -338,10 +451,40 @@ final class Sanitizer
      * @access public
      * @param string $string
      * @return string
-     * @todo
      */
     public static function sanitizeMimeType(string $string) : string
     {
+        // Input validation
+        if ( trim($string) === '' ) {
+            return '';
+        }
+
+        // Convert to lowercase for consistency
+        $string = strtolower(trim($string));
+
+        // Validate basic MIME type format (type/subtype)
+        if ( !preg_match('/^[a-z][a-z0-9]*[a-z0-9\-\.]\/[a-z0-9][a-z0-9\-\.]*[a-z0-9]$/', $string) ) {
+            return '';
+        }
+
+        // Define allowed MIME types for security
+        $allowedTypes = [
+            'text/plain', 'text/html', 'text/css', 'text/javascript', 'text/csv',
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+            'application/pdf', 'application/json', 'application/xml',
+            'application/zip', 'application/x-zip-compressed',
+            'application/msword', 'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'audio/mpeg', 'audio/wav', 'audio/ogg',
+            'video/mp4', 'video/webm', 'video/ogg'
+        ];
+
+        // Check if MIME type is in allowed list
+        if ( !in_array($string, $allowedTypes) ) {
+            return '';
+        }
+
         return $string;
     }
 }
