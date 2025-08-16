@@ -136,7 +136,7 @@ class Encryption
 		if ( trim($cipher) === '' ) {
 			throw new \InvalidArgumentException('Cipher algorithm cannot be empty');
 		}
-		
+
 		// Validate cipher is supported
 		if ( !in_array($cipher, openssl_get_cipher_methods()) ) {
 			throw new \InvalidArgumentException("Unsupported cipher algorithm: {$cipher}");
@@ -172,7 +172,7 @@ class Encryption
 		if ( trim($algo) === '' ) {
 			throw new \InvalidArgumentException('Hash algorithm cannot be empty');
 		}
-		
+
 		// Validate hash algorithm is supported
 		if ( !in_array($algo, hash_algos()) ) {
 			throw new \InvalidArgumentException("Unsupported hash algorithm: {$algo}");
@@ -207,10 +207,11 @@ class Encryption
 			}
 
 			$loop = ($loop <= 3) ? $loop : 3;
-			
+
 			// Clear any previous OpenSSL errors
-			while (openssl_error_string() !== false) {}
-			
+			while (openssl_error_string() !== false) {
+			}
+
 			$encrypt = openssl_encrypt(
 				$this->data,
 				$this->cipher,
@@ -259,14 +260,15 @@ class Encryption
 		try {
 			$loop = ($loop <= 3) ? $loop : 3;
 			$crypted = Stringify::remove($this->prefix, $this->data);
-			
+
 			// Validate that we have data to decrypt after removing prefix
 			if ( trim($crypted) === '' ) {
 				throw new \InvalidArgumentException('No encrypted data found after removing prefix');
 			}
 
 			// Clear any previous OpenSSL errors
-			while (openssl_error_string() !== false) {}
+			while (openssl_error_string() !== false) {
+			}
 
 			$decrypted = openssl_decrypt(
 				Tokenizer::unbase64($crypted, $loop),
