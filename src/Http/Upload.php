@@ -39,9 +39,9 @@ final class Upload
 	public static function get(?string $key = null) : mixed
 	{
 		if ( $key ) {
-			return self::isSetted($key) ? $_FILES[$key] : null;
+			return self::isSet($key) ? $_FILES[$key] : null;
 		}
-		return self::isSetted() ? $_FILES : null;
+		return self::isSet() ? $_FILES : null;
 	}
 
 	/**
@@ -64,7 +64,7 @@ final class Upload
 	 * @param string $key
 	 * @return bool
 	 */
-	public static function isSetted(?string $key = null) : bool
+	public static function isSet(?string $key = null) : bool
 	{
 		if ( $key ) {
 			return isset($_FILES[$key]);
@@ -115,7 +115,7 @@ final class Upload
 	 */
 	public static function handle(string $upload, array $args = [], array $types = [])
 	{
-		// if ( self::isSetted('file') ) {
+		// if ( self::isSet('file') ) {
 
 		// 	// Handle
 		// 	static::$handler = Arrayify::merge([

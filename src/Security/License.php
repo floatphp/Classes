@@ -284,7 +284,7 @@ class License
     {
         $this->server = [
             'ip'   => Server::getIp(),
-            'host' => Server::isSetted('http-host') ?: ''
+            'host' => Server::isSet('http-host') ?: ''
         ];
     }
 

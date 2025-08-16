@@ -54,7 +54,7 @@ final class Cookie
 	public static function get(?string $key = null, bool $validate = true) : mixed
 	{
 		if ( $key ) {
-			if ( !self::isSetted($key) ) {
+			if ( !self::isSet($key) ) {
 				return null;
 			}
 
@@ -67,7 +67,7 @@ final class Cookie
 			return $value;
 		}
 
-		if ( !self::isSetted() ) {
+		if ( !self::isSet() ) {
 			return null;
 		}
 
@@ -153,7 +153,7 @@ final class Cookie
 	 */
 	public static function delete(string $key, string $path = '/', string $domain = '') : bool
 	{
-		if ( self::isSetted($key) ) {
+		if ( self::isSet($key) ) {
 			unset($_COOKIE[$key]);
 			return setcookie($key, '', [
 				'expires' => time() - 3600,
@@ -171,7 +171,7 @@ final class Cookie
 	 * @param string $key
 	 * @return bool
 	 */
-	public static function isSetted(?string $key = null) : bool
+	public static function isSet(?string $key = null) : bool
 	{
 		if ( $key ) {
 			return isset($_COOKIE[$key]);

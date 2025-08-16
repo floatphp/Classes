@@ -229,9 +229,9 @@ final class Session
     public static function get(?string $key = null) : mixed
     {
         if ( $key ) {
-            return self::isSetted($key) ? $_SESSION[$key] : null;
+            return self::isSet($key) ? $_SESSION[$key] : null;
         }
-        return self::isSetted() ? $_SESSION : null;
+        return self::isSet() ? $_SESSION : null;
     }
 
     /**
@@ -254,7 +254,7 @@ final class Session
      * @param string $key
      * @return bool
      */
-    public static function isSetted(?string $key = null) : bool
+    public static function isSet(?string $key = null) : bool
     {
         if ( $key ) {
             return isset($_SESSION[$key]);

@@ -34,9 +34,9 @@ final class Server
 	{
 		if ( $key ) {
 			if ( $format ) $key = Stringify::undash($key, true);
-			return self::isSetted($key) ? $_SERVER[$key] : null;
+			return self::isSet($key) ? $_SERVER[$key] : null;
 		}
-		return self::isSetted() ? $_SERVER : null;
+		return self::isSet() ? $_SERVER : null;
 	}
 
 	/**
@@ -62,7 +62,7 @@ final class Server
 	 * @param bool $format
 	 * @return bool
 	 */
-	public static function isSetted(?string $key = null, $format = true) : bool
+	public static function isSet(?string $key = null, $format = true) : bool
 	{
 		if ( $key ) {
 			if ( $format ) $key = Stringify::undash($key, true);
@@ -104,12 +104,12 @@ final class Server
 			return Validator::isIp($ip) ? $ip : $default;
 		}
 
-		if ( self::isSetted('http-x-real-ip') ) {
+		if ( self::isSet('http-x-real-ip') ) {
 			$ip = self::get('http-x-real-ip');
 			return Validator::isIp($ip) ? $ip : $default;
 		}
 
-		if ( self::isSetted('http-x-forwarded-for') ) {
+		if ( self::isSet('http-x-forwarded-for') ) {
 			$ip = self::get('http-x-forwarded-for');
 			$ip = Stringify::stripSlash($ip);
 			$ip = Stringify::split($ip, ['regex' => '/,/']);
@@ -117,7 +117,7 @@ final class Server
 			return Validator::isIp($ip) ? $ip : $default;
 		}
 
-		if ( self::isSetted('http-cf-connecting-ip') ) {
+		if ( self::isSet('http-cf-connecting-ip') ) {
 			$ip = self::get('http-cf-connecting-ip');
 			$ip = Stringify::stripSlash($ip);
 			$ip = Stringify::split($ip, ['regex' => '/,/']);
@@ -125,7 +125,7 @@ final class Server
 			return Validator::isIp($ip) ? $ip : $default;
 		}
 
-		if ( self::isSetted('remote-addr') ) {
+		if ( self::isSet('remote-addr') ) {
 			$ip = self::get('remote-addr');
 			$ip = Stringify::stripSlash($ip);
 			return Validator::isIp($ip) ? $ip : $default;
@@ -162,7 +162,7 @@ final class Server
 		], $headers);
 
 		foreach ($headers as $header) {
-			if ( self::isSetted($header) ) {
+			if ( self::isSet($header) ) {
 				$code = self::get($header);
 				if ( !empty($code) ) {
 					$code = Stringify::stripSlash($code);
@@ -294,11 +294,11 @@ final class Server
 	 */
 	public static function getAuthorizationHeaders() : mixed
 	{
-		if ( self::isSetted('Authorization', false) ) {
+		if ( self::isSet('Authorization', false) ) {
 			return trim(self::get('Authorization', false));
 		}
 
-		if ( self::isSetted('http-authorization') ) {
+		if ( self::isSet('http-authorization') ) {
 			return trim(self::get('http-authorization'));
 		}
 
@@ -340,7 +340,7 @@ final class Server
 	 */
 	public static function isSsl() : bool
 	{
-		if ( self::isSetted('https') ) {
+		if ( self::isSet('https') ) {
 
 			$isOn = strtolower(self::get('https')) === 'on';
 			$isOne = self::get('https') === '1';
@@ -349,7 +349,7 @@ final class Server
 				return true;
 			}
 
-		} elseif ( self::isSetted('server-port') ) {
+		} elseif ( self::isSet('server-port') ) {
 			return self::get('server-port') === '443';
 		}
 

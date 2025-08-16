@@ -121,8 +121,8 @@ final class GetTest extends TestCase
     {
         $_GET['test_key'] = 'test_value';
         
-        $this->assertTrue(Get::isSetted('test_key'));
-        $this->assertFalse(Get::isSetted('non_existent'));
+        $this->assertTrue(Get::isSet('test_key'));
+        $this->assertFalse(Get::isSet('non_existent'));
     }
 
     /**
@@ -130,10 +130,10 @@ final class GetTest extends TestCase
      */
     public function testIsSettedAny(): void
     {
-        $this->assertFalse(Get::isSetted());
+        $this->assertFalse(Get::isSet());
         
         $_GET['test_key'] = 'test_value';
-        $this->assertTrue(Get::isSetted());
+        $this->assertTrue(Get::isSet());
     }
 
     /**
@@ -172,7 +172,7 @@ final class GetTest extends TestCase
         
         $value = Get::get('empty_key');
         $this->assertEquals('', $value);
-        $this->assertTrue(Get::isSetted('empty_key'));
+        $this->assertTrue(Get::isSet('empty_key'));
     }
 
     /**
@@ -184,7 +184,7 @@ final class GetTest extends TestCase
         
         $value = Get::get('zero_key');
         $this->assertEquals(0, $value);
-        $this->assertTrue(Get::isSetted('zero_key'));
+        $this->assertTrue(Get::isSet('zero_key'));
     }
 
     /**
@@ -196,7 +196,7 @@ final class GetTest extends TestCase
         
         $value = Get::get('false_key');
         $this->assertFalse($value);
-        $this->assertTrue(Get::isSetted('false_key'));
+        $this->assertTrue(Get::isSet('false_key'));
     }
 
     /**

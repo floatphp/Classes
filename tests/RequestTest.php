@@ -121,8 +121,8 @@ final class RequestTest extends TestCase
     {
         $_REQUEST['test_key'] = 'test_value';
         
-        $this->assertTrue(Request::isSetted('test_key'));
-        $this->assertFalse(Request::isSetted('non_existent'));
+        $this->assertTrue(Request::isSet('test_key'));
+        $this->assertFalse(Request::isSet('non_existent'));
     }
 
     /**
@@ -130,10 +130,10 @@ final class RequestTest extends TestCase
      */
     public function testIsSettedAny(): void
     {
-        $this->assertFalse(Request::isSetted());
+        $this->assertFalse(Request::isSet());
         
         $_REQUEST['test_key'] = 'test_value';
-        $this->assertTrue(Request::isSetted());
+        $this->assertTrue(Request::isSet());
     }
 
     /**
@@ -172,7 +172,7 @@ final class RequestTest extends TestCase
         
         $value = Request::get('empty_key');
         $this->assertEquals('', $value);
-        $this->assertTrue(Request::isSetted('empty_key'));
+        $this->assertTrue(Request::isSet('empty_key'));
     }
 
     /**
@@ -184,7 +184,7 @@ final class RequestTest extends TestCase
         
         $value = Request::get('zero_key');
         $this->assertEquals(0, $value);
-        $this->assertTrue(Request::isSetted('zero_key'));
+        $this->assertTrue(Request::isSet('zero_key'));
     }
 
     /**
@@ -196,7 +196,7 @@ final class RequestTest extends TestCase
         
         $value = Request::get('false_key');
         $this->assertFalse($value);
-        $this->assertTrue(Request::isSetted('false_key'));
+        $this->assertTrue(Request::isSet('false_key'));
     }
 
     /**

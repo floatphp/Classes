@@ -121,8 +121,8 @@ final class PostTest extends TestCase
     {
         $_POST['test_key'] = 'test_value';
         
-        $this->assertTrue(Post::isSetted('test_key'));
-        $this->assertFalse(Post::isSetted('non_existent'));
+        $this->assertTrue(Post::isSet('test_key'));
+        $this->assertFalse(Post::isSet('non_existent'));
     }
 
     /**
@@ -130,10 +130,10 @@ final class PostTest extends TestCase
      */
     public function testIsSettedAny(): void
     {
-        $this->assertFalse(Post::isSetted());
+        $this->assertFalse(Post::isSet());
         
         $_POST['test_key'] = 'test_value';
-        $this->assertTrue(Post::isSetted());
+        $this->assertTrue(Post::isSet());
     }
 
     /**
@@ -172,7 +172,7 @@ final class PostTest extends TestCase
         
         $value = Post::get('empty_key');
         $this->assertEquals('', $value);
-        $this->assertTrue(Post::isSetted('empty_key'));
+        $this->assertTrue(Post::isSet('empty_key'));
     }
 
     /**
@@ -184,7 +184,7 @@ final class PostTest extends TestCase
         
         $value = Post::get('zero_key');
         $this->assertEquals(0, $value);
-        $this->assertTrue(Post::isSetted('zero_key'));
+        $this->assertTrue(Post::isSet('zero_key'));
     }
 
     /**
@@ -196,7 +196,7 @@ final class PostTest extends TestCase
         
         $value = Post::get('false_key');
         $this->assertFalse($value);
-        $this->assertTrue(Post::isSetted('false_key'));
+        $this->assertTrue(Post::isSet('false_key'));
     }
 
     /**
@@ -246,7 +246,7 @@ final class PostTest extends TestCase
         $this->assertEquals('testpass', Post::get('password'));
         $this->assertEquals('test@example.com', Post::get('email'));
         $this->assertTrue(Post::get('remember'));
-        $this->assertTrue(Post::isSetted());
+        $this->assertTrue(Post::isSet());
     }
 
     /**

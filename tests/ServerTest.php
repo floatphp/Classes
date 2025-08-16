@@ -91,8 +91,8 @@ final class ServerTest extends TestCase
      */
     public function testIsSetted(): void
     {
-        $this->assertTrue(Server::isSetted('HTTP_HOST'));
-        $this->assertFalse(Server::isSetted('NON_EXISTENT'));
+        $this->assertTrue(Server::isSet('HTTP_HOST'));
+        $this->assertFalse(Server::isSet('NON_EXISTENT'));
     }
 
     /**
@@ -100,7 +100,7 @@ final class ServerTest extends TestCase
      */
     public function testIsSettedAny(): void
     {
-        $this->assertTrue(Server::isSetted()); // $_SERVER should always have values
+        $this->assertTrue(Server::isSet()); // $_SERVER should always have values
     }
 
     /**

@@ -468,7 +468,7 @@ class Form
 			if ( $input['use-request'] ) {
 				$except = ['html', 'string', 'title', 'radio', 'checkbox', 'select', 'submit'];
 				if ( !Stringify::contains($except, $input['type']) ) {
-					if ( Request::isSetted($input['name']) ) {
+					if ( Request::isSet($input['name']) ) {
 						$input['value'] = Request::get($input['name']);
 					}
 				}
@@ -956,7 +956,7 @@ class Form
 				foreach ($input['options'] as $key => $option) {
 					$selected = false;
 					if ( $input['use-request'] ) {
-						if ( Request::isSetted($input['name']) ) {
+						if ( Request::isSet($input['name']) ) {
 							if ( Request::get($input['name']) === $key ) {
 								$selected = true;
 							}
@@ -988,7 +988,7 @@ class Form
 
 						if ( !$checked ) {
 							if ( $input['use-request'] ) {
-								if ( Request::isSetted($input['name']) ) {
+								if ( Request::isSet($input['name']) ) {
 									if ( Stringify::contains(Request::get($input['name']), $key) ) {
 										$checked = true;
 									}

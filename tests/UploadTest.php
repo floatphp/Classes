@@ -66,12 +66,12 @@ final class UploadTest extends TestCase
 
     public function testIsSettedMethod(): void
     {
-        $this->assertIsBool(Upload::isSetted());
+        $this->assertIsBool(Upload::isSet());
     }
 
     public function testIsSettedWithKey(): void
     {
-        $this->assertIsBool(Upload::isSetted('test_file'));
+        $this->assertIsBool(Upload::isSet('test_file'));
     }
 
     public function testSanitizeMethod(): void

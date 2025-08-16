@@ -30,9 +30,9 @@ final class Post
 	public static function get(?string $key = null) : mixed
 	{
 		if ( $key ) {
-			return self::isSetted($key) ? $_POST[$key] : null;
+			return self::isSet($key) ? $_POST[$key] : null;
 		}
-		return self::isSetted() ? $_POST : null;
+		return self::isSet() ? $_POST : null;
 	}
 
 	/**
@@ -55,7 +55,7 @@ final class Post
 	 * @param string $key
 	 * @return bool
 	 */
-	public static function isSetted(?string $key = null) : bool
+	public static function isSet(?string $key = null) : bool
 	{
 		if ( $key ) {
 			return isset($_POST[$key]);

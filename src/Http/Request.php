@@ -30,9 +30,9 @@ final class Request
 	public static function get(?string $key = null) : mixed
 	{
 		if ( $key ) {
-			return self::isSetted($key) ? $_REQUEST[$key] : null;
+			return self::isSet($key) ? $_REQUEST[$key] : null;
 		}
-		return self::isSetted() ? $_REQUEST : null;
+		return self::isSet() ? $_REQUEST : null;
 	}
 
 	/**
@@ -55,7 +55,7 @@ final class Request
 	 * @param string $key
 	 * @return bool
 	 */
-	public static function isSetted(?string $key = null) : bool
+	public static function isSet(?string $key = null) : bool
 	{
 		if ( $key ) {
 			return isset($_REQUEST[$key]);

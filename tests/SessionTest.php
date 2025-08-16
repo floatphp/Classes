@@ -136,8 +136,8 @@ final class SessionTest extends TestCase
     {
         $_SESSION['test_key'] = 'test_value';
         
-        $this->assertTrue(Session::isSetted('test_key'));
-        $this->assertFalse(Session::isSetted('non_existent'));
+        $this->assertTrue(Session::isSet('test_key'));
+        $this->assertFalse(Session::isSet('non_existent'));
     }
 
     /**
@@ -145,10 +145,10 @@ final class SessionTest extends TestCase
      */
     public function testIsSettedAny(): void
     {
-        $this->assertFalse(Session::isSetted());
+        $this->assertFalse(Session::isSet());
         
         $_SESSION['test_key'] = 'test_value';
-        $this->assertTrue(Session::isSetted());
+        $this->assertTrue(Session::isSet());
     }
 
     /**
@@ -185,9 +185,9 @@ final class SessionTest extends TestCase
     {
         Session::register(120);
         
-        $this->assertTrue(Session::isSetted('--session-id'));
-        $this->assertTrue(Session::isSetted('--session-time'));
-        $this->assertTrue(Session::isSetted('--session-start'));
+        $this->assertTrue(Session::isSet('--session-id'));
+        $this->assertTrue(Session::isSet('--session-time'));
+        $this->assertTrue(Session::isSet('--session-start'));
     }
 
     /**
@@ -261,10 +261,10 @@ final class SessionTest extends TestCase
         $this->assertEmpty(Session::get('empty_array'));
         
         // All should be considered "set" even if empty
-        $this->assertTrue(Session::isSetted('empty_string'));
-        $this->assertTrue(Session::isSetted('zero_value'));
-        $this->assertTrue(Session::isSetted('false_value'));
-        $this->assertTrue(Session::isSetted('empty_array'));
+        $this->assertTrue(Session::isSet('empty_string'));
+        $this->assertTrue(Session::isSet('zero_value'));
+        $this->assertTrue(Session::isSet('false_value'));
+        $this->assertTrue(Session::isSet('empty_array'));
     }
 
     /**

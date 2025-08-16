@@ -85,8 +85,8 @@ final class CookieTest extends TestCase
     {
         $_COOKIE['test_key'] = 'test_value';
         
-        $this->assertTrue(Cookie::isSetted('test_key'));
-        $this->assertFalse(Cookie::isSetted('non_existent'));
+        $this->assertTrue(Cookie::isSet('test_key'));
+        $this->assertFalse(Cookie::isSet('non_existent'));
     }
 
     /**
@@ -94,10 +94,10 @@ final class CookieTest extends TestCase
      */
     public function testIsSettedAny(): void
     {
-        $this->assertFalse(Cookie::isSetted());
+        $this->assertFalse(Cookie::isSet());
         
         $_COOKIE['test_key'] = 'test_value';
-        $this->assertTrue(Cookie::isSetted());
+        $this->assertTrue(Cookie::isSet());
     }
 
     /**
@@ -152,7 +152,7 @@ final class CookieTest extends TestCase
         
         $value = Cookie::get('empty_key');
         $this->assertEquals('', $value);
-        $this->assertTrue(Cookie::isSetted('empty_key'));
+        $this->assertTrue(Cookie::isSet('empty_key'));
     }
 
     /**
@@ -164,7 +164,7 @@ final class CookieTest extends TestCase
         
         $value = Cookie::get('null_key');
         $this->assertNull($value);
-        $this->assertTrue(Cookie::isSetted('null_key'));
+        $this->assertTrue(Cookie::isSet('null_key'));
     }
 
     /**
