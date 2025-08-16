@@ -34,6 +34,9 @@ class Validator
 	 */
 	public static function isEmail(string $email) : bool
 	{
+		if ( trim($email) === '' ) {
+			return false;
+		}
 		return (bool)Stringify::filter($email, null, 274);
 	}
 
@@ -48,6 +51,9 @@ class Validator
 	 */
 	public static function isUrl(string $url) : bool
 	{
+		if ( trim($url) === '' ) {
+			return false;
+		}
 		return (bool)Stringify::filter($url, null, 273);
 	}
 
@@ -90,22 +96,40 @@ class Validator
 	 */
 	public static function isIp(string $ip) : bool
 	{
-		$pattern = '/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/';
-		$match = Stringify::match($pattern, $ip, $matches);
-		return $match || self::isIpV6($ip);
+		if ( trim($ip) === '' ) {
+			return false;
+		}
+		return (bool)Stringify::filter($ip, 'ip');
+	}
+
+	/**
+	 * Check IPv6 address.
+	 *
+	 * @access public
+	 * @param string $ip
+	 * @return bool
+	 */
+	public static function isIpV6(string $ip) : bool
+	{
+		if ( trim($ip) === '' ) {
+			return false;
+		}
+		return (bool)Stringify::filter($ip, 'ipv6');
 	}
 
 	/**
 	 * Validate MAC.
 	 *
 	 * @access public
-	 * @param string $address
+	 * @param string $mac
 	 * @return bool
 	 */
-	public static function isMac(string $address) : bool
+	public static function isMac(string $mac) : bool
 	{
-		$pattern = "/^([0-9A-F]{2}[:-]){5}([0-9A-F]{2})$/i";
-		return Stringify::match($pattern, $address, $matches);
+		if ( trim($mac) === '' || strlen($mac) !== 17 ) {
+			return false;
+		}
+		return (bool)Stringify::filter($mac, 'mac');
 	}
 
 	/**
@@ -117,6 +141,9 @@ class Validator
 	 */
 	public static function isStream(string $path) : bool
 	{
+		if ( trim($path) === '' ) {
+			return false;
+		}
 		return Stream::isValid($path);
 	}
 
@@ -166,6 +193,9 @@ class Validator
 	 */
 	public static function isModule(string $module) : bool
 	{
+		if ( trim($module) === '' ) {
+			return false;
+		}
 		return extension_loaded($module);
 	}
 
@@ -207,58 +237,6 @@ class Validator
 	public static function isVersion(string $v1, string $v2, string $operator = '==') : bool
 	{
 		return version_compare($v1, $v2, $operator);
-	}
-
-	/**
-	 * Check IPv6 address.
-	 *
-	 * @access public
-	 * @param string $ip
-	 * @return bool
-	 */
-	public static function isIpV6(string $ip) : bool
-	{
-		$ip = self::uncompressIpV6($ip);
-		list($ipv6, $ipv4) = self::splitIpV6($ip);
-
-		$ipv6 = explode(':', $ipv6);
-		$ipv4 = explode('.', $ipv4);
-
-		if ( count($ipv6) === 8 && count($ipv4) === 1 || count($ipv6) === 6 && count($ipv4) === 4 ) {
-			foreach ($ipv6 as $part) {
-
-				if ( $part === '' ) {
-					return false;
-				}
-
-				if ( strlen($part) > 4 ) {
-					return false;
-				}
-
-				$part = ltrim($part, '0');
-				if ( $part === '' ) {
-					$part = '0';
-				}
-
-				$value = hexdec($part);
-				if ( dechex($value) !== strtolower($part) || $value < 0 || $value > 0xFFFF ) {
-					return false;
-				}
-			}
-
-			if ( count($ipv4) === 4 ) {
-				foreach ($ipv4 as $part) {
-					$value = (int)$part;
-					if ( (string)$value !== $part || $value < 0 || $value > 0xFF ) {
-						return false;
-					}
-				}
-			}
-
-			return true;
-		}
-
-		return false;
 	}
 
 	/**
@@ -312,63 +290,6 @@ class Validator
 	}
 
 	/**
-	 * Uncompresses IPv6 address.
-	 *
-	 * @access private
-	 * @return string
-	 */
-	private static function uncompressIpV6(string $ip) : string
-	{
-		if ( Stringify::subCount($ip, '::') !== 1 ) {
-			return $ip;
-		}
-
-		list($ip1, $ip2) = explode('::', $ip);
-		$c1 = ($ip1 === '') ? -1 : Stringify::subCount($ip1, ':');
-		$c2 = ($ip2 === '') ? -1 : Stringify::subCount($ip2, ':');
-
-		if ( strpos($ip2, '.') !== false ) {
-			$c2++;
-		}
-
-		if ( $c1 === -1 && $c2 === -1 ) {
-			$ip = '0:0:0:0:0:0:0:0';
-
-		} elseif ( $c1 === -1 ) {
-			$fill = Stringify::repeat('0:', 7 - $c2);
-			$ip = Stringify::replace('::', $fill, $ip);
-
-		} elseif ( $c2 === -1 ) {
-			$fill = Stringify::repeat(':0', 7 - $c1);
-			$ip = Stringify::replace('::', $fill, $ip);
-
-		} else {
-			$fill = ':' . Stringify::repeat('0:', 6 - $c2 - $c1);
-			$ip = Stringify::replace('::', $fill, $ip);
-		}
-
-		return $ip;
-	}
-
-	/**
-	 * Splits IPv6 address into the IPv6 and IPv4 parts.
-	 *
-	 * @access private
-	 * @param string $ip
-	 * @return array
-	 */
-	private static function splitIpV6(string $ip) : array
-	{
-		if ( strpos($ip, '.') !== false ) {
-			$pos = (int)strrpos($ip, ':');
-			$ipv6 = substr($ip, 0, $pos);
-			$ipv4 = substr($ip, $pos + 1);
-			return [$ipv6, $ipv4];
-		}
-		return [$ip, ''];
-	}
-
-	/**
 	 * Check if two IP addresses are in the same subnet.
 	 *
 	 * @access public
@@ -396,41 +317,5 @@ class Validator
 
 		// For IPv6 or other cases, require exact match
 		return false;
-	}
-
-	/**
-	 * Validate and sanitize file path against directory traversal attacks.
-	 *
-	 * @access public
-	 * @param string $path
-	 * @param bool $throwException
-	 * @return string
-	 * @throws \InvalidArgumentException
-	 */
-	public static function isPath(string $path, bool $throwException = false) : string
-	{
-		// Normalize path
-		$path = Stringify::formatPath($path);
-
-		// Check for directory traversal patterns
-		$dangerous = ['../', '..\/', '../', '..\\'];
-		foreach ($dangerous as $pattern) {
-			if ( Stringify::contains($path, $pattern) ) {
-				if ( $throwException ) {
-					throw new \InvalidArgumentException("Path contains directory traversal: {$path}");
-				}
-				return '';
-			}
-		}
-
-		// Check for null bytes (path truncation attack)
-		if ( Stringify::contains($path, "\0") ) {
-			if ( $throwException ) {
-				throw new \InvalidArgumentException("Path contains null byte: {$path}");
-			}
-			return '';
-		}
-
-		return $path;
 	}
 }
