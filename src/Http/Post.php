@@ -18,10 +18,7 @@ namespace FloatPHP\Classes\Http;
 use InvalidArgumentException;
 
 /**
- * Advanced HTTP POST manipulation with enhanced security and validation.
- * 
- * Provides secure access to $_POST superglobal with built-in validation,
- * sanitization, and XSS protection capabilities.
+ * Advanced HTTP POST manipulation with enhanced security.
  */
 final class Post
 {
