@@ -24,7 +24,7 @@ use FloatPHP\Classes\Filesystem\{Stringify, TypeCheck};
 class Tokenizer
 {
 	/**
-	 * Get token.
+	 * Generate encrypted token.
 	 * 
 	 * @access public
 	 * @param string $user
@@ -34,20 +34,37 @@ class Tokenizer
 	 */
 	public static function get(string $user, string $pswd, ?string $prefix = null) : array
 	{
-		$secret = self::getUniqueId();
-		$token = trim("{user:{$user}}{pswd:{$pswd}}");
+		// Input validation
+		if ( trim($user) === '' || trim($pswd) === '' ) {
+			throw new \InvalidArgumentException('Username and password cannot be empty');
+		}
 
-		$encryption = new Encryption($token, $secret);
-		$encryption->setPrefix((string)$prefix);
+		try {
+			$secret = self::getUniqueId();
+			$token = trim("{user:{$user}}{pswd:{$pswd}}");
 
-		return [
-			'public' => $encryption->encrypt(),
-			'secret' => $secret
-		];
+			$encryption = new Encryption($token, $secret);
+			$encryption->setPrefix((string)$prefix);
+
+			$encrypted = $encryption->encrypt();
+			
+			// Verify encryption was successful
+			if ( $encrypted === false || $encrypted === null ) {
+				throw new \RuntimeException('Token encryption failed');
+			}
+
+			return [
+				'public' => $encrypted,
+				'secret' => $secret
+			];
+
+		} catch (\Exception $e) {
+			throw new \RuntimeException('Token generation failed: ' . $e->getMessage());
+		}
 	}
 
 	/**
-	 * Match token.
+	 * Decrypt and validate token.
 	 * 
 	 * @access public
 	 * @param string $public
@@ -57,23 +74,39 @@ class Tokenizer
 	 */
 	public static function match(string $public, string $secret, ?string $prefix = null)
 	{
+		// Input validation
+		if ( trim($public) === '' || trim($secret) === '' ) {
+			return false;
+		}
+
 		$pattern = '/{user:(.*?)}{pswd:(.*?)}/';
 
-		$encryption = new Encryption($public, $secret);
-		$encryption->setPrefix((string)$prefix);
-		$access = $encryption->decrypt();
+		try {
+			$encryption = new Encryption($public, $secret);
+			$encryption->setPrefix((string)$prefix);
+			$access = $encryption->decrypt();
 
-		Stringify::match($pattern, $access, $matches);
-		$user = $matches[1] ?? false;
+			// Handle failed decryption
+			if ( $access === false || $access === null ) {
+				return false;
+			}
 
-		Stringify::match($pattern, $access, $matches);
-		$pswd = $matches[2] ?? false;
+			Stringify::match($pattern, $access, $matches);
+			$user = $matches[1] ?? false;
 
-		if ( $user && $pswd ) {
-			return [
-				'username' => $user,
-				'password' => $pswd
-			];
+			Stringify::match($pattern, $access, $matches);
+			$pswd = $matches[2] ?? false;
+
+			if ( $user && $pswd ) {
+				return [
+					'username' => $user,
+					'password' => $pswd
+				];
+			}
+
+		} catch (\Exception $e) {
+			// Handle encryption/decryption errors gracefully
+			return false;
 		}
 
 		return false;
@@ -88,11 +121,19 @@ class Tokenizer
 	 */
 	public static function generate(int $length = 32) : string
 	{
+		// Input validation for length
+		if ( $length < 1 ) {
+			throw new \InvalidArgumentException('Token length must be at least 1');
+		}
+		if ( $length > 1024 ) {
+			throw new \InvalidArgumentException('Token length too large (max: 1024)');
+		}
+
 		return bin2hex(random_bytes($length));
 	}
 
 	/**
-	 * Encode base64.
+	 * Multi-level base64 encoding.
 	 *
 	 * @access public
 	 * @param string $value
@@ -101,8 +142,15 @@ class Tokenizer
 	 */
 	public static function base64(string $value, int $loop = 1) : string
 	{
+		// Input validation
+		if ( trim($value) === '' ) {
+			throw new \InvalidArgumentException('Value cannot be empty');
+		}
+		if ( $loop < 1 || $loop > 5 ) {
+			throw new \InvalidArgumentException('Loop count must be between 1 and 5');
+		}
+
 		$encode = base64_encode($value);
-		$loop = ($loop > 5) ? 5 : $loop;
 		for ($i = 1; $i < $loop; $i++) {
 			$encode = base64_encode($encode);
 		}
@@ -119,8 +167,15 @@ class Tokenizer
 	 */
 	public static function unbase64(string $value, int $loop = 1) : string
 	{
+		// Input validation
+		if ( trim($value) === '' ) {
+			throw new \InvalidArgumentException('Value cannot be empty');
+		}
+		if ( $loop < 1 || $loop > 5 ) {
+			throw new \InvalidArgumentException('Loop count must be between 1 and 5');
+		}
+
 		$decode = base64_decode($value);
-		$loop = ($loop > 5) ? 5 : $loop;
 		for ($i = 1; $i < $loop; $i++) {
 			$decode = base64_decode($decode);
 		}
@@ -128,7 +183,7 @@ class Tokenizer
 	}
 
 	/**
-	 * Get unique Id.
+	 * Generate unique identifier.
 	 *
 	 * @access public
 	 * @param bool $md5
@@ -141,7 +196,7 @@ class Tokenizer
 	}
 
 	/**
-	 * Get UUID (4).
+	 * Generate UUID v4.
 	 *
 	 * @access public
 	 * @param bool $format
@@ -169,7 +224,7 @@ class Tokenizer
 	}
 
 	/**
-	 * Get range of numbers.
+	 * Secure random number in range.
 	 *
 	 * @access public
 	 * @param int $min
@@ -178,6 +233,16 @@ class Tokenizer
 	 */
 	public static function range(int $min = 5, int $max = 10) : int
 	{
+		// Input validation for negative values
+		if ( $min < 0 || $max < 0 ) {
+			throw new \InvalidArgumentException('Range values must be non-negative');
+		}
+
+		// Edge case handling for extreme inputs
+		if ( $max - $min > PHP_INT_MAX / 2 ) {
+			throw new \InvalidArgumentException('Range too large to process safely');
+		}
+
 		if ( $min >= $max ) {
 			return $min;
 		}
@@ -198,7 +263,7 @@ class Tokenizer
 	}
 
 	/**
-	 * Hash value.
+	 * Hash values with salt.
 	 *
 	 * @access public
 	 * @param mixed $value
@@ -216,7 +281,7 @@ class Tokenizer
 	}
 
 	/**
-	 * Hash value.
+	 * Verify hashed values.
 	 *
 	 * @access public
 	 * @param string $hash
