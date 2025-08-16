@@ -38,15 +38,15 @@ final class Get
 	 */
 	public static function get(?string $key = null, bool $sanitize = false) : mixed
 	{
-		if ($key !== null) {
+		if ( $key !== null ) {
 			self::validateKey($key);
-			if (self::isSet($key)) {
+			if ( self::isSet($key) ) {
 				$value = $_GET[$key];
 				return $sanitize ? self::sanitize($value) : $value;
 			}
 			return null;
 		}
-		
+
 		$data = self::isSet() ? $_GET : null;
 		return $sanitize && $data !== null ? self::sanitizeArray($data) : $data;
 	}
@@ -76,7 +76,7 @@ final class Get
 	 */
 	public static function isSet(?string $key = null) : bool
 	{
-		if ($key !== null) {
+		if ( $key !== null ) {
 			self::validateKey($key);
 			return isset($_GET[$key]);
 		}
@@ -93,10 +93,10 @@ final class Get
 	 */
 	public static function unset(?string $key = null) : void
 	{
-		if ($key !== null) {
+		if ( $key !== null ) {
 			self::validateKey($key);
 			unset($_GET[$key]);
-			
+
 		} else {
 			$_GET = [];
 		}
@@ -113,24 +113,24 @@ final class Get
 	private static function validateKey(string $key) : void
 	{
 		// Check for empty key
-		if (trim($key) === '') {
+		if ( trim($key) === '' ) {
 			throw new InvalidArgumentException('Key cannot be empty or whitespace only');
 		}
 
 		// Check key length for security
-		if (strlen($key) > self::MAX_KEY_LENGTH) {
+		if ( strlen($key) > self::MAX_KEY_LENGTH ) {
 			throw new InvalidArgumentException(
 				sprintf('Key length cannot exceed %d characters', self::MAX_KEY_LENGTH)
 			);
 		}
 
 		// Check for potentially malicious characters
-		if (preg_match('/[<>"\'\0\x1F]/', $key)) {
+		if ( preg_match('/[<>"\'\0\x1F]/', $key) ) {
 			throw new InvalidArgumentException('Key contains invalid characters');
 		}
 
 		// Check for control characters and null bytes
-		if (filter_var($key, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH) !== $key) {
+		if ( filter_var($key, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH) !== $key ) {
 			throw new InvalidArgumentException('Key contains control characters');
 		}
 	}
@@ -144,17 +144,17 @@ final class Get
 	 */
 	private static function sanitize(mixed $value) : mixed
 	{
-		if (is_string($value)) {
+		if ( is_string($value) ) {
 			// Remove null bytes and control characters
 			$value = filter_var($value, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW);
-			
+
 			// Basic XSS protection
 			$value = htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-			
+
 			return $value;
 		}
 
-		if (is_array($value)) {
+		if ( is_array($value) ) {
 			return self::sanitizeArray($value);
 		}
 
@@ -171,7 +171,7 @@ final class Get
 	private static function sanitizeArray(array $array) : array
 	{
 		$sanitized = [];
-		
+
 		foreach ($array as $key => $value) {
 			// Sanitize the key as well
 			$sanitizedKey = is_string($key) ? self::sanitize($key) : $key;
