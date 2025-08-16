@@ -53,7 +53,7 @@ final class Password
         if ( $special ) {
             $chars .= '!#$%&()*+,-.:;<>?@[]^{}~';
         }
-        
+
         $maxIndex = strlen($chars) - 1;
         for ($i = 0; $i < $length; $i++) {
             $token .= $chars[Tokenizer::range(0, $maxIndex)];
@@ -102,7 +102,7 @@ final class Password
 
         try {
             $hash = password_hash($pswd, $algo, $options);
-            
+
             // Check if hashing failed
             if ( $hash === false ) {
                 throw new \RuntimeException('Password hashing failed - possibly invalid algorithm or options');
@@ -132,7 +132,7 @@ final class Password
         if ( trim($pswd) === '' ) {
             return false;
         }
-        
+
         // Edge case handling for extreme length values
         if ( $length < 1 ) {
             $length = self::LENGTH;
