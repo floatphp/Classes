@@ -18,7 +18,7 @@ namespace FloatPHP\Classes\Filesystem;
 use FloatPHP\Interfaces\Classes\LoggerInterface;
 
 /**
- * Built-in secure file-based class.
+ * Built-in secure file-based Logger class.
  */
 class Logger implements LoggerInterface
 {
