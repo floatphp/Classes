@@ -536,7 +536,7 @@ final class Stringify
 		}
 
 		// Validate encoding names
-		if ( !self::isValidEncoding($from) || !self::isValidEncoding($to) ) {
+		if ( !self::isEncoding($from) || !self::isEncoding($to) ) {
 			throw new \InvalidArgumentException("Invalid encoding specified: from '{$from}' to '{$to}'");
 		}
 
@@ -898,12 +898,12 @@ final class Stringify
 		}
 
 		// Format validation
-		if ( !self::validateSerializedFormat($value, $strict) ) {
+		if ( !self::isSerializedFormat($value, $strict) ) {
 			return false;
 		}
 
 		// Token-specific validation
-		return self::validateSerializedToken($value[0], $value, $strict);
+		return self::isSerializedToken($value[0], $value, $strict);
 	}
 
 	/**
@@ -1354,7 +1354,7 @@ final class Stringify
 	 * @param string $encoding
 	 * @return bool
 	 */
-	private static function isValidEncoding(string $encoding) : bool
+	private static function isEncoding(string $encoding) : bool
 	{
 		// Common encoding names validation
 		$validEncodings = [
@@ -1395,7 +1395,7 @@ final class Stringify
 	 * @param bool $strict
 	 * @return bool
 	 */
-	private static function validateSerializedFormat(string $value, bool $strict) : bool
+	private static function isSerializedFormat(string $value, bool $strict) : bool
 	{
 		// Check basic format
 		if ( $value[1] !== ':' ) {
@@ -1433,18 +1433,18 @@ final class Stringify
 	 * @param bool $strict
 	 * @return bool
 	 */
-	private static function validateSerializedToken(string $token, string $value, bool $strict) : bool
+	private static function isSerializedToken(string $token, string $value, bool $strict) : bool
 	{
 		switch ($token) {
 			case 's':
-				return self::validateStringToken($value, $strict);
+				return self::isStringToken($value, $strict);
 			case 'a':
 			case 'O':
-				return self::validateComplexToken($token, $value);
+				return self::isComplexToken($token, $value);
 			case 'b':
 			case 'i':
 			case 'd':
-				return self::validateScalarToken($token, $value, $strict);
+				return self::isScalarToken($token, $value, $strict);
 			default:
 				return false;
 		}
@@ -1458,7 +1458,7 @@ final class Stringify
 	 * @param bool $strict
 	 * @return bool
 	 */
-	private static function validateStringToken(string $value, bool $strict) : bool
+	private static function isStringToken(string $value, bool $strict) : bool
 	{
 		if ( $strict ) {
 			if ( substr($value, -2, 1) !== '"' ) {
@@ -1478,7 +1478,7 @@ final class Stringify
 	 * @param string $value
 	 * @return bool
 	 */
-	private static function validateComplexToken(string $token, string $value) : bool
+	private static function isComplexToken(string $token, string $value) : bool
 	{
 		try {
 			self::match("/^{$token}:[0-9]+:/s", $value, $matches);
@@ -1497,7 +1497,7 @@ final class Stringify
 	 * @param bool $strict
 	 * @return bool
 	 */
-	private static function validateScalarToken(string $token, string $value, bool $strict) : bool
+	private static function isScalarToken(string $token, string $value, bool $strict) : bool
 	{
 		try {
 			$end = $strict ? '$' : '';
