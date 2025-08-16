@@ -290,8 +290,8 @@ class File
 	 */
 	public static function copy(string $path, string $to, $context = null) : bool
 	{
-		$path = Validator::isPath($path);
-		$to = Validator::isPath($to);
+		$path = self::validatePath($path);
+		$to = self::validatePath($to);
 		if ( empty($path) || empty($to) ) {
 			return false;
 		}
@@ -317,8 +317,8 @@ class File
 	 */
 	public static function copySafe(string $path, string $to, $context = null) : bool
 	{
-		$path = Validator::isPath($path, true);
-		$to = Validator::isPath($to, true);
+		$path = self::validatePath($path, true);
+		$to = self::validatePath($to, true);
 
 		if ( !self::exists($path) ) {
 			throw new \RuntimeException("Source file does not exist: {$path}");
@@ -360,8 +360,8 @@ class File
 	 */
 	public static function move(string $path, string $to, $context = null) : bool
 	{
-		$path = Validator::isPath($path);
-		$to = Validator::isPath($to);
+		$path = self::validatePath($path);
+		$to = self::validatePath($to);
 		if ( empty($path) || empty($to) ) {
 			return false;
 		}
@@ -387,8 +387,8 @@ class File
 	 */
 	public static function moveSafe(string $path, string $to, $context = null) : bool
 	{
-		$path = Validator::isPath($path, true);
-		$to = Validator::isPath($to, true);
+		$path = self::validatePath($path, true);
+		$to = self::validatePath($to, true);
 
 		if ( !self::exists($path) ) {
 			throw new \RuntimeException("Source file does not exist: {$path}");
@@ -485,7 +485,7 @@ class File
 	 */
 	public static function addDir(string $path, int $p = 0755, bool $r = true, $c = null) : bool
 	{
-		$path = Validator::isPath($path);
+		$path = self::validatePath($path);
 		if ( empty($path) ) {
 			return false;
 		}
@@ -513,7 +513,7 @@ class File
 	 */
 	public static function addDirSafe(string $path, int $p = 0755, bool $r = true, $c = null) : bool
 	{
-		$path = Validator::isPath($path, true);
+		$path = self::validatePath($path, true);
 
 		if ( self::exists($path) ) {
 			if ( self::isDir($path) ) {
@@ -669,7 +669,7 @@ class File
 	 */
 	public static function r(string $path, bool $i = false, $c = null, int $o = 0, ?int $l = null) : mixed
 	{
-		$path = Validator::isPath($path);
+		$path = self::validatePath($path);
 		if ( empty($path) ) {
 			return false;
 		}
@@ -691,7 +691,7 @@ class File
 	 */
 	public static function readSafe(string $path, bool $i = false, $c = null, int $o = 0, ?int $l = null) : string
 	{
-		$path = Validator::isPath($path, true);
+		$path = self::validatePath($path, true);
 
 		if ( !self::exists($path) ) {
 			throw new \RuntimeException("File does not exist: {$path}");
@@ -721,7 +721,7 @@ class File
 	 */
 	public static function w(string $path, $input = '', bool $append = false, $c = null) : bool
 	{
-		$path = Validator::isPath($path);
+		$path = self::validatePath($path);
 		if ( empty($path) ) {
 			return false;
 		}
@@ -748,7 +748,7 @@ class File
 	 */
 	public static function writeSafe(string $path, $input = '', bool $append = false, $c = null) : int
 	{
-		$path = Validator::isPath($path, true);
+		$path = self::validatePath($path, true);
 
 		// Check if directory exists and is writable
 		$dir = dirname($path);
@@ -1076,5 +1076,41 @@ class File
 			'gz|gzip'      => 'application/x-gzip',
 			'7z'           => 'application/x-7z-compressed'
 		];
+	}
+
+	/**
+	 * Validate and sanitize file path against directory traversal attacks.
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param bool $throwException
+	 * @return string
+	 * @throws \InvalidArgumentException
+	 */
+	public static function validatePath(string $path, bool $throwException = false) : string
+	{
+		// Normalize path
+		$path = Stringify::formatPath($path);
+
+		// Check for directory traversal patterns
+		$dangerous = ['../', '..\/', '../', '..\\'];
+		foreach ($dangerous as $pattern) {
+			if ( Stringify::contains($path, $pattern) ) {
+				if ( $throwException ) {
+					throw new \InvalidArgumentException("Path contains directory traversal: {$path}");
+				}
+				return '';
+			}
+		}
+
+		// Check for null bytes (path truncation attack)
+		if ( Stringify::contains($path, "\0") ) {
+			if ( $throwException ) {
+				throw new \InvalidArgumentException("Path contains null byte: {$path}");
+			}
+			return '';
+		}
+
+		return $path;
 	}
 }
