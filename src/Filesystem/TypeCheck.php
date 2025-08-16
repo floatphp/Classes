@@ -44,6 +44,10 @@ final class TypeCheck
 	public static function isObject($value, ?string $class = null, bool $string = false) : bool
 	{
 		if ( $class ) {
+			// Validate class name input
+			if ( trim($class) === '' ) {
+				return false;
+			}
 			return is_a($value, $class, $string);
 		}
 		return is_object($value);
@@ -118,6 +122,10 @@ final class TypeCheck
 	 */
 	public static function isNegative($value) : bool
 	{
+		// Handle edge cases: NaN, infinite values
+		if ( self::isNan($value) || !is_finite($value) ) {
+			return false;
+		}
 		return (self::isFloat($value) || self::isInt($value))
 			&& $value < 0;
 	}
@@ -133,6 +141,14 @@ final class TypeCheck
 	public static function isFloat($value, bool $string = false) : bool
 	{
 		if ( $string ) {
+			// Validate string input before casting
+			if ( !self::isString($value) ) {
+				return false;
+			}
+			// Handle edge cases for string-to-float conversion
+			if ( trim($value) === '' ) {
+				return false;
+			}
 			$value = (float)$value;
 		}
 		return is_float($value);
@@ -241,6 +257,10 @@ final class TypeCheck
 	 */
 	public static function isFunction(string $name) : bool
 	{
+		// Validate function name input
+		if ( trim($name) === '' ) {
+			return false;
+		}
 		return function_exists(Stringify::undash($name));
 	}
 
@@ -254,6 +274,10 @@ final class TypeCheck
 	 */
 	public static function isClass(string $class, bool $autoload = true) : bool
 	{
+		// Validate class name input
+		if ( trim($class) === '' ) {
+			return false;
+		}
 		return class_exists($class, $autoload);
 	}
 
@@ -280,6 +304,10 @@ final class TypeCheck
 	 */
 	public static function isInterface(string $interface, bool $autoload = true) : bool
 	{
+		// Validate interface name input
+		if ( trim($interface) === '' ) {
+			return false;
+		}
 		return interface_exists($interface, $autoload);
 	}
 
@@ -294,12 +322,23 @@ final class TypeCheck
 	 */
 	public static function hasInterface($class, string $interface, bool $short = true) : bool
 	{
+		// Validate inputs
+		if ( trim($interface) === '' ) {
+			return false;
+		}
+
+		// Handle edge case: if class is not valid
 		$implements = class_implements($class);
+		if ( !$implements ) {
+			return false;
+		}
+
 		if ( $short ) {
 			foreach ($implements as $key => $value) {
 				$implements[$key] = Stringify::basename($value);
 			}
 		}
+
 		return Arrayify::inArray($interface, (array)$implements);
 	}
 
@@ -313,6 +352,10 @@ final class TypeCheck
 	 */
 	public static function hasMethod($object, string $method) : bool
 	{
+		// Validate method name input
+		if ( trim($method) === '' ) {
+			return false;
+		}
 		return method_exists($object, $method);
 	}
 
@@ -329,7 +372,7 @@ final class TypeCheck
 	}
 
 	/**
-	 * Check ressource.
+	 * Check resource.
 	 *
 	 * @access public
 	 * @param mixed $value
