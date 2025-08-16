@@ -1104,6 +1104,9 @@ final class Stringify
 			'name'  => filter_var($value, FILTER_DEFAULT, FILTER_FLAG_NO_ENCODE_QUOTES),
 			'text'  => filter_var($value, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW),
 			'url'   => filter_var($value, FILTER_SANITIZE_URL),
+			'ip'    => filter_var($value, FILTER_VALIDATE_IP),
+			'ipv6'  => filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6),
+			'mac'   => filter_var($value, FILTER_VALIDATE_MAC),
 			default => filter_var($value, $filter, $options)
 		};
 	}
