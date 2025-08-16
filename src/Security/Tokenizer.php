@@ -47,7 +47,7 @@ class Tokenizer
 			$encryption->setPrefix((string)$prefix);
 
 			$encrypted = $encryption->encrypt();
-			
+
 			// Verify encryption was successful
 			if ( $encrypted === false || $encrypted === null ) {
 				throw new \RuntimeException('Token encryption failed');
