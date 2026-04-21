@@ -52,11 +52,13 @@ class Router implements RouterInterface
      * @var string $base, Route base path
      * @var array $types, Route types
      * @var array $names, Named routes
+     * @var array $cache, Compiled route regex cache
      */
     protected $routes = [];
     protected $base;
     protected $types = [];
     protected $names = [];
+    protected $cache = [];
 
     /**
      * @inheritdoc
@@ -81,12 +83,6 @@ class Router implements RouterInterface
      */
     public function addRoutes(array $routes) : void
     {
-        if ( !TypeCheck::isArray($routes) && !($routes instanceof \Traversable) ) {
-            throw new RouterException(
-                RouterException::notTraversable()
-            );
-        }
-
         foreach ($routes as $route) {
             if ( TypeCheck::isArray($route) && !empty($route) ) {
                 Hook::callUserFunctionArray([$this, 'map'], $route);
@@ -152,7 +148,8 @@ class Router implements RouterInterface
     public function clearRoutes() : void
     {
         $this->routes = [];
-        $this->names = [];
+        $this->names  = [];
+        $this->cache  = [];
     }
 
     /**
@@ -216,7 +213,7 @@ class Router implements RouterInterface
 
             foreach ($matches as $index => $match) {
 
-                list($block, $pre, $type, $param, $optional) = $match;
+                [$block, $pre, $type, $param, $optional] = $match;
 
                 if ( $pre ) {
                     $block = substr($block, 1);
@@ -264,8 +261,8 @@ class Router implements RouterInterface
         $url = substr($url, strlen($this->base));
 
         // Strip query string (?a=b) from request URL
-        if ( ($strpos = strpos($url, '?')) !== false ) {
-            $url = substr($url, 0, $strpos);
+        if ( ($queryPos = strpos($url, '?')) !== false ) {
+            $url = substr($url, 0, $queryPos);
         }
 
         // Get last request URL char
@@ -273,14 +270,11 @@ class Router implements RouterInterface
 
         foreach ($this->routes as $handler) {
 
-            list($routeMethod, $route, $controller, $name, $permission) = $handler;
+            [$routeMethod, $route, $controller, $name, $permission] = $handler;
 
-            // Normalize route method for comparison
+            // Normalize route method and check match
             $routeMethod = Stringify::uppercase($routeMethod);
-            $routeMethodMatch = (stripos($routeMethod, $method) !== false) || $routeMethod === '*';
-
-            // Method did not match, continue to next route.
-            if ( !$routeMethodMatch ) {
+            if ( $routeMethod !== '*' && strpos($routeMethod, $method) === false ) {
                 continue;
             }
 
@@ -311,11 +305,11 @@ class Router implements RouterInterface
             if ( $match ) {
 
                 if ( $params ) {
-                    foreach ($params as $key => $value) {
-                        if ( TypeCheck::isInt($key) ) {
-                            unset($params[$key]);
-                        }
-                    }
+                    $params = Arrayify::filter(
+                        $params,
+                        fn($key) => !TypeCheck::isInt($key),
+                        ARRAY_FILTER_USE_KEY
+                    );
                 }
 
                 return [
@@ -339,11 +333,17 @@ class Router implements RouterInterface
      */
     protected function compile(string $route) : string
     {
+        if ( isset($this->cache[$route]) ) {
+            return $this->cache[$route];
+        }
+
+        $compiled = $route;
+
         if ( Stringify::matchAll(static::REGEX, $route, $matches, 2) ) {
 
             foreach ($matches as $match) {
 
-                list($block, $pre, $type, $param, $optional) = $match;
+                [$block, $pre, $type, $param, $optional] = $match;
 
                 if ( isset($this->types[$type]) ) {
                     $type = $this->types[$type];
@@ -353,23 +353,23 @@ class Router implements RouterInterface
                     $pre = '\.';
                 }
 
-                $optional = $optional !== '' ? '?' : null;
+                $optional = $optional !== '' ? '?' : '';
 
                 // Legacy version of PCRE require the 'P' in (?P<named>)
                 $pattern = '(?:'
-                    . ($pre !== '' ? $pre : null)
+                    . ($pre !== '' ? $pre : '')
                     . '('
-                    . ($param !== '' ? "?P<$param>" : null)
+                    . ($param !== '' ? "?P<$param>" : '')
                     . $type
                     . ')'
                     . $optional
                     . ')'
                     . $optional;
 
-                $route = Stringify::replace($block, $pattern, $route);
+                $compiled = Stringify::replace($block, $pattern, $compiled);
             }
         }
 
-        return "`^{$route}$`u";
+        return $this->cache[$route] = "`^{$compiled}$`u";
     }
 }
