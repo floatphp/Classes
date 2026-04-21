@@ -103,7 +103,8 @@ class Router implements RouterInterface
      */
     public function addTypes(array $types) : void
     {
-        $this->types = Arrayify::merge($this->types, $types);
+        $this->types  = Arrayify::merge($this->types, $types);
+        $this->cache  = [];
     }
 
     /**
