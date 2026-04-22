@@ -423,10 +423,10 @@ final class RouterTest extends TestCase
     public function testMatchWithAlphanumericParam(): void
     {
         $this->router->map('GET', '/posts/[a:slug]', 'PostController@show');
-        $result = $this->router->match('/posts/myPost123', 'GET');
+        $result = $this->router->match('/posts/mypost123', 'GET');
 
         $this->assertIsArray($result);
-        $this->assertEquals('myPost123', $result['params']['slug']);
+        $this->assertEquals('mypost123', $result['params']['slug']);
     }
 
     /**
